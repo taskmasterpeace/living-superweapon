@@ -52,3 +52,40 @@ test('fleetIntent maps each class to the right stepper fields', () => {
   assert.equal(fleetIntent('rotor', { fwd: 1, lift: 1 }).on, true);
   assert.equal(fleetIntent('fixedwing', { throttle: 1, pitch: 1 }).pitch, 1);
 });
+
+test('boarding requires real vertical proximity and direct entry shares the same rejection',()=>{
+ const {pilot,p,a}=rig('jet-a');a.pos.y=160;
+ assert.equal(pilot._nearest(p),null);assert.equal(pilot.enter(a,p),false);assert.equal(p._fleetVehicle,undefined);
+ p.pos.y=160;assert.equal(pilot.enter(a,p),true);pilot.dispose();
+});
+
+test('boarding rejects incapacitation and a blocked entrance without changing owners',()=>{
+ const {pilot,p,a,game}=rig('tank');p.stunT=1;assert.equal(pilot.enter(a,p),false);p.stunT=0;
+ game.world._camNearestT=()=>.2;assert.equal(pilot.enter(a,p),false);assert.equal(pilot._nearest(p),null);
+ game.world._camNearestT=()=>1;assert.equal(pilot.enter(a,p),true);pilot.dispose();
+});
+
+test('exit searches around a parked vehicle instead of placing the player in the right wall',()=>{
+ const {pilot,p,a,game}=rig('tank');pilot.enter(a,p);
+ game.world.cover=[{x:15,z:0,hx:3,hz:20,top:40}];assert.equal(pilot.exit(),true);
+ assert.ok(p.pos.x<10);assert.equal(p.pos.y,0);assert.equal(p._fleetVehicle,null);assert.equal(p.obj.visible,true);
+});
+
+test('blocked exits retain driver ownership and HUD until space becomes available',()=>{
+ const {pilot,p,a,game}=rig('tank');pilot.enter(a,p);game.world.cover=[{x:0,z:0,hx:30,hz:30,top:40}];
+ assert.equal(pilot.exit(),false);assert.equal(pilot.actor,a);assert.equal(p._fleetVehicle,a);assert.equal(p.obj.visible,false);
+ game.world.cover=[];assert.equal(pilot.exit(),true);
+});
+
+test('ordinary soldiers cannot abandon an aircraft in midair; capable flyers can',()=>{
+ const {pilot,p,a}=rig('helicopter');pilot.enter(a,p);a.pos.y=100;pilot._seat();
+ assert.equal(pilot.exit(),false);assert.equal(p._fleetVehicle,a);
+ p.flightTier=3;assert.equal(pilot.exit(),true);assert.equal(p.flying,true);assert.equal(p.pos.y,100);
+});
+
+test('forced lifecycle cleanup detaches a dead or boxed-in driver without wall teleport',()=>{
+ const {pilot,p,a,game}=rig('tank');pilot.enter(a,p);const before={x:p.pos.x,y:p.pos.y,z:p.pos.z};
+ game.world.cover=[{x:0,z:0,hx:50,hz:50,top:100}];p.alive=false;pilot.update(.1);
+ assert.equal(pilot.actor,null);assert.equal(p._fleetVehicle,null);assert.equal(a.occupant,null);
+ assert.deepEqual({x:p.pos.x,y:p.pos.y,z:p.pos.z},before);
+});

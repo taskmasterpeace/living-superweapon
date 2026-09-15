@@ -45,3 +45,11 @@ window.PW = PW;
 // this repo reaches for `LSW.game` — a page that renamed the seam would silently fail every test
 // ever written against it. `PW` is the page's own name; `LSW` is the contract.
 window.LSW = PW;
+requestAnimationFrame(async()=>{
+  if(new URLSearchParams(location.search).has('highwall')){
+    door?.close();PW.hud.hideSelect?.();
+    const {launchHighwall}=await import('./engine/highwall.js');
+    document.getElementById('warworld-boot-loading')?.remove();
+    await launchHighwall(PW.game,new URLSearchParams(location.search).get('scenario')||'corridor');
+  }else document.getElementById('warworld-boot-loading')?.remove();
+});

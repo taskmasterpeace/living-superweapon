@@ -1,0 +1,5 @@
+Highwall foreground measurements at1280x720 on i9-14900KF/RTX4090/128GB RAM show a usable eight-actor squad default, but large horde presets are not acceptable for normal play.
+
+Latest median/p95 frame intervals: squad8.4/12.6ms;16infected20.8/29.3ms;32infected41.7/83.5ms;64infected87.5/250.3ms. Samples8seconds afterwarmup; casualties differ between runs, so these are observational capacity checks, not deterministic benchmarks. Evidence artifacts/highwall/resume/performance.json.
+
+Spatial indexing made the isolated ten-route fixture about4.5x faster without changing clearance but did not eliminate frame-time collapse. Profile real actor updates, animation/matrix work, combat/perception loops, audio voice count and rendering before optimizing further. Do not replace simulated enemies with decorative actors to claim a capacity increase. Establish target frame-time and hardware budget, repeat mixed and infected-only population ladders with reproducible seeds, and keep32/64 explicitly experimental until accepted.

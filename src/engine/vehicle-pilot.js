@@ -67,6 +67,9 @@ function clear(world, x, z, y, r, actor) {
   if (world.waterAt && world.waterAt(x, z) && !AIR.has(actor.cls) && actor.cls !== 'ship' && actor.cls !== 'hover') return false;
   for (const c of (world.cover || [])) {
     if (c === actor.cover || c.hp <= 0) continue;
+    // Authored roof slabs are not solid columns. Only actors with a measured
+    // body height can claim clearance beneath them; legacy unknowns stay safe.
+    if (Number.isFinite(actor.bodyHeight) && y + actor.bodyHeight < (c.bottom ?? 0) - .05) continue;
     if (AIR.has(actor.cls) && y > (c.top ?? c.h ?? Infinity) + 1) continue;   // flying over it
     const dx = Math.max(0, Math.abs(x - c.x) - (c.hx ?? c.r ?? 0)), dz = Math.max(0, Math.abs(z - c.z) - (c.hz ?? c.r ?? 0));
     if (dx * dx + dz * dz < r * r) return false;
@@ -101,7 +104,14 @@ export function driveActor(actor, intent, dt, world) {
   }
   // vertical: air integrates vy and lands; ground follows the terrain
   if (AIR.has(cls)) {
-    pos.y += (m.vy || 0) * dt;
+    const rise=(m.vy||0)*dt;
+    if(Number.isFinite(actor.bodyHeight)){
+      const verticalSteps=Math.max(1,Math.ceil(Math.abs(rise)/1.5)),dy=rise/verticalSteps;
+      for(let i=0;i<verticalSteps;i++){
+        if(!clear(world,pos.x,pos.z,pos.y+dy,r,actor)){m.vy=0;break;}
+        pos.y+=dy;
+      }
+    }else pos.y += rise;
     const floor = heightAt(world, pos.x, pos.z) + off;
     if (pos.y <= floor) { pos.y = floor; if ((m.vy || 0) < 0) m.vy = 0; actor.grounded = true; } else actor.grounded = false;
   } else {

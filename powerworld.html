@@ -22,6 +22,10 @@
 <link rel="stylesheet" href="/src/styles/shell.css" />
 </head>
 <body>
+  <div id="warworld-boot-loading" role="status" style="position:fixed;inset:0;z-index:10000;display:grid;place-content:center;background:#44483c;color:#eeeade;text-align:center;font:16px Inter,system-ui,sans-serif">
+    <img src="/images/highwall/loading.png" alt="War World Acendents" style="width:min(1080px,100vw);max-height:80vh;object-fit:contain">
+    <p>Loading War World…</p>
+  </div>
   <canvas id="game"></canvas>
   <div id="hud"></div>
   <!-- ⚠ #title STAYS, EMPTY, AND STARTS HIDDEN. The HUD constructor binds it and several shared

@@ -16,7 +16,7 @@ export function itemFootprint(def={}){
  return {width:Math.max(1,Math.min(4,Math.round(authored.width??(long?3:gun?2:1)))),height:Math.max(1,Math.min(4,Math.round(authored.height??1))),massKg:Number.isFinite(authored.massKg)&&authored.massKg>=0?authored.massKg:null};
 }
 export function inventoryEntries(f){
- const entries=[{...HANDHELD_DEVICE,kind:'device',massKg:null}];
+ const entries=f._inventoryDevice===false||f.def?.vocalFamily==='zombie'?[]:[{...HANDHELD_DEVICE,kind:'device',massKg:null}];
  if(f._gearHeld)entries.push({id:'held',name:f._gearHeld.ab.name||'Carried weapon',kind:'weapon',def:f._gearHeld.ab,...itemFootprint(f._gearHeld.ab),held:!f._inventoryStowed});
  for(const saved of f._inventoryWeapons||[])entries.push({id:saved.id,name:saved.gear.ab.name||'Stored weapon',kind:'stored-weapon',saved,def:saved.gear.ab,...itemFootprint(saved.gear.ab),held:false});
  for(const [index,item]of(f.items||[]).entries())entries.push({id:`gadget:${index}`,name:item.def.name||item.def.kind,kind:'gadget',index,item,def:item.def,...itemFootprint(item.def)});

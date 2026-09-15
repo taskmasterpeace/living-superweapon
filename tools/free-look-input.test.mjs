@@ -153,7 +153,7 @@ for(const boundary of ['blur','pause','KO','map'])test(`${boundary} clears indep
 });
 test('existing HUD projects the preserved combat aim inside the composed Alt view',()=>{
  const x=setup();try{
-  const cross={style:{setProperty(k,v){this[k]=v;}},dataset:{},classList:{toggle(){}}},hud={syncCombatView:()=>true,el:{cross},_lkCls:false};
+  const cross={style:{setProperty(k,v){this[k]=v;}},dataset:{},classList:{toggle(){}}},hud={syncCombatView:()=>true,el:{cross},_lkCls:false,_meleeCue:{hidden:true}};
   x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=100;x.control(0);
   HUD.prototype.updateCrosshair.call(hud,x.g);assert.notEqual(cross.style.transform,'translate(0px, 0px)','False center reticle while aiming elsewhere');
   assert.ok(Math.abs(hud._csx)>20);
@@ -178,3 +178,4 @@ test('native Alt events suppress menu activation only in captured combat and blu
   win.keydown(alt);assert.equal(input.down('AltLeft'),true);win.blur();assert.equal(input.down('AltLeft'),false);
  }finally{globalThis.addEventListener=oldAdd;globalThis.document=oldDoc;}
 });
+test('double Alt latches full orbit, tap returns and zoom preserves gameplay aim',()=>{const x=setup('sol',false);try{const i=x.g.input;const tick=(held,dx=0)=>{i.keys[held?'add':'delete']('AltLeft');i.mouse.dx=dx;x.control(1/60);i.endFrame();};const aim=x.p.aim3.clone();tick(true);tick(false);tick(true);tick(false);assert.equal(x.w._freeLook.latched,true);tick(false,1200);assert.ok(Math.abs(x.w._freeLook.yaw)>FREE_LOOK_DEFAULTS.yawLimit);assert.ok(x.p.aim3.angleTo(aim)<1e-7);tick(true);assert.equal(x.w._freeLook.latched,false);tick(false);for(let n=0;n<120;n++)tick(false);assert.equal(x.w._freeLook.orbit,false);tick(true);i.wheelFreeLook=-5;x.control(1/60);assert.ok(x.w._freeLook.zoom<1);assert.ok(x.p.aim3.angleTo(aim)<1e-7);}finally{x.close();}});

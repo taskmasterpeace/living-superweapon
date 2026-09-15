@@ -13,6 +13,14 @@ import {createModularFlightAdapter} from './modular-flight.js';
 import {STRIKES} from '../data/martial.js';
 import {meleeWeaponFor,WEAPON_GRIP_CENTERS} from './weapon-grip.js';
 import {setModularExpression} from './modular-face.js';
+
+// Shared live/portrait source: a saved edit overrides the authored unit recipe.
+// Custom family IDs can use the existing rig without registering roster heroes.
+export function characterRecipeOf(def,{read=readCharacterRecipe,fallback}={}){
+ try{const saved=read(def.id);if(saved)return validateModularRecipe(saved);}catch(error){console.warn('Saved character recipe ignored:',error.message);}
+ if(def.modularRecipe)return validateModularRecipe(def.modularRecipe);
+ return (def.vocalFamily==='zombie'?MODULAR_RECIPES.infected:MODULAR_RECIPES['roster-'+def.id])||fallback;
+}
 import {heroModelOf} from '../data/hero-models.js';
 import {rangedPoseChannels} from './cast-channels.js';
 import {zombieLegSpeed} from './zombie-locational-damage.js';
@@ -70,8 +78,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
  if(parts.skin)for(const mesh of Object.values(parts.skin.meshes||{}))if(mesh?.isMesh)hide(mesh);
  setModularCostume(c.meshes,{primary:f.def.colors.primary,accent:f.def.colors.accent||f.def.colors.secondary,cape:!f.def.metal,soldier:heroModelOf(f.def).equipment==='soldier'});
- let savedRecipe;try{const stored=readCharacterRecipe(f.def.id);if(stored)savedRecipe=validateModularRecipe(stored);}catch(error){console.warn('Saved character recipe ignored:',error.message);}
- const signatureRecipe=savedRecipe||(f.def.vocalFamily==='zombie'?MODULAR_RECIPES.infected:MODULAR_RECIPES['roster-'+f.def.id]);const signatureParts=createSignatureParts(c.actor),tailoring=createTailoring(c.actor),imagePlacements=createImagePlacements(c.actor);if(signatureRecipe){applyModularFrame(c.actor,signatureRecipe.frame,height/1.8325);applyModularRecipe(c.meshes,signatureRecipe);signatureParts.set(signatureRecipe);tailoring.set(signatureRecipe);imagePlacements.set(signatureRecipe);}
+ const signatureRecipe=characterRecipeOf(f.def);const signatureParts=createSignatureParts(c.actor),tailoring=createTailoring(c.actor),imagePlacements=createImagePlacements(c.actor);if(signatureRecipe){applyModularFrame(c.actor,signatureRecipe.frame,height/1.8325);applyModularRecipe(c.meshes,signatureRecipe);signatureParts.set(signatureRecipe);tailoring.set(signatureRecipe);imagePlacements.set(signatureRecipe);}
  const authoredParts=createAuthoredParts(c.actor);if(signatureRecipe?.authoredAsset)authoredParts.set(signatureRecipe.authoredAsset);
  let drivenWeapon=null,weaponBase=null;
  const restoreWeapon=()=>{if(drivenWeapon&&weaponBase){weaponBase.decompose(drivenWeapon.position,drivenWeapon.quaternion,drivenWeapon.scale);drivenWeapon=null;weaponBase=null;}};

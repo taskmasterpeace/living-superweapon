@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {suppressFleetShortcut,fleetControls} from '../src/engine/fleet-controls.js';
 import {FleetPilot} from '../src/engine/fleet-pilot.js';
+test('vehicle switching hint appears only in the vehicle simulation',()=>{
+ for(const cls of ['wheeled','tracked','mech','rotor','fixedwing']){
+  assert.doesNotMatch(fleetControls(cls),/L next vehicle/);
+  assert.doesNotMatch(fleetControls(cls,{canSwitchVehicle:false}),/L next vehicle/);
+  assert.match(fleetControls(cls,{canSwitchVehicle:true}),/L next vehicle/);
+  assert.match(fleetControls(cls),/J exit/);
+ }
+});
 test('vehicle practice blocks spawn and hero selection shortcuts but retains exit and flight keys',()=>{
  for(const state of [{_simActive:true},{player:{_fleetVehicle:{}}}]){
   for(const k of ['KeyN','KeyB','Tab','BracketLeft'])assert.ok(suppressFleetShortcut(state,k));

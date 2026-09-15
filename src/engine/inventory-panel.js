@@ -13,9 +13,9 @@ export function mountInventory(game){
  const style=document.createElement('style');style.textContent=INVENTORY_CSS;document.head.append(style);
  const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
  const button=(name,action)=>{const b=el('button',name);b.type='button';b.onclick=action;return b;};
- let previousOverlay=false,selected=null,device=false,owner=null,lastFocus=null,drag=null;const portraits=new Map();
+ let previousOverlay=false,selected=null,device=false,owner=null,lastFocus=null,drag=null,loot=null;const portraits=new Map();
  function close(){if(dialog.open)dialog.close();}
- dialog.addEventListener('close',()=>{game.combatOverlayOpen=previousOverlay;game.retireCombatViewInput?.(game.player,{preserveCarry:true});lastFocus?.focus?.();});
+ dialog.addEventListener('close',()=>{loot=null;game.combatOverlayOpen=previousOverlay;game.retireCombatViewInput?.(game.player,{preserveCarry:true});lastFocus?.focus?.();});
  function render(){
   const f=game.player;if(!f)return;const layout=inventoryLayout(f),policy=layout.policy;dialog.replaceChildren();
   const header=el('header'),title=el('div',undefined,'inventory-title'),img=el('img',undefined,'inventory-portrait');img.alt='';try{if(!portraits.has(f.def.id))portraits.set(f.def.id,portraitOf(f.def));img.src=portraits.get(f.def.id);}catch{}
@@ -24,6 +24,19 @@ export function mountInventory(game){
   header.onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;dialog.style.left=Math.max(0,Math.min(innerWidth-dialog.offsetWidth,e.clientX-drag.x))+'px';dialog.style.top=Math.max(0,Math.min(innerHeight-50,e.clientY-drag.y))+'px';dialog.style.right='auto';};
   header.onpointerup=()=>{drag=null;};header.onpointercancel=()=>{drag=null;};
   if(device){const screen=el('div',undefined,'inventory-device');screen.append(el('b','COMING SOON'),el('small','Your handheld game system'));dialog.append(screen);const section=el('section');section.append(el('p','Your pocket game collection is coming soon.','inventory-note'),button('Back to equipment',()=>{device=false;render();}));dialog.append(section);return;}
+  if(loot){
+   const check=loot.store.access(f,loot.id),section=el('section');section.append(el('h3',check.container?.name||'World backpack'));
+   if(!check.ok)section.append(el('p',check.reason,'inventory-note'));
+   else if(!check.container.entries.length)section.append(el('p','Empty · all equipment transferred.','inventory-note'));
+   else for(const entry of check.container.entries){
+    const row=el('div',undefined,'inventory-detail'),name=entry.saved?.gear.ab.name||entry.item?.def.name||entry.device?.name||'Equipment';row.append(el('b',name));
+    if(entry.saved?.ammo)row.append(el('p',`${entry.saved.ammo.loaded} loaded · ${entry.saved.ammo.reserve} reserve`));
+    if(entry.item)row.append(el('p',`${entry.item.charges} charges · ${Math.ceil(entry.item.cd)}s cooldown`));
+    const transfer=options=>{const result=loot.store.transfer(f,loot.id,entry.id,options);if(!result.ok)game.hud?.feed(result.reason);render();};
+    row.append(button('Take',()=>transfer()));if(entry.kind==='weapon')row.append(button('Take compatible ammo',()=>transfer({ammoOnly:true})));section.append(row);
+   }
+   dialog.append(section);
+  }
   const hands=el('section');hands.append(el('h3','In your hands'));const h=el('div',undefined,'inventory-hands'),held=f._gearHeld,ab=held?.ab,occupied=!!(f._carry||f._personCarry),mask=ab?castHandMask(f,ab):0,drawn=ab&&!f._inventoryStowed;
   for(const side of ['LEFT','RIGHT']){const tile=el('div',side,'inventory-hand');tile.append(el('b',occupied?'Carried load':drawn&&(mask&(side==='LEFT'?1:2))?ab.name:'Free'));h.append(tile);}hands.append(h);
   if(held){const ammo=firearmAmmo(f.slots._gear);if(ammo)hands.append(el('p',`${ammo.loaded}/${ammo.capacity} · ${ammo.reserve} reserve`,'inventory-note'));const actions=el('div',undefined,'inventory-controls');actions.append(button(f._inventoryStowed?'Draw weapon':'Stow weapon',()=>{if(!setHeldStowed(f,!f._inventoryStowed))game.hud?.feed('Finish the current action before changing hands.');render();}),button('Drop',()=>{game.dropGear(f,true);f._inventoryStowed=false;render();}));hands.append(actions);}
@@ -40,8 +53,9 @@ export function mountInventory(game){
   if(game._threatRoom?.active&&game.ms?.threatLab?.state==='preparing'){const issue=el('section');issue.append(el('h3','Training issue'));const choices=gadgetCatalog(),select=el('select');choices.forEach(({def},i)=>{const o=el('option',def.name||def.kind);o.value=i;select.append(o);});issue.append(select);const actions=el('div',undefined,'inventory-controls');for(let i=0;i<Math.min(policy.gadgetLimit,Math.max(2,f.items.length+1));i++)actions.append(button(`Slot ${i+1}`,()=>{const result=issueTrainingGadget(game,f,choices[Number(select.value)].def,i);if(!result.ok)game.hud?.feed(result.reason);render();}));issue.append(actions);dialog.append(issue);}
   const footer=el('footer');footer.append(button('Game device',()=>{device=true;render();}));if(policy.personalWeapons)footer.append(button('Armory',()=>{close();openArmory(game,game.hud);}));footer.append(button('Return · I',close));dialog.append(footer);
  }
- function open(){if(dialog.open||!game.player?.alive||!game.running||game.hud?.titleOpen||game.matchOver||game.combatOverlayOpen)return;lastFocus=document.activeElement;owner=game.player;previousOverlay=!!game.combatOverlayOpen;game.retireCombatViewInput?.(owner,{preserveCarry:true});game.combatOverlayOpen=true;device=false;selected=null;render();dialog.show();dialog.querySelector('button')?.focus();}
+ function open(){if(dialog.open||!game.player?.alive||!game.running||game.hud?.titleOpen||game.matchOver||game.combatOverlayOpen)return false;lastFocus=document.activeElement;owner=game.player;previousOverlay=!!game.combatOverlayOpen;game.retireCombatViewInput?.(owner,{preserveCarry:true});game.combatOverlayOpen=true;device=false;selected=null;render();dialog.show();dialog.querySelector('button')?.focus();return true;}
+ function openContainer(store,id){const check=store.access(game.player,id);if(!check.ok){game.hud?.feed(check.reason);return false;}loot={store,id};if(dialog.open){device=false;render();return true;}if(!open()){loot=null;return false;}return true;}
  const key=e=>{if(e.code==='Escape'&&dialog.open){e.preventDefault();e.stopImmediatePropagation();close();return;}if(e.code==='KeyI'&&!e.repeat&&!['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)){e.preventDefault();e.stopImmediatePropagation();if(dialog.open)close();else open();}};window.addEventListener('keydown',key,true);
- const tick=setInterval(()=>{if(dialog.open&&(!game.running||game.matchOver||!owner?.alive||game.player!==owner))close();},200);
- return {open,close,render,get isOpen(){return dialog.open;},dispose(){close();clearInterval(tick);window.removeEventListener('keydown',key,true);dialog.remove();style.remove();}};
+ const tick=setInterval(()=>{if(dialog.open&&(!game.running||game.matchOver||!owner?.alive||game.player!==owner||loot&&!loot.store.access(owner,loot.id).ok))close();},200);
+ return {open,openContainer,close,render,get isOpen(){return dialog.open;},dispose(){close();clearInterval(tick);window.removeEventListener('keydown',key,true);dialog.remove();style.remove();}};
 }

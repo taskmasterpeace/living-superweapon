@@ -1,0 +1,33 @@
+import {chromium} from 'playwright';
+import {mkdir,writeFile} from 'node:fs/promises';
+const out='artifacts/highwall';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:false});
+const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];
+page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR',e.message);});
+try{
+ await page.goto('http://127.0.0.1:5193/powerworld.html');
+ console.log('Booted');
+ await page.waitForTimeout(3000);await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'HIGHWALL proving ground'}).click({timeout:90000});
+ await page.waitForFunction(()=>window.PW?.game?._highwall?.units.length===8,{},{timeout:60000});
+ await page.waitForTimeout(2500);
+ const read=()=>page.evaluate(()=>{const g=window.PW.game,h=g._highwall;return {preset:h.preset,started:h.started,time:g.time,solids:g.world.cover.length,scene:g.scene.children.length,units:h.units.map(f=>({id:f.def.id,team:f.team,hp:f.hp,pos:f.pos.toArray(),role:f.def.combatRole,loadout:f.def.loadoutId,appearance:f.def.appearanceId,model:f.def.modularRecipe?.body,route:f._highwallRoute})),tank:h.tank?{id:h.tank.id,pos:h.tank.pos}:null};});
+ const report={ready:await read()};
+ await page.screenshot({path:out+'/corridor-ready.png'});
+ await page.getByRole('button',{name:'Start combat',exact:true}).click();
+ await page.waitForTimeout(12000);report.live=await read();
+ await page.screenshot({path:out+'/corridor-live.png'});
+ await page.getByRole('button',{name:'Reset',exact:true}).click();
+ await page.waitForTimeout(1000);report.reset=await read();
+ await page.getByLabel('Highwall scenario').selectOption('vehicle');
+ await page.waitForFunction(()=>window.PW.game._highwall.tank?.ready,{},{timeout:60000});
+ report.vehicle=await read();await page.screenshot({path:out+'/vehicle-ready.png'});
+ await page.keyboard.press('j');await page.waitForTimeout(400);
+ report.boarded=await page.evaluate(()=>!!window.PW.game._fleetPilot?.active);
+ await page.keyboard.down('w');await page.waitForTimeout(1500);await page.keyboard.up('w');
+ report.vehicleAfterDrive=await read();await page.screenshot({path:out+'/vehicle-drive.png'});
+ await page.getByLabel('Highwall scenario').selectOption('intercept');
+ await page.waitForTimeout(1200);report.intercept=await read();await page.screenshot({path:out+'/intercept.png'});
+ report.errors=errors;
+ await writeFile(out+'/result.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}finally{await browser.close();}

@@ -153,6 +153,15 @@ export class AI {
     // threat / easiest / random) — but it only ever chooses among foes this bot can ACTUALLY SEE,
     // so a "goes for the weakest" fighter still cannot know who is weakest through a wall.
     let real = (game.player && game.isFoe(b, game.player) && game.player.alive) ? game.player : game.nearestFoe(b, b.pos, 500);
+    if(b._highwallUnit){
+      // A mixed battle must not ignore an observed nearby foe solely because the
+      // player (possibly hidden) was first in the historical target preference.
+      const visible=game.entities.filter(e=>e!==b&&e.alive&&game.isFoe(b,e)&&(e._vis??1)>.4).filter(e=>{
+        const dx=e.pos.x-b.pos.x,dz=e.pos.z-b.pos.z,d=Math.hypot(dx,dz)||1;
+        return b.blindT<=0&&(d<this.seeNear||d<this.seeRange&&(dx*b.aim.x+dz*b.aim.z)/d>this.seeCos)&&game.canSee(b,e);
+      });
+      if(visible.length)real=visible.reduce((a,e)=>b.pos.distanceToSquared(e.pos)<b.pos.distanceToSquared(a.pos)?e:a);
+    }
     if (b._psyche) {
       const seen = game.entities.filter(e => e.alive && e.def && !e.isDummy && game.isFoe(b, e)
         && (e._vis == null || e._vis > 0.4) && Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z) < 500);
@@ -184,6 +193,7 @@ export class AI {
       // (This branch used to fall back to `real.pos`, the live truth, which is why bots felt
       // omniscient: one that had never seen you would still walk straight at you.)
       const goal = this._searchGoal(game, dt);
+      out.navigationGoal={x:goal.x,z:goal.z};
       const hx = goal.x - b.pos.x, hz = goal.z - b.pos.z, hd = Math.hypot(hx, hz) || 1;
       let mx = hx / hd, mz = hz / hd;
       // 1:1-scale city: tall blocks can wedge a bot against a wall — FLANK when progress stalls

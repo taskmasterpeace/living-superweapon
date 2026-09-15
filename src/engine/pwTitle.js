@@ -236,6 +236,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
         <button id="pwNewsroom" aria-label="Newsroom">▣ Newsroom</button>
         <button id="pwCampaign">Campaign records</button>
+        <button id="pwHighwall">HIGHWALL proving ground</button>
         <button id="pwRank">📊 Rankings</button>
         <button id="pwOpt">⚙ Options</button>
         <button id="pwHow">❓ How to Play</button>
@@ -306,6 +307,7 @@ body.phone #pwTitle h1{ font-size:34px; }
 
     footage.setHero(selYou.id);
     el.querySelector('#pwCampaign').onclick=()=>campaignPanel.open();
+    el.querySelector('#pwHighwall').onclick=async()=>{const {launchHighwall}=await import('./highwall.js');await launchHighwall(ctx.game);};
     el.querySelector('#pwFootage').appendChild(footage.el);
     // ---- the roster grid ----
     const grid = el.querySelector('#pwRoster');

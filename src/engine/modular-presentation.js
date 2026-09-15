@@ -1,12 +1,11 @@
-import {modularAsset,createModularActor} from './modular-character.js';
-import {applyModularRecipe,MODULAR_RECIPES,validateModularRecipe} from './modular-costume.js';
-import {readCharacterRecipe,createAuthoredParts} from './character-authoring.js';
+import {modularAsset,createModularActor,characterRecipeOf} from './modular-character.js';
+import {applyModularRecipe,MODULAR_RECIPES} from './modular-costume.js';
+import {createAuthoredParts} from './character-authoring.js';
 import {createSignatureParts} from './modular-signature-parts.js';
 import {createTailoring} from './modular-tailoring.js';
 import {createImagePlacements} from './modular-image-placements.js';
 export async function createModularPresentation(def){
- const c=createModularActor(await modularAsset());let recipe=MODULAR_RECIPES['roster-'+def.id]||MODULAR_RECIPES.base;
- try{const saved=readCharacterRecipe(def.id);if(saved)recipe=validateModularRecipe(saved);}catch(error){console.warn('Saved presentation ignored',error.message);}
+ const c=createModularActor(await modularAsset());const recipe=characterRecipeOf(def,{fallback:MODULAR_RECIPES.base});
  applyModularRecipe(c.meshes,recipe);c.pose('Idle_Loop',0);
  const signature=createSignatureParts(c.actor),tailoring=createTailoring(c.actor),images=createImagePlacements(c.actor),parts=createAuthoredParts(c.actor);
  signature.set(recipe);tailoring.set(recipe);images.set(recipe);if(recipe.authoredAsset)parts.set(recipe.authoredAsset);

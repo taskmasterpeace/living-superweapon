@@ -9,6 +9,7 @@ export function playerStatus(p){
  const add=(id,label,glyph,t)=>{if(t>0)effects.push({id,label,glyph,remaining:Math.ceil(t)});};
  const condition=(id,label,glyph,t,hint,precision=1)=>{if(t>0)effects.push({id,label,glyph,remaining:Math.ceil(t*precision)/precision,hint,harmful:true});};
  const recovery=p.sheet?.ccRecover||1;
+ if(p._highwallInfection?.stage==='symptomatic')effects.push({id:'infection',label:'Infected',glyph:'threat',harmful:true,remaining:null,hint:'Highwall infection · contact transmitted'});
  condition('guard-break','Guard broken','defense',p.guardBreakT/recovery,'Guard unavailable · create distance',10);
  if(!(p.guardBreakT>0||p.sleepT>0||p.shockT>0||p.stunT>0||p.frozenT>0))condition('stagger','Staggered','threat',p.staggerT/recovery,'Recover before attacking');
  condition('sleep','Asleep','person',p.sleepT,'Damage wakes you');

@@ -1392,10 +1392,10 @@ export class World {
   freeLookInput(input,dt,sight=1){
     const state=this._freeLook||(this._freeLook=createFreeLook());
     advanceFreeLook(state,{held:input.down('AltLeft')||input.down('AltRight'),dx:input.mouse.dx/sight,dy:input.mouse.dy/sight,
-      dt,sensitivity:this._lookSens,cancelVersion:input.cancelVersion});
+      wheel:input.wheelFreeLook||0,dt,sensitivity:this._lookSens,cancelVersion:input.cancelVersion});
     return state.held;
   }
-  get freeLooking(){return !!(this._freeLook&&(this._freeLook.yaw||this._freeLook.pitch));}
+  get freeLooking(){return !!(this._freeLook&&(this._freeLook.latched||this._freeLook.yaw||this._freeLook.pitch||this._freeLook.zoom!==1));}
   combatAimDirection(out){
     return this.freeLooking&&this._combatAimDirection?out.copy(this._combatAimDirection):this.camera.getWorldDirection(out);
   }
@@ -1598,6 +1598,12 @@ export class World {
       if (!c || c.hidden || c.noCam === true) continue;
       const t = this.traceBox3(x0, y0, z0, x1, y1, z1, c, pad);
       if (t >= 0 && t < best) best = t;
+    }
+    // Decorative panels can obstruct a view without becoming weapon or movement cover.
+    for(const c of this.cameraObstacles||[]){
+      if(!c||c.hidden||c.noCam===true)continue;
+      const t=this.traceBox3(x0,y0,z0,x1,y1,z1,c,pad);
+      if(t>=0&&t<best)best=t;
     }
     const ints = this.interiors;
     if (ints) for (let i = 0; i < ints.length; i++) {
@@ -2674,10 +2680,18 @@ export class World {
       // Slide the camera toward the requested shoulder and toe it inward. This
       // holds the player and target in a rear three-quarter composition while
       // the captured combat ray above continues to own travel and attacks.
+      if(this._freeLook.orbit){
+        c.position.sub(a).applyAxisAngle(new THREE.Vector3(0,1,0),this._freeLook.yaw);
+        const radius=c.position.length(),flat=Math.hypot(c.position.x,c.position.z);
+        if(flat>1e-5){c.position.x*=Math.cos(this._freeLook.pitch)*radius/flat;c.position.z*=Math.cos(this._freeLook.pitch)*radius/flat;}
+        c.position.y=Math.sin(this._freeLook.pitch)*radius;c.position.add(a);
+      }else{
       const side=clamp(this._freeLook.yaw/FREE_LOOK_DEFAULTS.yawLimit,-1,1);
       const easedSide=Math.sin(Math.abs(side)*Math.PI*.5)*Math.sign(side);
       const sideShift=FREE_LOOK_DEFAULTS.sideShift*easedSide,backShift=FREE_LOOK_DEFAULTS.backShift*Math.abs(easedSide);
       c.position.x+=cy*sideShift-ax*backShift;c.position.y-=ay*backShift;c.position.z-=sy*sideShift+az*backShift;
+      }
+      c.position.sub(a).multiplyScalar(this._freeLook.zoom||1).add(a);
       // The normal boom was resolved before independent look. Sweep this
       // additional shoulder displacement too, including the near-plane pad.
       const eye=this._combatAimOrigin;
@@ -2685,10 +2699,11 @@ export class World {
       if(slideT<1)c.position.lerpVectors(eye,c.position,Math.max(0,slideT-1e-5));
       this.camPos.copy(c.position);
       const focus=this._freeLookFocus||(this._freeLookFocus=new THREE.Vector3());
-      if(target&&target.alive)focus.copy(a).lerp(target.center(this._combatFocus||(this._combatFocus=new THREE.Vector3())),FREE_LOOK_DEFAULTS.targetWeight);
+      if(this._freeLook.orbit)focus.copy(a);
+      else if(target&&target.alive)focus.copy(a).lerp(target.center(this._combatFocus||(this._combatFocus=new THREE.Vector3())),FREE_LOOK_DEFAULTS.targetWeight);
       else focus.copy(a).addScaledVector(aim,Math.max(12,range*.65));
-      focus.y+=Math.tan(this._freeLook.pitch)*Math.max(8,c.position.distanceTo(focus));
-      frameFreeLook(c,subject,focus);
+      if(!this._freeLook.orbit)focus.y+=Math.tan(this._freeLook.pitch)*Math.max(8,c.position.distanceTo(focus));
+      if(!this._freeLook.orbit&&this._freeLook.zoom===1)frameFreeLook(c,subject,focus);
       this.camTarget.copy(focus);c.lookAt(this.camTarget);
     }
     this._combatLocked=!!target;

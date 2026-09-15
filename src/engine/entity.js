@@ -1709,6 +1709,8 @@ export class Fighter {
 
   _updateKO(dt, game, {practice=false}={}) {
     this.koT += dt;
+    // Scenario-owned persistent casualties retain the native ragdoll; no respawn or decay.
+    if(this.persistCorpse&&this.noRespawn&&!practice)return;
     if (this.koT > (this.isDummy ? 2.2 : 3.4)) {
       if (this.noRespawn&&!practice) { this._remove = true; return; }   // survival/wave enemies stay dead
       // put the figure hierarchy back exactly, then respawn

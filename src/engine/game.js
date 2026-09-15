@@ -1602,12 +1602,12 @@ export class Game {
   updateVision(dt) {
     const p = this.player;
     const piloting = e => e._fleetVehicle || e._aircraftVehicle || e._scoutVehicle;   // the driver's body rides hidden — you see the vehicle, not them
-    if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e); } this.world.setFogEnabled(false); return; }
+    if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(true);
     const h2 = this.humans[1] && this.humans[1].fighter;
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
     for (const e of this.entities) {
-      if (e._banished) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
+      if (e._banished || e._highwallRetiredBody) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
       if (e._inert) { e.obj.visible = false; continue; }      // POSSESSED AWAY: the body is left behind, not here
       if (piloting(e)) { e._vis = 1; e.obj.visible = false; continue; }   // PILOTING a vehicle — known at the seat, but the body is not drawn
       if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
@@ -1941,6 +1941,7 @@ export class Game {
     this._simDeployGeneration = (this._simDeployGeneration || 0) + 1;
     clearScannerPanel(this);
     this.ms?.threatLab?.dispose();
+    this._highwall?.dispose();
     this.ms?.convoyOperation?.dispose();
     this.ms?.fieldResearch?.dispose();
     this.ms?.frontline?.dispose();
@@ -2152,7 +2153,7 @@ export class Game {
     // SWAP, DON'T STACK — dispose the previously printed vehicle (and dismount first)
     if (this._simVehicle) {
       const old = this._simVehicle;
-      if (this._fleetPilot?.actor === old) this._fleetPilot.exit();
+      if (this._fleetPilot?.actor === old) this._fleetPilot.exit({force:true});
       if (old.wrapper) { this.scene.remove(old.wrapper); old.wrapper.traverse(o => o.geometry?.dispose?.()); }
       const i = this._fleetActors ? this._fleetActors.indexOf(old) : -1; if (i >= 0) this._fleetActors.splice(i, 1);
       this._simVehicle = null;
@@ -2171,7 +2172,7 @@ export class Game {
     }
     if (a) this._simVehicle = a;
     this._simActive = true;
-    if(a?.cls==='fixedwing')this._fleetPilot.enter(a,this.player);
+    if(a?.cls==='fixedwing'){this.player.pos.copy(a.pos);this._fleetPilot.enter(a,this.player);}
     this.hud?.feed?.(`SIM · ${(a?.name || id).toUpperCase()} PRINTED — J board · ${VEHICLE_SIM.menuKey.replace('Key', '')} swap · K octagon · P boxing`, '#7fe6ff');
     return a;
   }
@@ -2205,7 +2206,7 @@ export class Game {
   // vehicle, warps to the canvas; the per-frame check keeps flight off while inside the cage.
   simEnterRing() {
     if (!this._simActive || !this._simRing) return;
-    if (this._fleetPilot?.actor) this._fleetPilot.exit();
+    if (this._fleetPilot?.actor) this._fleetPilot.exit({force:true});
     const R = this._simRing, p = this.player;
     if (p) {
       p.pos.x = R.cx; p.pos.z = R.cz - 28; p.pos.y = R.top + 2;
@@ -2228,7 +2229,7 @@ export class Game {
   // clears it once they leave; teardown clears it too, so it never outlives the sim.
   simEnterBoxRing() {
     if (!this._simActive || !this._simBoxRing) return;
-    if (this._fleetPilot?.actor) this._fleetPilot.exit();
+    if (this._fleetPilot?.actor) this._fleetPilot.exit({force:true});
     const R = this._simBoxRing, p = this.player;
     if (p) {
       p.pos.x = R.cx; p.pos.z = R.cz - 12; p.pos.y = R.top + 2;
@@ -2907,6 +2908,7 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
+    if(this._highwall&&victim._highwallUnit){this._highwall.onKO(victim);return;}
 
     try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
     const practice=this.ms?.threatLab?.state==='preparing'&&this.ms.threatLab.meleeTrial;
@@ -3282,6 +3284,7 @@ export class Game {
   }
 
   onHit(target, amount, opts = {}, blocked = false, outcome = null) {
+    this._highwall?.infection.hit(target,amount,opts,blocked);
     this.ms?.threatLab?.meleeTrial?.hit(target,amount,opts,blocked,outcome);
     if(this.modeId==='powerworld')presentMaterialHit(this,target,amount,opts,blocked,outcome);
     confirmCombatOutcome(this,target,opts,outcome);
@@ -3790,7 +3793,7 @@ export class Game {
   }
 
   prepareCombatView(inputDt) {
-    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.()||this.inventoryPanel?.isOpen||this.powerPicker?.isOpen);
+    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.()||this.inventoryPanel?.isOpen||this.powerPicker?.isOpen||this._highwall?.devices?.focus||this._highwall?.devices?.isOpen);
     const active=combatLookActive(this),w=this.world;
     const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
     const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
@@ -3832,6 +3835,7 @@ export class Game {
     const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
     const chase=combatView(this)==='bfp';
     if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){resetMovementGears(p);p.moveDir={x:0,z:0};return;}
+    if(this._highwall&&inp.pressed('KeyE')&&this._highwall.interact(p)){inp.justPressed?.delete('KeyE');p.moveDir={x:0,z:0};return;}
     if(this.ms?.threatLab?.meleeTrial?.demo?.update(dt))return;
     if(this._pwStage?.transport?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
@@ -4260,6 +4264,7 @@ export class Game {
   }
 
   controlBot(f, dt) {
+    if(this._highwall&&!this._highwall.started){f.moveDir={x:0,z:0};return;}
     if(f._meleeTrial){f._meleeTrial.control(f,dt);return;}
     if(f._passengerTransport)return;
     // ⚠ MOOD CHANGES WHAT A BOT WANTS, NOT WHAT IT CAN DO. Anger pulls the preferred range in and
@@ -4314,6 +4319,7 @@ export class Game {
       }
       it.fly=f.flightTier>0&&(leader.pos.y>f.pos.y+8||leader.flying&&d>22);
     }
+    if(this._highwall&&f._highwallUnit)this._highwall.routeIntent(f,it,dt);
     const webTraversal=!deployment&&driveWebZipAI(f,it,this);
     const chargingLeap=!deployment&&!webTraversal&&driveTraversalLeapAI(f,it,this,dt);
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);

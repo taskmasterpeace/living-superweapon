@@ -81,7 +81,7 @@ export class Input {
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('wheel', (e) => {
-      const direction=Math.sign(e.deltaY);this.wheel+=direction;
+      const direction=Math.sign(e.deltaY);if(e.altKey||this.down('AltLeft')||this.down('AltRight')){this.wheelFreeLook=(this.wheelFreeLook||0)+direction;e.preventDefault();return;}this.wheel+=direction;
       if(this.independentCombat?this.down('Tab'):(this.mouse.right||(e.buttons&2)))this.wheelSecondary+=direction;else this.wheelPrimary+=direction;
       e.preventDefault();
     }, { passive: false });
@@ -96,7 +96,7 @@ export class Input {
       this.mouse.leftUp ||= this.mouse.left;this.mouse.rightUp ||= this.mouse.right;
       this.mouse.left=this.mouse.right=this.mouse.leftEdge=this.mouse.rightEdge=this.mouse.b3=this.mouse.b4=false;
       this.mouse.dx=this.mouse.dy=this.wheel=0;
-      this.wheelPrimary=this.wheelSecondary=0;
+      this.wheelPrimary=this.wheelSecondary=this.wheelFreeLook=0;
   }
 
   down(code) { return this.keys.has(code); }
@@ -113,7 +113,7 @@ export class Input {
     this.mouse.dx = 0;                 // the look delta is per-frame; consumed by world.mouseLook
     this.mouse.dy = 0;
     this.wheel = 0;
-    this.wheelPrimary=this.wheelSecondary=0;
+    this.wheelPrimary=this.wheelSecondary=this.wheelFreeLook=0;
     // ungated (left the chase view) but still captured → release, so the city gets its cursor back
     if (!this.pointerLock && this.mouse.locked && typeof document !== 'undefined' && document.exitPointerLock) document.exitPointerLock();
   }
