@@ -10,7 +10,8 @@ export const CAMERA_DEFAULTS = Object.freeze({
 export const MOTION_DEFAULTS = Object.freeze({ acceleration: 9, braking: 5.5, boostAcceleration: 7.5, groundSprint:1.65 });
 export const WAKE_DEFAULTS = Object.freeze({life:.62,width:.58,intensity:.92});
 export const SURFACE_WAKE_DEFAULTS=Object.freeze({intensity:.85,minSpeed:55,maxHeight:26,life:2.2});
-export const FLIGHT_STYLES = Object.freeze(['hero','twin','martial','thruster','hammer','glider']);
+export const CRUISE_STYLE_LABELS=Object.freeze({'cruise-sides':'Cruise: arms at sides','cruise-fists':'Cruise: both fists forward','cruise-palms':'Cruise: both open hands forward','cruise-one':'Cruise: one fist forward','cruise-bent':'Cruise: fists near shoulders'});
+export const FLIGHT_STYLES = Object.freeze(['hero','twin','martial','thruster','hammer','glider',...Object.keys(CRUISE_STYLE_LABELS)]);
 
 // Procedural authored targets informed by BFP's separate idle/forward/back clips and the
 // visible airborne silhouettes. Angles are radians in this rig, not recovered BFP joint data.
@@ -57,7 +58,15 @@ const GLIDER_POSES=family({
  forward:{armLx:.36,armRx:.36,armLz:.09,armRz:-.09,elbowL:.06,elbowR:.06,kneeL:.14,kneeR:.1,headPitch:-1.2},
  boost:{armLx:-2.8,armRx:.25,elbowL:.12,elbowR:.12,armLz:.1,armRz:-.14,kneeL:.2,kneeR:.12,headPitch:-1.2},
 });
+const cruise=(arms)=>family({forward:arms,boost:arms});
+const CRUISE_POSES={
+ 'cruise-sides':cruise({armLx:0,armRx:0,armLz:-.12,armRz:.12,elbowL:.08,elbowR:.08}),
+ 'cruise-fists':cruise({armLx:-2.94,armRx:-2.94,armLz:-.1,armRz:.1,elbowL:.1,elbowR:.1}),
+ 'cruise-palms':cruise({armLx:-2.94,armRx:-2.94,armLz:-.1,armRz:.1,elbowL:.1,elbowR:.1}),
+ 'cruise-one':cruise({armLx:0,armRx:-2.94,armLz:-.12,armRz:.1,elbowL:.12,elbowR:.1}),
+ 'cruise-bent':cruise({armLx:-1.45,armRx:-1.45,armLz:-.22,armRz:.22,elbowL:1.65,elbowR:1.65}),
+};
 // Distinct procedural motion families, never a claim of recovered film/game animation.
 export function poseDefaultsForStyle(style = 'martial') {
-  return ({hero:HERO_POSES,twin:TWIN_POSES,thruster:THRUSTER_POSES,hammer:HAMMER_POSES,glider:GLIDER_POSES})[style]||POSE_DEFAULTS;
+  return CRUISE_POSES[style]||({hero:HERO_POSES,twin:TWIN_POSES,thruster:THRUSTER_POSES,hammer:HAMMER_POSES,glider:GLIDER_POSES})[style]||POSE_DEFAULTS;
 }

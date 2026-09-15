@@ -7,7 +7,7 @@ import { usesFlightPose } from './jump-motion.js';
 import { ridingBoard } from './board-flight.js';
 
 const JOINTS = Object.keys(POSE_DEFAULTS.hover);
-const CRUISE_PITCH={hero:1.26,twin:1.3,martial:1.18,thruster:1.3,hammer:1.06,glider:1.36};
+const CRUISE_PITCH={'cruise-sides':1.26,'cruise-fists':1.26,'cruise-palms':1.26,'cruise-one':1.26,'cruise-bent':1.26,hero:1.26,twin:1.3,martial:1.18,thruster:1.3,hammer:1.06,glider:1.36};
 
 // Flight is a pose family, not a rotation on the idle cycle. Combat owns the hands;
 // velocity owns the torso; acceleration/release own the transitions between silhouettes.

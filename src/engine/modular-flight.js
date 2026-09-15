@@ -8,10 +8,14 @@ export function createModularFlightAdapter(actor,fighter){
  const bind=new Map(bones.map(b=>[b,{p:b.position.clone(),q:b.quaternion.clone(),s:b.scale.clone()}]));
  actor.updateMatrixWorld(true);
  const worldBind=new Map(bones.map(b=>[b,b.matrixWorld.clone()]));
+ // The model may attach asynchronously after flight already pitched/yawed its parent.
+ // Calibration describes the source rest frame, never the live actor heading.
+ const parentBindInverse=actor.parent?actor.parent.getWorldQuaternion(new T.Quaternion()).invert():new T.Quaternion();
  const p=fighter.parts,entries=[];
  const add=(name,driver,position,axis=null,region='body')=>{
   const bone=byName(name);if(!bone)return;
   const restQ=new T.Quaternion();worldBind.get(bone).decompose(new T.Vector3(),restQ,new T.Vector3());
+  restQ.premultiply(parentBindInverse);
   // Bone +Y is the authored longitudinal axis. Native limb meshes use -Y.
   const align=axis?new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0).applyQuaternion(restQ),axis):new T.Quaternion();
   entries.push({bone,driver,position,region,cal:align.multiply(restQ)});

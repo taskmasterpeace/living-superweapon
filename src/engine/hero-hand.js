@@ -108,6 +108,8 @@ export function animateHands(f,dt) {
     const barrier=f._openSky&&f.def.guardType==='barrier'&&!primary&&f.staggerT<=0&&!(f.frozenT>0)?(f.poseGuard||0):0;
     const cast=independent?channel:state;
     let open=hand.userData.gripOccupied?0:barrier>.01?barrier:casting?cast.weight*(1-.38*cast.gather):glide?(f._flyPose||0)*.92:0;
+    const cruiseHands=style?.startsWith('cruise-')&&f.airborne&&['forward','boost'].includes(f._flightPoseState)&&!f.grabbing&&!f.grabbedBy&&!f._carry&&!f._personThrowPose&&!f.mstate&&!f.guarding&&!(f.poseGuard>.01)&&!(f.poseGrab>.01)&&!(f.meleeCharge>0)&&!casting&&!(state?.weight>.01)&&!(f.stunT>0)&&!(f.staggerT>0)&&!(f.frozenT>0)&&!hand.userData.gripOccupied;
+    if(cruiseHands)open=style==='cruise-palms'?(f._flyPose||0)*.95:0;
     const variants=hand.geometry.palmVariants,wanted=casting&&!f.parts.skin&&!hand.userData.gripOccupied?1:0;
     if(variants&&hand.geometry!==variants[wanted]){
       // Change shape through the shared closed fist, never teleport open digits.

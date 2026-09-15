@@ -1,3 +1,4 @@
+import {CRUISE_STYLE_LABELS} from '../data/flight-tuning.js';
 import {LIMITS,validateProfile} from './studio-profile.js';
 import {formAt,unlockLevel} from '../data/progression.js';
 import {heroModelOf,HERO_BODY_LABELS} from '../data/hero-models.js';
@@ -5,7 +6,7 @@ import {heroModelOf,HERO_BODY_LABELS} from '../data/hero-models.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const frames={scale:'Scale',bulk:'Bulk',broad:'Shoulders',head:'Head',neck:'Neck',stance:'Stance'};
 const palettes=['primary','secondary','accent','skin','cape'];
-const languages={hero:'One-fist lead',twin:'Two-fist spearhead',martial:'BFP arms-back',thruster:'Repulsor stance',hammer:'Weapon-led flight',glider:'Relaxed glide'};
+const languages={...CRUISE_STYLE_LABELS,hero:'One-fist lead',twin:'Two-fist spearhead',martial:'BFP arms-back',thruster:'Repulsor stance',hammer:'Weapon-led flight',glider:'Relaxed glide'};
 
 export function editForm(profile,fields,previousLevel=null){
  const p=structuredClone(profile),level=String(fields.level);
