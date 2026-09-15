@@ -17,13 +17,24 @@ const clampDt = dt => Number.isFinite(dt) && dt > 0 ? Math.min(dt, .1) : 0;
 // Fresh per-class motion state (the fields each stepper reads/writes).
 export function initVehicleState(cls, yaw = 0) {
   const base = { yaw, vx: 0, vy: 0, vz: 0, rollSpin: 0, rollDir: 1 };
-  if (cls === 'fixedwing') return { ...base, speed: 0, roll: 0, pitch: 0, lever: 0, stalled: false };
+  if (cls === 'fixedwing') return { ...base, speed: 0, roll: 0, pitch: 0, lever: 0, stalled: false, gearDown: true, gearAmount: 1 };
   if (cls === 'rotor') return { ...base, spool: 1, tiltX: 0, tiltZ: 0, rockT: 0 };
   if (cls === 'tracked') return { ...base, speed: 0, turretYaw: 0, turretPitch: 0 };
   if (cls === 'mech') return { ...base, speed: 0, torsoYaw: 0, power: 1, strideT: 0 };
   if (cls === 'hover') return { ...base, speed: 0, lean: 0, bobT: 0 };
   if (cls === 'ship') return { ...base, speed: 0 };
   return { ...base, speed: 0, steerSmooth: 0, yawVel: 0, lean: 0, y: 0, air: false }; // wheeled
+}
+
+// An airborne practice spawn must start with matching thrust and airspeed.
+// A zero lever silently decelerated the old spawn below its lift threshold.
+export function initAirborneVehicleState(env, yaw = 0) {
+  const state = initVehicleState('fixedwing', yaw);
+  state.speed = Math.min(env.top, Math.max(env.top * .65, env.stall + env.liftRamp + 5));
+  state.lever = state.speed / env.top;
+  state.vx = Math.sin(yaw) * state.speed;
+  state.vz = Math.cos(yaw) * state.speed;
+  return state;
 }
 
 // The model's Euler pose (order 'YXZ') for a class from its motion state. rollSpin
@@ -67,6 +78,16 @@ function clear(world, x, z, y, r, actor) {
 export function driveActor(actor, intent, dt, world) {
   dt = clampDt(dt); if (!actor || !dt || !intent) return actor;
   const cls = actor.cls, m = actor.motion, e = actor.env, pos = actor.pos, off = actor.groundOffset || 0;
+  if (cls === 'fixedwing' && actor.parts?.landingGear?.length) {
+    // Protect against a held input toggling once per simulation frame, and do
+    // not retract the supports while the aircraft rests on the ground.
+    const onGround = pos.y <= heightAt(world, pos.x, pos.z) + off + .5;
+    if (intent.gearToggle && !m._gearToggleHeld && !onGround) m.gearDown = !(m.gearDown ?? true);
+    m._gearToggleHeld = !!intent.gearToggle;
+    const target = m.gearDown === false ? 0 : 1;
+    const amount = m.gearAmount ?? 1;
+    m.gearAmount = target > amount ? Math.min(target, amount + dt / 1.2) : Math.max(target, amount - dt / 1.2);
+  }
   const ground = AIR.has(cls) ? null : terrain(world, pos.x, pos.z, m.yaw || 0, actor.wheelbase || 8);
   const ctx = AIR.has(cls) ? {} : { grade: cls === 'ship' ? 0 : ground.grade, groundY: ground.groundY };
   stepVehicle(cls, m, intent, dt, e, ctx);

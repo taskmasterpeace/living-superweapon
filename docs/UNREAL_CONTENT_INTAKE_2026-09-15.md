@@ -80,3 +80,50 @@ For the first Unreal pilot, prepare an allowlisted Python script outside runtime
 Read repo AGENTS and the animation-authoring skill. That skill's War World `tests/rig.test.ts`, `tools/pose-ingest.ts`, `src/client/animation.ts`, and `src/client/models/weapons.ts` paths do not exist in this LSW checkout. Existing LSW seams include `tools/ingest-strikes.mjs`, `tools/lib/quaternius-source.mjs`, `tools/build-paid-motion-bank.mjs`, and `tools/audit-purchased-fbx.mjs`; this audit reused the latter's parser strategy without editing shared code.
 
 Before gameplay wiring: compare source and target at start/25/50/75/end, inspect loop wraps/one-shot exit, measure root ownership and support contacts, and review paired characters together. Keep procedural fallback. No parser success, filename, skeleton reference or single still grants motion approval.
+
+## Follow-up: actual Unreal export and class audit, 2026-09-15 06:34 UTC
+
+The initial section above is historical: **Unreal has now been launched successfully for a bounded export**. No source package save operation was called. The commandlet may update derived-data caches and logs. No paid FBX was copied into browser runtime.
+
+The live Content folder now contains **4,862 files**, up from 4,805 during the previous snapshot; Kung Fu V2 is among the new content. Unreal AssetRegistry reports **948 AnimSequence assets** across the project. That is NOT 948 unique combat moves: root-motion/in-place alternatives, UE4/UE5 variants, demo locomotion and corrective bone animations are included. The table below separates those where verified by names.
+
+| Pack | Confirmed content | What it can supply | Current integration stage |
+|---|---|---|---|
+| CloseCombat | 99 AnimSequence: 92 action/locomotion variants + 7 demo clips | Jab, cross, hook, uppercut, kicks, blocks, directional body reactions | 46 source FBXs extracted previously; no newly approved gameplay assignment |
+| Suplex | 40 AnimSequence: 12 intended actions + 28 mannequin corrective clips | Five paired sequence stages and two getups | **Four actual FBXs exported and parsed this pass** |
+| JKMotion Knockdown | 80 AnimSequence: 52 directional UE4/UE5 knockdowns + 28 corrective clips | Front/back/side falls | Unreal-only, not newly wired |
+| Creature | 61 AnimSequence | Creature locomotion, attack and reaction source; mannequin skeleton | Unreal-only; quadruped compatibility unproved |
+| Kickboxing V2 / Kung Fu V2 | 22 / 39 AnimSequence | Fighter styles, kicks, elbows and stances | Unreal-only; not newly wired |
+| Dual Sword | 38 AnimSequence + 10 montages | Six attacks, defenses, equip, movement, evades | Unreal-only; names verified, target contacts unreviewed |
+| Evil Magician | 9 AnimSequence | Three attacks, ranged cast, special, movement, death | Unreal-only; candidate for readable beam/casting poses |
+| Flips and Tricks | 40 AnimSequence; 40 archived FBX alternatives | Acrobatics, 20 IP/RM pairs in archive | Archive known; not newly wired |
+| Motion Capture Deaths | 292 AnimSequence | Broad death reactions, variants | Unreal-only plus known all-takes source archive |
+| Interaction Pack | **110 AnimSequence + 269 SoundWave + 269 SoundCue** | Prop interactions and associated audio | Registry confirmed; sounds/animations not exported or wired here |
+| Polygon Town | **779 StaticMesh**, 27 SkeletalMesh, 7 demo AnimSequence | Reusable streets/buildings/props | Unreal-only; mesh counts do not prove building interiors or game collision |
+| Polygon Prototype | **475 StaticMesh**, 15 SkeletalMesh, 7 demo AnimSequence | Proving-ground construction kit | Unreal-only; not imported into current proving ground |
+| All Explosions | **33 NiagaraSystem**, 9 StaticMesh | Reference for differentiated effects | Unreal graphs; not directly playable in Three.js |
+| Character Body FX | **16 NiagaraSystem**, 19 NiagaraEmitter, 7 AnimSequence | Body effects and supporting motion | Unreal-only; requires deliberate browser equivalent |
+| Appearance / Dissolve | 48 materials, 52 instances, 23 meshes | Spawn/disappear/transformation presentation | Unreal-only; materials do not transfer as functioning browser effects |
+
+Registry enumeration is stronger than counting files, but does not visually approve all assets. Full class totals and animation names are recorded in `tools/unreal-intake-2026-09-15/export-pilot/registry-audit.json`.
+
+### The four successful exports
+
+| Exact source clip | Unreal duration | Unreal frame count | Export result |
+|---|---:|---:|---|
+| a_suplex_single_p00 | 3.9000 s | 117 | 1,927,984 bytes; parsed |
+| a_suplex_single_p01 | 3.3667 s | 101 | 1,750,000 bytes; parsed |
+| a_liedown_getup_prone | 2.4667 s | 74 | 1,449,648 bytes; parsed |
+| a_LiedownGetup_Supine | 2.4333 s | 73 | 1,438,528 bytes; parsed |
+
+All four resolved to **AnimSequence**, with skeleton `/Game/SuplexAnimations/Demo/External/Characters/Mannequins/Meshes/SK_Mannequin.SK_Mannequin`. FBX parser found **89 bones**, one positive-duration finite clip per file, and no loader warnings. `AnimationLibrary.get_num_frames` supplied the frame counts; frame-count/duration implies approximately 30 frames/second. Initial direct frame-rate property probes were unavailable in this engine Python API; those errors are retained in the report rather than hidden.
+
+**Critical sync finding:** p00 and p01 do not have equal durations (117 versus 101 frames). Do not normalize both to the same progress and assume correct contact. Next work must inspect montage timing, paired roots, contact, release and recovery together. Participant roles have not yet been visually established. These four are export/parse successes, **not newly applied or visually approved gameplay animations**.
+
+Private files: `C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-suplex-pilot`. Reproducible allowlisted Python scripts, SHA-256 manifest, metadata and parser report are copied into the repository's `tools/unreal-intake-2026-09-15/export-pilot/`; FBX payloads stay private. Command used installed UE 5.6.1, `-run=pythonscript -unattended -nop4 -nosplash -nullrhi -EnablePlugins=PythonScriptPlugin`. Four export tasks returned true without export errors. No bulk animation export ran.
+
+### What the earlier animation effort actually produced
+
+The browser bank `public/models/modular-hero/paid-motion-bank.json` still contains **22 retargeted entries**, all explicitly `retargeted-unreviewed`: 6 aerial interaction participant clips, 8 pickup/carry/lift clips, 2 back-throw participant clips, 2 getups, and 4 boxer clips. That work produced converted motion data and preview candidates. It did not mean all the newly supplied Unreal packs had been exported or applied. This pass adds four usable FBX sources and an engine-class audit; it does not increase that 22-entry runtime bank. Gameplay activation and visual contact acceptance must be reported separately by the controller/motion integration work.
+
+Immediate recommendation: review the exported getups and paired timing, then replace one full gameplay sequence at a time. CloseCombat jab/cross are already extracted, so they need no Unreal wait. Keep broad effects/environment extraction behind the flight/grab/control fixes; the purchases already cover substantial near-term work.

@@ -1,0 +1,47 @@
+✔ actual boarding, held throttle, moving brake and exit emit recordings once per transition (3.911ms)
+✔ cold boarding stays silent; idle recovers on decode without replaying stale ignition (0.3071ms)
+✔ authored idle binding remains authoritative and global stop can recover one loop (0.3302ms)
+✔ idle cleans up on pause (0.1501ms)
+✔ idle cleans up on dispose (0.1396ms)
+✔ idle cleans up on destroy (0.0907ms)
+✔ idle cleans up on death (0.0978ms)
+✔ idle cleans up on transfer (0.0951ms)
+✔ idle cleans up on missing-occupant (0.0882ms)
+✔ tracked never acquires car recordings (0.1556ms)
+✔ rotor never acquires car recordings (1.0211ms)
+✔ fixedwing never acquires car recordings (0.103ms)
+✔ mech never acquires car recordings (0.0502ms)
+✔ hover never acquires car recordings (0.0319ms)
+✔ ship never acquires car recordings (0.0327ms)
+✔ explicit placeholder choice reaches SoundLibrary and audio errors never interrupt driving (0.4059ms)
+✔ vehicle practice blocks spawn and hero selection shortcuts but retains exit and flight keys (0.7706ms)
+✔ repeated helicopter steering never rolls; descent and gear controls are explicit (0.2864ms)
+(node:7464) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pending GLB cannot spawn after actual clearTransients (1.3296ms)
+✔ catalog response cannot restart proving ground after reset (0.4767ms)
+✔ newer deployment wins even when older GLB resolves last (1.2074ms)
+✔ PowerWorld Threat Room enters practice desert before building proving ground (0.4269ms)
+✔ deleting one instance never disposes cached or other-instance geometry (0.5116ms)
+✔ shipped mech has four bound leg chains that move and return to authored rest (5.2535ms)
+✔ all fixed-wing practice envelopes sustain hands-off level flight after airborne start (6.8166ms)
+✔ shipped jet struts retract progressively, held gear input toggles once, ground retraction blocked (2.1453ms)
+✔ board with J, hide the driver, then exit with J restores (1.1308ms)
+✔ _nearest skips un-ready and occupied actors (0.1143ms)
+✔ drive a tracked (tank) through the fleet pilot: it moves, driver rides along (1.9074ms)
+✔ drive a wheeled (humvee) through the fleet pilot: it moves, driver rides along (2.0832ms)
+✔ drive a ship (aircraft-carrier) through the fleet pilot: it moves, driver rides along (0.89ms)
+✔ drive a fixedwing (jet-a) through the fleet pilot: it moves, driver rides along (1.1544ms)
+✔ drive a rotor (helicopter) through the fleet pilot: it moves, driver rides along (1.2332ms)
+✔ fleetIntent maps each class to the right stepper fields (0.119ms)
+✔ every class returns a finite range/height/fov boom (0.5422ms)
+✔ a giant pulls the camera way back — the carrier is not framed like a bike (0.097ms)
+✔ a normal vehicle uses its class boom, not a blown-up one (0.0678ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 310.3917

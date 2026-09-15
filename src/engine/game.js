@@ -25,7 +25,7 @@ import {meleeApproach} from '../data/melee-approaches.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FleetPilot} from './fleet-pilot.js';
 import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
-import {initVehicleState} from './vehicle-pilot.js';
+import {initVehicleState,initAirborneVehicleState} from './vehicle-pilot.js';
 import {bindVehicleParts} from './vehicle-rig.js';
 import {sculptSimArena, restoreSimArena, bayPos, buildSimWalls, buildSimWater, buildSimSkyRings, buildSimRing, buildSimBoxRing, buildSimMaze, buildSimDefenses, buildSimGate, buildSimDesert, clearSimObstructions, teardownSimProps, SKY_RING_R, SIM as VEHICLE_SIM, AA as SIM_AA} from './vehicle-sim.js';
 import {snapshotHeroSkins} from './hero-skin.js';
@@ -2152,6 +2152,7 @@ export class Game {
     }
     if (a) this._simVehicle = a;
     this._simActive = true;
+    if(a?.cls==='fixedwing')this._fleetPilot.enter(a,this.player);
     this.hud?.feed?.(`SIM · ${(a?.name || id).toUpperCase()} PRINTED — J board · ${VEHICLE_SIM.menuKey.replace('Key', '')} swap · K octagon · P boxing`, '#7fe6ff');
     return a;
   }
@@ -2272,7 +2273,8 @@ export class Game {
       ready: true, occupant: null,
     };
     if (cls === 'fixedwing') {   // a plane boards INTO flight — a heavy transport can't taxi out of a spire field, and a fly-game jet is airborne, not parked (a deck launch is its own future mode that ground-starts on purpose)
-      const alt = gy + 40; actor.pos.y = alt; actor.motion.speed = (actor.env?.top || 100) * .55;
+      const alt = gy + 160; actor.pos.y = alt;
+      actor.motion = initAirborneVehicleState(actor.env,actor.motion.yaw);
     }
     wrapper.position.set(actor.pos.x, actor.pos.y, actor.pos.z);
     actor.parts = bindVehicleParts(model);   // turret/rotor/wheels/control surfaces, driven each frame by rigParts
@@ -3793,10 +3795,10 @@ export class Game {
     const padLook=this.pad?.active&&this.pad.viewFreeLook;
     const pixels=2.4*Math.max(0,Math.min(.05,inputDt||0))/(w._lookSens||.0024);
     const lookInput=padLook?{...this.input,down:code=>code==='AltLeft'||this.input.down(code),mouse:{...this.input.mouse,dx:this.input.mouse.dx+this.pad.rx*pixels,dy:this.input.mouse.dy+this.pad.ry*pixels}}:this.input;
-    if(!w.freeLookInput(lookInput,inputDt,sight))w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
+    if(!w.freeLookInput(lookInput,inputDt,sight)&&!this.player?._fleetVehicle)w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
     // Native deadzone-normalized stick values; 2.4 radians/s at full throw.
     // Convert to existing mouse-look units so pitch limits/inversion stay shared.
-    if(this.pad?.active&&!padLook){
+    if(this.pad?.active&&!padLook&&!this.player?._fleetVehicle){
       w.mouseLook(this.pad.rx*pixels/sight,this.pad.ry*pixels/sight);
     }
     w.chase(this.player,this.hardLock,0,'bfp');

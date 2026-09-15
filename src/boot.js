@@ -17,6 +17,7 @@
 // different gets its own front door module; the shared part is the engine, not the chrome.
 import * as THREE from 'three';
 import { Input } from './core/input.js';
+import {suppressFleetShortcut} from './engine/fleet-controls.js';
 import {toggleMeleeMode} from './core/melee-mode.js';
 import {soldierControlsActive} from './core/soldier-controls.js';
 import {retireOpeningClips} from './engine/broadcast-frames.js';
@@ -521,6 +522,7 @@ export function boot(P = PROFILE_FULL) {
     // (7) "/" jumps to the roster search instead of reaching for the mouse
     if (e.key === '/' && hud.titleOpen) { const q = document.querySelector('#fQ'); if (q) { e.preventDefault(); q.focus(); q.select(); return; } }
     if (!started) return;
+    if(suppressFleetShortcut(game,e.code)){e.preventDefault();return;}
     if(e.code==='Tab'&&game.modeId==='powerworld'&&!hud.titleOpen){
       if(e.altKey||hud.overlayOpen())return;
       e.preventDefault();

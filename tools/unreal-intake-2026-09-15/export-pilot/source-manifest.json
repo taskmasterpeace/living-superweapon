@@ -1,0 +1,29 @@
+{
+  "packs": [
+    {
+      "files": [
+        {
+          "path": "C:\\Users\\taskm\\Documents\\PowerWorldAssets\\animations\\2026-09-15-suplex-pilot\\a_liedown_getup_prone.fbx",
+          "sha256": "adca38b8cde320080c8496c2682d906c5ab4c4d8963aeaffa768670128e06664",
+          "bytes": 1449648
+        },
+        {
+          "path": "C:\\Users\\taskm\\Documents\\PowerWorldAssets\\animations\\2026-09-15-suplex-pilot\\a_LiedownGetup_Supine.fbx",
+          "sha256": "1e5f7df0464232aea8f1be34cb5c6bea18924cdaa7c9f61f76ad95876100e1d6",
+          "bytes": 1438528
+        },
+        {
+          "path": "C:\\Users\\taskm\\Documents\\PowerWorldAssets\\animations\\2026-09-15-suplex-pilot\\a_suplex_single_p00.fbx",
+          "sha256": "721c436fff2e4c6e415fd0370dc34c726a393c011ad124ccc33d61c255ef653b",
+          "bytes": 1927984
+        },
+        {
+          "path": "C:\\Users\\taskm\\Documents\\PowerWorldAssets\\animations\\2026-09-15-suplex-pilot\\a_suplex_single_p01.fbx",
+          "sha256": "2394cfb0a59eba04e58b744139f7e59178f946fee316fa814498b122556f2200",
+          "bytes": 1750000
+        }
+      ],
+      "id": "suplex-unreal-pilot"
+    }
+  ]
+}

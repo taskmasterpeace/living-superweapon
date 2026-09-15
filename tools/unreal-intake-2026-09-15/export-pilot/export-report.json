@@ -1,0 +1,65 @@
+{
+  "source_saved": false,
+  "results": [
+    {
+      "name": "a_suplex_single_p00",
+      "asset": "/Game/SuplexAnimations/AnimSequence/a_suplex_single_p00",
+      "class": "AnimSequence",
+      "skeleton": "/Game/SuplexAnimations/Demo/External/Characters/Mannequins/Meshes/SK_Mannequin.SK_Mannequin",
+      "duration": 3.9000000953674316,
+      "rate_error": "AnimSequence: Failed to find property 'target_frame_rate' for attribute 'target_frame_rate' on 'AnimSequence'",
+      "sampled_keys_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_keys'",
+      "sampled_frames_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_frames'",
+      "export_success": true,
+      "export_errors": [],
+      "bytes": 1927984,
+      "num_frames": 117,
+      "sampling_frame_rate_error": "AnimSequence: Failed to find property 'sampling_frame_rate' for attribute 'sampling_frame_rate' on 'AnimSequence'"
+    },
+    {
+      "name": "a_suplex_single_p01",
+      "asset": "/Game/SuplexAnimations/AnimSequence/a_suplex_single_p01",
+      "class": "AnimSequence",
+      "skeleton": "/Game/SuplexAnimations/Demo/External/Characters/Mannequins/Meshes/SK_Mannequin.SK_Mannequin",
+      "duration": 3.366666555404663,
+      "rate_error": "AnimSequence: Failed to find property 'target_frame_rate' for attribute 'target_frame_rate' on 'AnimSequence'",
+      "sampled_keys_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_keys'",
+      "sampled_frames_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_frames'",
+      "export_success": true,
+      "export_errors": [],
+      "bytes": 1750000,
+      "num_frames": 101,
+      "sampling_frame_rate_error": "AnimSequence: Failed to find property 'sampling_frame_rate' for attribute 'sampling_frame_rate' on 'AnimSequence'"
+    },
+    {
+      "name": "a_liedown_getup_prone",
+      "asset": "/Game/SuplexAnimations/AnimSequence/a_liedown_getup_prone",
+      "class": "AnimSequence",
+      "skeleton": "/Game/SuplexAnimations/Demo/External/Characters/Mannequins/Meshes/SK_Mannequin.SK_Mannequin",
+      "duration": 2.4666666984558105,
+      "rate_error": "AnimSequence: Failed to find property 'target_frame_rate' for attribute 'target_frame_rate' on 'AnimSequence'",
+      "sampled_keys_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_keys'",
+      "sampled_frames_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_frames'",
+      "export_success": true,
+      "export_errors": [],
+      "bytes": 1449648,
+      "num_frames": 74,
+      "sampling_frame_rate_error": "AnimSequence: Failed to find property 'sampling_frame_rate' for attribute 'sampling_frame_rate' on 'AnimSequence'"
+    },
+    {
+      "name": "a_LiedownGetup_Supine",
+      "asset": "/Game/SuplexAnimations/AnimSequence/a_LiedownGetup_Supine",
+      "class": "AnimSequence",
+      "skeleton": "/Game/SuplexAnimations/Demo/External/Characters/Mannequins/Meshes/SK_Mannequin.SK_Mannequin",
+      "duration": 2.433333396911621,
+      "rate_error": "AnimSequence: Failed to find property 'target_frame_rate' for attribute 'target_frame_rate' on 'AnimSequence'",
+      "sampled_keys_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_keys'",
+      "sampled_frames_error": "'AnimSequence' object has no attribute 'get_number_of_sampled_frames'",
+      "export_success": true,
+      "export_errors": [],
+      "bytes": 1438528,
+      "num_frames": 73,
+      "sampling_frame_rate_error": "AnimSequence: Failed to find property 'sampling_frame_rate' for attribute 'sampling_frame_rate' on 'AnimSequence'"
+    }
+  ]
+}
