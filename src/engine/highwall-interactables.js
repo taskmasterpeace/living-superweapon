@@ -11,6 +11,43 @@ export function doorOccupied(door,actors){
 }
 export function canOperateHighwallDevice(f){return !!(f?.alive&&!f.frozenT&&!(f.stunT>0)&&!(f.sleepT>0)&&!(f.launchT>0)&&!f.grabbing&&!f._fleetVehicle&&!f._aircraftVehicle&&!f.grabbedBy&&!f._carry&&!f._personCarry&&!f._vehicle&&!f.vehicle&&!(f.staggerT>0)&&!(f.downedT>0));}
 
+// A common mounted appliance envelope, in the game's 0.19-metre world units.
+// No matching terminal exists in the restored facility catalog. This housing is
+// newly authored; both live and archived video use its actual inset display.
+export const HIGHWALL_TERMINAL = Object.freeze({width:8,height:10,depth:5.2,screenWidth:6.4,screenHeight:3.6,screenCenterY:7.25});
+export function buildHighwallTerminal({map=null,speaker=false}={}){
+ const group=new THREE.Group();group.name=speaker?'Highwall / audio terminal':'Highwall / screen terminal';
+ const materials={ivory:new THREE.MeshStandardMaterial({color:0xc6c6b4,roughness:.86,flatShading:true}),dark:new THREE.MeshStandardMaterial({color:0x2c3330,roughness:.9,flatShading:true}),red:new THREE.MeshStandardMaterial({color:0x8e2f2b,roughness:.8}),keys:new THREE.MeshStandardMaterial({color:0x777f73,roughness:.8})};
+ const box=(name,w,h,d,x,y,z,material=materials.dark)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.name=name;mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;};
+ box('anchored plinth',7.2,.65,5.2,0,.325,0);
+ box('service cabinet',5.7,4.15,3.25,0,2.725,-.35,materials.ivory);
+ box('left reinforced cheek',.65,4.5,3.65,-3.05,2.65,-.35);
+ box('right reinforced cheek',.65,4.5,3.65,3.05,2.65,-.35);
+ box('inset red identification strip',3.7,.36,.09,0,3.25,1.32,materials.red);
+ box('control shelf',7.5,.5,3.7,0,4.95,.5);
+ box('screen cabinet',8,4.8,1.55,0,7.45,-.5,materials.ivory);
+ box('top protective cap',8,.45,2,0,9.775,-.4);
+ box('recess backplate',7.1,4.1,.12,0,7.25,.335);
+ // Four solid bezel lips protrude beyond the luminous plane; the image is
+ // genuinely recessed, not a double-sided plane floating ahead of the box.
+ box('left screen bezel',.33,4.1,.42,-3.385,7.25,.53);
+ box('right screen bezel',.33,4.1,.42,3.385,7.25,.53);
+ box('upper screen bezel',7.1,.25,.42,0,9.175,.53);
+ box('lower screen bezel',7.1,.25,.42,0,5.325,.53);
+ let face=null;
+ if(speaker){
+  for(let i=0;i<8;i++)box(`speaker grille ${i}`,6.4,.18,.16,0,5.76+i*.43,.48,materials.keys);
+ }else{
+  face=new THREE.Mesh(new THREE.PlaneGeometry(HIGHWALL_TERMINAL.screenWidth,HIGHWALL_TERMINAL.screenHeight),new THREE.MeshBasicMaterial({map,color:map?0xffffff:0x182923,side:THREE.FrontSide,toneMapped:false}));
+  face.name='inset 16:9 display';face.position.set(0,HIGHWALL_TERMINAL.screenCenterY,.415);group.add(face);
+ }
+ box('keyboard inset',5.5,.08,1.35,-.4,5.245,1.03);
+ for(let row=0;row<3;row++)for(let col=0;col<9;col++)box('key',.42,.085,.24,-2.65+col*.51,5.325,.57+row*.37,materials.keys);
+ box('status lamp',.55,.1,.35,3.04,5.25,1.0,materials.red);
+ group.userData.terminal={...HIGHWALL_TERMINAL,kind:speaker?'speaker':'display',front:'+Z'};
+ return {group,face};
+}
+
 export class HighwallInteractables {
  constructor(g,{door={x:-169,z:80,hx:35,hz:3,bottom:0,top:36},doorOpen=false,doorController=null,onDoorChange=()=>false,positions={},onNoise=null}={}){
   this.g=g;this.door=door;this.doorController=doorController;this.doorOpen=doorController?doorController.open:doorOpen;this.onDoorChange=doorController?open=>doorController.request(open):onDoorChange;this.onNoise=onNoise;this.elapsed=0;this.lastFeed=-1;this.lastNoise=-10;this.feedIndex=0;this.media=[];this.items=[];
@@ -20,13 +57,13 @@ export class HighwallInteractables {
   const add=(id,name,p,w=7,h=9,d=5)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),this.mat);mesh.position.set(p.x,(p.y||0)+h/2,p.z);this.group.add(mesh);const item={id,name,pos:new THREE.Vector3(p.x,p.y||0,p.z),mesh};this.items.push(item);return item;};
   // Two accessible control posts operate the same gate from either side.
   add('door','Service gate',{x:door.x,z:door.z+door.hz+9},3,5,2);add('door','Service gate',{x:door.x,z:door.z-door.hz-9},3,5,2);
-  this.monitor=add('monitor','LIVE / surveillance',positions.monitor||{x:-235,z:212});
   this.target=new THREE.WebGLRenderTarget(320,180,{depthBuffer:true});this.target.texture.colorSpace=THREE.SRGBColorSpace;
-  this.monitorFace=new THREE.Mesh(new THREE.PlaneGeometry(6.5,3.7),new THREE.MeshBasicMaterial({map:this.target.texture,side:THREE.DoubleSide}));this.monitorFace.position.copy(this.monitor.mesh.position).add(new THREE.Vector3(0,1,2.6));this.group.add(this.monitorFace);
+  const terminal=(id,name,p,options={})=>{const {group:mesh,face}=buildHighwallTerminal(options);mesh.position.set(p.x,p.y||0,p.z);this.group.add(mesh);const item={id,name,pos:mesh.position.clone(),mesh,face};this.items.push(item);return item;};
+  this.monitor=terminal('monitor','LIVE / surveillance',positions.monitor||{x:-235,z:212},{map:this.target.texture});this.monitorFace=this.monitor.face;
   const viewpoints=positions.cameras||[{x:-169,y:32,z:60,look:{x:-169,y:4,z:-50},name:'Junction'},{x:160,y:32,z:50,look:{x:240,y:4,z:-110},name:'Open field'}];
   this.cameras=viewpoints.slice(0,2).map((p,i)=>{const item=add(`camera-${i}`,`Camera / ${p.name}`,{x:p.x,z:p.z},4,4,5);item.mesh.position.y=p.y;const mast=new THREE.Mesh(new THREE.BoxGeometry(1,p.y,1),this.gold);mast.position.set(p.x,p.y/2,p.z);this.group.add(mast);item.pos.y=0;item.enabled=true;item.camera=new THREE.PerspectiveCamera(65,320/180,.5,1400);const look=new THREE.Vector3(p.look.x,p.look.y,p.look.z),direction=look.clone().sub(item.mesh.position).normalize();item.mesh.lookAt(look);item.camera.position.copy(item.mesh.position).addScaledVector(direction,4);item.camera.lookAt(look);return item;});
-  for(const def of HIGHWALL_MEDIA){const item=add(def.id,def.name,positions[def.id]||{x:def.id==='speaker'?-218:-200,z:212});const el=document.createElement(def.kind==='mp4'?'video':'audio');el.preload='metadata';el.loop=true;el.playsInline=true;el.src=def.url;item.def=def;item.el=el;item.state='stopped';item.volume=.8;item.serial=0;el.onerror=()=>{item.state='unavailable';this.message(`${def.name}: media unavailable`);};
-   if(def.kind==='mp4'){item.texture=new THREE.VideoTexture(el);item.texture.colorSpace=THREE.SRGBColorSpace;const face=new THREE.Mesh(new THREE.PlaneGeometry(6.5,3.7),new THREE.MeshBasicMaterial({map:item.texture,side:THREE.DoubleSide}));face.position.copy(item.mesh.position).add(new THREE.Vector3(0,1,2.6));this.group.add(face);}
+  for(const def of HIGHWALL_MEDIA){const item=terminal(def.id,def.name,positions[def.id]||{x:def.id==='speaker'?-218:-200,z:212},{speaker:def.kind!=='mp4'});const el=document.createElement(def.kind==='mp4'?'video':'audio');el.preload='metadata';el.loop=true;el.playsInline=true;el.src=def.url;item.def=def;item.el=el;item.state='stopped';item.volume=.8;item.serial=0;el.onerror=()=>{item.state='unavailable';this.message(`${def.name}: media unavailable`);};
+   if(def.kind==='mp4'){item.texture=new THREE.VideoTexture(el);item.texture.colorSpace=THREE.SRGBColorSpace;item.face.material.map=item.texture;item.face.material.color.set(0xffffff);item.face.material.needsUpdate=true;}
    this.media.push(item);
   }
   this.key=e=>{if(!this.focus)return;if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();this.closeMonitor();}else if(e.code==='KeyE'&&!e.repeat){e.preventDefault();e.stopImmediatePropagation();if(this.focus.kind==='monitor')this.cycleFeed();}};
@@ -83,7 +120,7 @@ export class HighwallInteractables {
  renderFeed(){const it=this.cameras[this.feedIndex],r=this.g.world.renderer;if(!r||!it)return;this.feedStatus&&(this.feedStatus.textContent=`${it.name} · ${it.enabled?'LIVE 320 × 180 / 8 Hz':'SIGNAL LOST'} · Operator remains vulnerable`);
   if(!it.enabled){this.monitorFace.material.map=null;this.monitorFace.material.color.set(0x151916);this.monitorFace.material.needsUpdate=true;if(this.feedCanvas){const c=this.feedCanvas.getContext('2d');c.fillStyle='#151916';c.fillRect(0,0,320,180);c.fillStyle='#e8c461';c.font='20px sans-serif';c.fillText('SIGNAL LOST',85,95);}return;}
   this.monitorFace.material.map=this.target.texture;this.monitorFace.material.color.set(0xffffff);this.monitorFace.material.needsUpdate=true;
-  const prior=r.getRenderTarget(),visible=this.monitorFace.visible,auto=r.shadowMap.autoUpdate;const actors=this.g.entities.map(f=>[f.obj,f.obj?.visible,!!f._highwallRetiredBody]);try{this.monitorFace.visible=false;r.shadowMap.autoUpdate=false;for(const [obj,,retired]of actors)if(obj)obj.visible=!retired;r.setRenderTarget(this.target);r.clear();r.render(this.g.scene,it.camera);if(this.feedCanvas){this.pixels??=new Uint8Array(320*180*4);r.readRenderTargetPixels(this.target,0,0,320,180,this.pixels);const c=this.feedCanvas.getContext('2d'),im=c.createImageData(320,180);for(let y=0;y<180;y++)im.data.set(this.pixels.subarray((179-y)*1280,(180-y)*1280),y*1280);c.putImageData(im,0,0);}}finally{r.setRenderTarget(prior);this.monitorFace.visible=visible;r.shadowMap.autoUpdate=auto;for(const [obj,v]of actors)if(obj)obj.visible=v;}
+  const sight=this.g.world.surfaceSight?.uniforms.wwSightOn,priorSight=sight?.value;const prior=r.getRenderTarget(),visible=this.monitorFace.visible,auto=r.shadowMap.autoUpdate;const actors=this.g.entities.map(f=>[f.obj,f.obj?.visible,!!f._highwallRetiredBody]);try{if(sight)sight.value=0;this.monitorFace.visible=false;r.shadowMap.autoUpdate=false;for(const [obj,,retired]of actors)if(obj)obj.visible=!retired;r.setRenderTarget(this.target);r.clear();r.render(this.g.scene,it.camera);if(this.feedCanvas){this.pixels??=new Uint8Array(320*180*4);r.readRenderTargetPixels(this.target,0,0,320,180,this.pixels);const c=this.feedCanvas.getContext('2d'),im=c.createImageData(320,180);for(let y=0;y<180;y++)im.data.set(this.pixels.subarray((179-y)*1280,(180-y)*1280),y*1280);c.putImageData(im,0,0);}}finally{if(sight)sight.value=priorSight;r.setRenderTarget(prior);this.monitorFace.visible=visible;r.shadowMap.autoUpdate=auto;for(const [obj,v]of actors)if(obj)obj.visible=v;}
  }
  tick(dt=1/60){if(this.disposed)return;this.elapsed+=Number.isFinite(dt)?Math.max(0,Math.min(dt,.25)):1/60;if(this.focus&&(!canOperateHighwallDevice(this.focus.owner)||this.focus.owner.hp<this.focus.hp||this.g.player!==this.focus.owner||!this.g.running||this.g.matchOver||this.focus.item.mesh.parent!==this.group||this.focus.owner.pos.distanceTo(this.focus.item.pos)>25||this.focus.owner.grabbedBy||this.focus.owner.frozenT>0))this.closeMonitor();
   if(this.doorController){this.doorController.tick(dt);this.doorOpen=this.doorController.open;}

@@ -1605,7 +1605,7 @@ export class Game {
     const p = this.player;
     const piloting = e => e._fleetVehicle || e._aircraftVehicle || e._scoutVehicle;   // the driver's body rides hidden — you see the vehicle, not them
     if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
-    this.world.setFogEnabled(true);
+    this.world.setFogEnabled(!this.world.surfaceSight);
     const h2 = this.humans[1] && this.humans[1].fighter;
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null, p.pos.y + 5);
     for (const e of this.entities) {
@@ -3801,7 +3801,7 @@ export class Game {
   }
 
   prepareCombatView(inputDt) {
-    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.()||this.inventoryPanel?.isOpen||this.powerPicker?.isOpen||this._highwall?.devices?.focus||this._highwall?.devices?.isOpen);
+    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.()||this.inventoryPanel?.isOpen||this.handheldDeviceView?.isOpen||this.powerPicker?.isOpen||this._highwall?.devices?.focus||this._highwall?.devices?.isOpen);
     const active=combatLookActive(this),w=this.world;
     const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
     const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
@@ -4792,6 +4792,7 @@ export class Game {
    * Priority: cinematic/map owner → one-player BFP view → legacy/shared fit.
    */
   cameraDrive(dt) {
+    if(this.handheldDeviceView?.frameCamera(dt))return;
     const view=combatView(this),active=combatLookActive(this);
     if(!active)clearForegroundVisibility(this.world);
     if(this.input)this.input.pointerLock=active;

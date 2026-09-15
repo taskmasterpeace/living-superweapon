@@ -1,0 +1,45 @@
+✔ cold approved one-shot is handled without a synth or stale replay (0.5375ms)
+✔ generic native gunshot selects approved M16 recording (0.191ms)
+✔ runtime SoundLibrary never falls back to oscillator for missing or cold recordings (0.3622ms)
+✔ cold charge and beam sustain do not create legacy oscillators (0.5266ms)
+(node:49172) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Highwall damage rewards cannot change character XP or tier (84.8556ms)
+✔ Highwall persistent LSW corpse remains knocked out after normal despawn deadline (37.7711ms)
+(node:46612) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ four Highwall stations use existing catalog models and safe real spawn/rig API (19.9146ms)
+✔ jet remains separate and its flight start retains airspeed and throttle (5.5468ms)
+✔ invalid station placement is rejected and removes only the new actor (4.9764ms)
+✔ known-height vehicles pass below roof slabs but cannot pass through low ceilings (1.6957ms)
+✔ measured helicopter cannot rise vertically through a shelter roof (1.2044ms)
+(node:45884) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native zombie contact drives Highwall exposure, not proximity (seed 20260911) (384.7731ms)
+✔ infection excludes blocked, zero damage, ranged, nonbiological and duplicate exposure (0.1779ms)
+✔ living symptoms never kill; death incubates 20s then turns for 1s once (0.1481ms)
+✔ living symptoms never kill; death incubates 6s then turns for 1s once (0.0711ms)
+✔ occupied reanimation space waits without duplicate turning events (0.133ms)
+✔ native infected human reanimation retains a hidden camera anchor and does not duplicate death loot (59.2ms)
+(node:4688) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ death drops owned weapon/ammo/gadget once, not a default duplicate, independently of corpse (128.7881ms)
+✔ player and AI share atomic capacity, state, distance and obstruction transfer rules (70.5446ms)
+✔ taking a gun stores it; innate characters still cannot equip, explicit storage ban preserves loot (46.3895ms)
+✔ compatible ammunition transfers once to a needy equipped AI and leaves the empty owned weapon (70.5053ms)
+✔ loot survives JSON save/resume with stable identities and no second death grant (40.1181ms)
+✔ inventory resume preserves held/stored ammo, cooldown and stowed hand claims (97.6525ms)
+✔ native ammo also persists and active deployed gadgets cannot produce a broken resume (58.1431ms)
+✔ spatial broadphase matches full scan across seeded endpoints, radii, roof heights and exact edges (502.0197ms)
+✔ indexed and full scan produce identical deterministic routes (12510.0521ms)
+✔ restored rifle preserves source art and maps actual grip/muzzle into native axes (42.6214ms)
+✔ restored pistol preserves source art and maps actual grip/muzzle into native axes (6.1032ms)
+✔ restored source cannot be mounted as a different weapon class (2.1617ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13111.7671

@@ -61,6 +61,10 @@ export function sweepFighterEnvironment(f,game,dt){
     const hit={t:Infinity,axis:null,normal:0,cover:null,terrain:false};
     if(!ghost)for(const c of world.cover||[]){
       if(c.destroyed)continue;
+      // Gravity can put feet a few hundredths below a supported top before this
+      // sweep. Crossing onto its coplanar neighbour is a landing, not a side hit.
+      // Keep the same .05u tolerance as buildingContact; this grants no step-up.
+      if(c.standable&&!f.flying&&!(f.launchT>0)&&f.vel.y<=2&&Math.abs(c.top-a.y)<=.05)continue;
       // The endpoint building-contact pass owns small authored step-ups.
       // Sweeping their vertical riser first would make an otherwise legal step a wall.
       if(c.buildingRole==='step'&&c.standable&&!f.flying&&!(f.launchT>0)&&f.vel.y<=2&&c.top-a.y>=0&&c.top-a.y<=2.5)continue;

@@ -15,6 +15,9 @@ export function restoreFreeLookHead(f){
 export function animateFreeLookHead(f){
  const p=f.parts,look=f._game?.world?._freeLook;
  if(!p?.head||!p.cowl||!look||f._game?.player!==f)return;
+ // Latched Alt orbit is a camera inspection mode, including its return blend.
+ // It must not redirect the character's gaze or weapon/vision direction.
+ if(look.orbit){restoreFreeLookHead(f);return;}
  const unavailable=f.state==='ko'||f.staggerT>0||f.stunT>0||f.frozenT>0||f.sleepT>0||f.downedT>0;
  const opticBusy=f._combatAim?.source==='face'&&f._combatAim.weight>.02;
  if(unavailable||opticBusy||Math.abs(look.yaw)+Math.abs(look.pitch)<1e-5)return;

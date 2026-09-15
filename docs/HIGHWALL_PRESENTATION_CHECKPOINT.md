@@ -1,5 +1,7 @@
 # Highwall presentation correction — 2026-09-15
 
+Later correction: see [the fortification and sight checkpoint](HIGHWALL_FORTIFICATION_CHECKPOINT.md) for the new module family, removal of the short Highwall sight radius, camera-only Alt orbit and demonstrated elevated stair routing. The text below records the earlier asset-restoration checkpoint.
+
 This is an integration checkpoint, **not final visual acceptance of the game**. The earlier checkpoint proved useful mechanics while presenting unfinished equipment and environment art. Feature expansion is paused; existing scenarios, doors, navigation, cameras, saves and faction rules are retained.
 
 ## Entry and recovered content

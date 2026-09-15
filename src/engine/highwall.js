@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {characterSees} from './character-sight.js';
+import {SurfaceSight} from './surface-sight.js';
 import {highwallLayout} from '../data/highwall.js';
 import {createSoldierFamilyDefinition,SOLDIER_PRESETS,soldierLoadout} from '../data/soldier-family.js';
 import {zombieDefinition} from '../data/zombie-encounter.js';
@@ -55,9 +56,10 @@ export class Highwall {
  constructor(g,preset,options){
   this.g=g;this.preset=preset;this.scenario=HIGHWALL_SCENARIOS[preset];this.options={...options};this.started=false;this.ready=true;this.units=[];this.infection=new HighwallInfection(this);
   this.layout=highwallLayout(options.layout);this.saved={};this.hidden=[];const w=g.world;
-  this.previousVision={fov:g.fov,characterVisibility:g.characterVisibility};
-  g.fov=true;g.characterVisibility=true;
-  for(const key of ['cover','coverAll','cameraObstacles','interiors','rocks','cars','planes','treeSpots','ARENA','heightAt','waterAt','_ghTriangles','crater','flattenGrass'])this.saved[key]=w[key];
+  this.previousVision={fov:g.fov,characterVisibility:g.characterVisibility,characterSightRange:g.characterSightRange};
+  g.fov=true;g.characterVisibility=true;g.characterSightRange=Infinity;
+  this.surfaceSight=new SurfaceSight(w,()=>({player:g.player,enabled:g.fov&&g.characterVisibility,range:w.camera.far,cos:g.visCos}));w.surfaceSight=this.surfaceSight;
+  for(const key of ['cover','coverAll','cameraObstacles','interiors','rocks','cars','planes','treeSpots','ARENA','heightAt','waterAt','_ghTriangles','crater','flattenGrass','groundNavigation'])this.saved[key]=w[key];
   for(const o of g.scene.children)if(!o.isLight&&!o.isPoints){this.hidden.push([o,o.visible]);o.visible=false;}
   this.background=g.scene.background;this.fog=g.scene.fog;
   g.scene.background=new THREE.Color(0xb4bcae);g.scene.fog=new THREE.FogExp2(0xb4bcae,.00045);
@@ -67,27 +69,32 @@ export class Highwall {
   g._bands0={...BANDS};BANDS.ceiling=Math.max(BANDS.ceiling,900);BANDS.sky=Math.max(BANDS.sky,420);
   this.rebuild(this.layout);
   this.loot=new HighwallLoot(g);
-  this.devices=new HighwallInteractables(g,{positions:{monitor:{x:220,y:10,z:230},speaker:{x:241,y:10,z:230},screen:{x:262,y:10,z:230}},door:this.layout.pieces.find(p=>p.id==='service-gate'),doorController:this.door,onNoise:(pos,loud)=>g.noise(pos,loud)});
+  this.devices=new HighwallInteractables(g,{positions:{monitor:{x:220,y:12,z:230},speaker:{x:241,y:12,z:230},screen:{x:262,y:12,z:230}},door:this.layout.pieces.find(p=>p.id==='service-gate'),doorController:this.door,onNoise:(pos,loud)=>g.noise(pos,loud)});
+  this.surfaceSight.attach(this.devices.group);
  }
  // Authored data is the only authoring surface. One rebuild replaces all three consumers.
  rebuild(layout){
   const group=buildHighwallGeometry({...layout,pieces:layout.pieces.filter(p=>p.id!=='service-gate')});
-  const solids=layout.pieces.map(p=>({...p,h:p.top,finiteBuilding:true,projectileShape:'box',buildingRole:p.kind==='step'?'step':undefined,standable:p.kind==='step'||p.kind==='deck'}));
+  const solids=layout.pieces.map(p=>({...p,h:p.top,finiteBuilding:true,projectileShape:'box',buildingRole:p.kind==='step'?'step':p.buildingRole,standable:p.standable||p.kind==='step'||p.kind==='deck'}));
   const nav=new HighwallNavigation({bounds:layout.bounds,solids,revision:layout.revision});
   if(this.units.some(f=>f.alive&&f.pos.y<3&&!nav.isClear(f.pos,{radius:Math.max(.5,(f.radius||2.2)-.01),height:12*(f.sizeScale||1)}))){
    group.userData.dispose();throw Error('Highwall rebuild overlaps an actor. Reset the scenario with the new placement data.');
   }
   this.group?.userData.dispose();this.group=group;this.layout=layout;this.nav=nav;
+  this.g.world.groundNavigation=nav;
   this.g.world.cover=solids;this.g.world.coverAll=solids;this.g.scene.add(group);
   this.g.world._fitFog?.({arena:350});this.g.world.refreshFogBoxes?.();
+  this.surfaceSight.replace(solids);this.surfaceSight.attach(group);
   // Decorative sign planes obstruct framing, but are not bulletproof walls.
   this.g.world.cameraObstacles=layout.signs.map(s=>({x:s.x,z:s.z,hx:s.w/2,hz:.15,bottom:s.y-s.w/8,top:s.y+s.w/8,h:s.y+s.w/8,finiteBuilding:true}));
   const gate=layout.pieces.find(p=>p.id==='service-gate'),open=this.door?.open||false;this.door?.dispose();this.door=null;
   if(gate)this.door=new HighwallDoor({scene:this.g.scene,box:gate,open,actors:()=>this.g.entities,onProgress:(_,__,collider)=>{
    const index=this.g.world.cover.findIndex(p=>p.id==='service-gate');if(index>=0)this.g.world.cover[index]=collider;
    this.g.world.refreshFogBoxes?.();
+   this.surfaceSight.replace(this.g.world.cover);
    this.nav.replace(this.g.world.cover,this.nav.revision+1);for(const f of this.units)delete f._highwallRoute;
   },onBlocked:message=>this.g.hud.feed(message)});
+  this.surfaceSight.attach(this.door?.group);
   if(this.devices)this.devices.doorController=this.door;
   for(const f of this.units)delete f._highwallRoute;
  }
@@ -127,7 +134,7 @@ export class Highwall {
   const i=this.units.indexOf(f),order=f._highwallOrder;
   let objective=f.def.zombieProfile?it.navigationGoal:{x:this.layout.objective.x+(i%3)*9,z:this.layout.objective.z+Math.floor(i/3)*9};
   if(order?.kind==='hold'){it.move={x:0,z:0};return it;}
-  if(order?.kind==='follow')objective={x:this.g.player.pos.x+(i%3-1)*12,z:this.g.player.pos.z+18};
+  if(order?.kind==='follow')objective={x:this.g.player.pos.x+(i%3-1)*12,y:this.g.player.pos.y,z:this.g.player.pos.z+18};
   if(order?.kind==='move')objective=order.point;
   return routeHighwallIntent(this.nav,f,it,dt,objective);
  }
@@ -137,7 +144,8 @@ export class Highwall {
   const allies=this.units.filter(f=>f.alive&&!f.human&&f.team===p.team&&f.def.family==='soldier');
   let point=null;
   if(kind==='move'){
-   point={x:g.aimPoint.x,z:g.aimPoint.z};
+   const aim=p.hasAimWorld?p.aimWorld:g.aimPoint;
+   point={x:aim.x,y:aim.y||0,z:aim.z};
    if(!this.nav.isClear(point,{radius:3,height:12})){g.hud.feed('Aim at a reachable patch of ground.');return;}
   }
   let assigned=0;
@@ -209,6 +217,7 @@ export class Highwall {
  dispose(){
   if(this.disposed)return;this.disposed=true;
   const g=this.g;this.panel?.remove();this.prompt?.remove();this.devices?.dispose();this.door?.dispose();this.loot?.dispose();this.group?.userData.dispose();
+  this.surfaceSight.dispose();if(g.world.surfaceSight===this.surfaceSight)g.world.surfaceSight=null;
   Object.assign(g.world,this.saved);Object.assign(g,this.previousVision);g.world._fitFog?.();g.world.refreshFogBoxes?.();g.scene.background=this.background;g.scene.fog=this.fog;
   for(const [o,v]of this.hidden)o.visible=v;
   g.peds=this.peds;g.police=this.police;if(g._highwall===this)g._highwall=null;

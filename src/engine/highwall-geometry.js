@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {HIGHWALL_MODULES as KIT} from '../data/highwall-modules.js';
+import {buildFortificationKit} from './fortification-kit.js';
 
 export function buildHighwallGeometry(layout,{labels=typeof document!=='undefined'}={}){
  const root=new THREE.Group();root.name='HIGHWALL / modular battlefield';
@@ -9,7 +10,7 @@ export function buildHighwallGeometry(layout,{labels=typeof document!=='undefine
  const batches=new Map();
  const box=(x,y,z,w,h,d,mat)=>{const geo=new THREE.BoxGeometry(w,h,d);geo.translate(x,y,z);if(!batches.has(mat))batches.set(mat,[]);batches.get(mat).push(geo);};
  box(0,-1.5,0,2300,3,2300,mats.floor);
- for(const p of layout.pieces){
+ for(const p of layout.modules?[]:layout.pieces){
   const w=p.hx*2,d=p.hz*2,h=p.top-p.bottom;
   const dressed=['wall','gate','tower','post','cover'].includes(p.kind);
   box(p.x,p.bottom+h/2,p.z,w-(dressed?.08:0),h-(dressed?.08:0),d-(dressed?.08:0),p.kind==='gate'?mats.steel:p.kind==='roof'?mats.cap:mats.concrete);
@@ -32,6 +33,7 @@ export function buildHighwallGeometry(layout,{labels=typeof document!=='undefine
  for(const[team,starts]of[[mats.blue,layout.blue],[mats.red,layout.red]])for(const p of starts){for(const side of[-1,1]){box(p.x+side*5,.08,p.z+5,2,.08,.45,team);box(p.x+side*5.8,.08,p.z+4,.45,.08,2,team);}}
  for(const z of[-160,80])for(const x of[-44,-32,-20,-8])box(x,.2,z,4,.16,2,mats.gold);
  for(const[mat,geos]of batches){const mesh=new THREE.Mesh(mergeGeometries(geos),mat);mesh.castShadow=mat!==mats.floor;mesh.receiveShadow=true;root.add(mesh);for(const geo of geos)geo.dispose();}
+ if(layout.modules)root.add(buildFortificationKit(layout.modules));
  if(labels)for(const sign of layout.signs){
   const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;const c=canvas.getContext('2d');
   c.fillStyle='#252e2d';c.fillRect(0,0,1024,256);c.fillStyle='#d9b54d';c.fillRect(0,0,1024,12);c.textAlign='center';c.font='700 72px Rajdhani, sans-serif';c.fillText(sign.text,512,116);c.fillStyle='#e8e2d6';c.font='500 32px Inter, sans-serif';c.fillText(sign.sub,512,185);

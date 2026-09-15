@@ -5,7 +5,7 @@ export function characterSees(game,viewer,target){
  if(viewer===target)return true;
  if(!viewer.alive||viewer.blindT>0)return false;
  const dx=target.pos.x-viewer.pos.x,dy=target.pos.y-viewer.pos.y,dz=target.pos.z-viewer.pos.z;
- const d=Math.hypot(dx,dy,dz),range=(game.visRange||96)*(viewer.sheet?.visMult||1);
+ const d=Math.hypot(dx,dy,dz),range=game.characterSightRange??((game.visRange||96)*(viewer.sheet?.visMult||1));
  if(d>range)return false;
  const a=viewer.aim3||{x:viewer.aim.x,y:0,z:viewer.aim.z};
  const forward=(dx*a.x+dy*(a.y||0)+dz*a.z)/Math.max(d,1e-6);

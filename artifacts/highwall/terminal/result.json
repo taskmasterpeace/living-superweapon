@@ -1,0 +1,63 @@
+{
+  "screenMapIsLiveTarget": true,
+  "sightUniformRestored": 1,
+  "screenParentIsHousing": true,
+  "terminals": [
+    {
+      "id": "monitor",
+      "base": [
+        -12,
+        0,
+        0
+      ],
+      "dimensions": {
+        "width": 8,
+        "height": 10,
+        "depth": 5.2,
+        "screenWidth": 6.4,
+        "screenHeight": 3.6,
+        "screenCenterY": 7.25,
+        "kind": "display",
+        "front": "+Z"
+      }
+    },
+    {
+      "id": "speaker",
+      "base": [
+        0,
+        0,
+        0
+      ],
+      "dimensions": {
+        "width": 8,
+        "height": 10,
+        "depth": 5.2,
+        "screenWidth": 6.4,
+        "screenHeight": 3.6,
+        "screenCenterY": 7.25,
+        "kind": "speaker",
+        "front": "+Z"
+      }
+    },
+    {
+      "id": "screen",
+      "base": [
+        12,
+        0,
+        0
+      ],
+      "dimensions": {
+        "width": 8,
+        "height": 10,
+        "depth": 5.2,
+        "screenWidth": 6.4,
+        "screenHeight": 3.6,
+        "screenCenterY": 7.25,
+        "kind": "display",
+        "front": "+Z"
+      }
+    }
+  ],
+  "scope": "Isolated terminal render and actual surveillance render target, not native bunker approach or audible approval",
+  "errors": []
+}

@@ -1,0 +1,11 @@
+import {chromium} from 'playwright';import {mkdir,writeFile} from 'node:fs/promises';
+const out='artifacts/fortification-kit/depth'+(process.argv[2]?'/'+process.argv[2]:'');await mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1600,height:1000}});
+await page.goto('http://127.0.0.1:5193/powerworld.html?highwall&scenario=corridor');await page.waitForFunction(()=>window.PW?.game?._highwall?.panel&&!document.querySelector('#highwall-loading'),null,{timeout:90000});
+await page.evaluate(()=>{const g=PW.game,w=g.world;g.fov=false;w.setFogEnabled(false);g.update=()=>{};w.surfaceSight.uniforms.wwSightOn.value=0;w.camera.fov=35;w.camera.position.set(570,570,730);w.camera.lookAt(0,0,0);w.camera.updateProjectionMatrix();w.camera.updateMatrixWorld(true);w.composer.render();});
+const snap=async name=>{await page.evaluate(()=>PW.game.world.composer.render());await page.screenshot({path:`${out}/${name}.png`});};
+await snap('baseline');
+const report=await page.evaluate(()=>{const w=PW.game.world;return {near:w.camera.near,far:w.camera.far,shadowMap:w.renderer.shadowMap.enabled}});
+await page.evaluate(()=>{const w=PW.game.world;w.renderer.shadowMap.enabled=false;w.scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});});await snap('without-shadows');
+await page.evaluate(()=>{const w=PW.game.world;w.renderer.shadowMap.enabled=true;w.scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});w.print.enabled=false;});await snap('without-print');
+await page.evaluate(()=>{const w=PW.game.world;w.camera.near=8;w.camera.updateProjectionMatrix();w.print.enabled=true;});await snap('near-eight');
+await writeFile(`${out}/result.json`,JSON.stringify(report));console.log(report);await browser.close();

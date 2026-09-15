@@ -2454,6 +2454,7 @@ export class World {
     }
     // Quality changes resize (and clear) the canvas. Finish them BEFORE drawing so
     // every presented frame contains the scene, including the transition frame.
+    this.surfaceSight?.render();
     this.composer.render();
     // ⚠ TICK AFTER THE RENDER, NEVER BEFORE. The impact frame is a ONE-FRAME uniform: ticking first
     // decrements it to zero and clears `uInvert` before the frame it belongs to is ever drawn, so

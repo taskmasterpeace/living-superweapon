@@ -23,6 +23,9 @@ export function mainCombatFixture({height=0,mode='freeroam',hero='sol'}={}) {
   renderer:{setPixelRatio:noop},composer:{setPixelRatio:noop,setSize:noop,passes:[]},bloom:{setSize:noop}});
  ortho.position.copy(w.camPos);ortho.lookAt(0,6,0);ortho.updateMatrixWorld(true);
  const combat=new StudioCombat(scene,w),g=combat.game;
+ // The native item path now uses recorded samples. This fixture has no audio
+ // output, so provide the same silent adapter contract as its other SFX calls.
+ g.audio={...g.audio,sample:noop};
  Object.setPrototypeOf(g,Game.prototype);
  const p=new Fighter(structuredClone(ROSTER.find(d=>d.id===hero)));
  p.pos.set(0,height,0);p.groundY=height;p.obj.position.copy(p.pos);p.gait='grounded';p._game=g;

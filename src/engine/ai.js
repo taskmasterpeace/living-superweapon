@@ -194,7 +194,7 @@ export class AI {
       // (This branch used to fall back to `real.pos`, the live truth, which is why bots felt
       // omniscient: one that had never seen you would still walk straight at you.)
       const goal = this._searchGoal(game, dt);
-      out.navigationGoal={x:goal.x,z:goal.z};
+      out.navigationGoal={x:goal.x,y:goal.y||0,z:goal.z};
       const hx = goal.x - b.pos.x, hz = goal.z - b.pos.z, hd = Math.hypot(hx, hz) || 1;
       let mx = hx / hd, mz = hz / hd;
       // 1:1-scale city: tall blocks can wedge a bot against a wall — FLANK when progress stalls
@@ -346,9 +346,14 @@ export class AI {
       const from = this.belief || b.pos;
       const spread = this.belief && this._searchT < 9 ? 55 : A * 0.7;   // search near the trail first, then wander
       const a = rand(0, Math.PI * 2), r = rand(spread * 0.35, spread);
-      const wx = Math.max(-A + 20, Math.min(A - 20, from.x + Math.cos(a) * r));
-      const wz = Math.max(-A + 20, Math.min(A - 20, from.z + Math.sin(a) * r));
-      this._patrol = { x: wx, z: wz, y: 0 };
+      const nav = !b.flying && game.world?.groundNavigation;
+      const margin = Math.max(.5, (b.radius || 2.2) + .6);
+      const domain = nav?.bounds || {minX:-A+20-margin,maxX:A-20+margin,minZ:-A+20-margin,maxZ:A-20+margin};
+      const wx = Math.max(domain.minX + margin, Math.min(domain.maxX - margin, from.x + Math.cos(a) * r));
+      const wz = Math.max(domain.minZ + margin, Math.min(domain.maxZ - margin, from.z + Math.sin(a) * r));
+      // A map may expose grounded routing independently of its open flight arena.
+      // This patrol request remains knowledge-based; routing resolves blocked points.
+      this._patrol = { x: wx, z: wz, y: nav ? b.pos.y || 0 : 0 };
     }
     this._patrolT -= dt;
     return this._patrol;

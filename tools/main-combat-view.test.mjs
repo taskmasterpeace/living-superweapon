@@ -163,8 +163,8 @@ for(const firstRelease of ['guard','item'])test(`L1 plus R3 keeps guard and cons
 
 test('native HUD separates compact chase presentation from city identity and retires it for overlays',()=>{
  const doc=globalThis.document,x=mainCombatFixture(),classes=new Set();
- globalThis.document={body:{classList:{toggle(k,on){if(on)classes.add(k);else classes.delete(k);},contains:k=>classes.has(k)}}};
- const hud=Object.create(HUD.prototype);hud.el={cross:{style:{},dataset:{}}};
+ globalThis.document={createElement:()=>({style:{},dataset:{}}),body:{classList:{toggle(k,on){if(on)classes.add(k);else classes.delete(k);},contains:k=>classes.has(k)}}};
+ const hud=Object.create(HUD.prototype);hud.el={cross:{style:{},dataset:{},append(){}}};
  try{
   hud.updateCrosshair(x.g);
   assert.ok(classes.has('combat-chase'),'Native city crosshair/layout remains disabled');assert.ok(!classes.has('powerworld'));

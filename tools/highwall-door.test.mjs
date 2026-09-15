@@ -16,3 +16,13 @@ test('closing gate rejects occupied threshold, then reverses on a new entrant wi
 test('rising gate waits for overhead actor rather than lifting through it',()=>{
  const door=new HighwallDoor({box,actors:()=>[{alive:true,pos:{x:0,y:31,z:0}}]});door.request(true);door.tick(.1);assert.equal(door.fraction,0);door.dispose();
 });
+
+test('actor stopped against the gate can open it without backing out of an oversized safety radius',()=>{
+ const actor={alive:true,radius:2.2,pos:{x:0,y:0,z:4.21}};
+ const door=new HighwallDoor({box,actors:()=>[actor]});
+ assert.equal(door.request(true),true);
+ for(let i=0;i<45;i++)door.tick(1/60);
+ assert.equal(door.fraction,1);
+ actor.pos.z=0;assert.equal(door.request(false),false,'Actual threshold occupancy still blocks closing');
+ door.dispose();
+});

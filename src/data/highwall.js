@@ -1,5 +1,5 @@
 import {metersToUnits} from '../core/world-units.js';
-import {HIGHWALL_MODULES as KIT} from './highwall-modules.js';
+import {fortificationPlacement} from './fortification-kit.js';
 
 export const HIGHWALL_HEIGHT=metersToUnits(30*.3048);
 export const HIGHWALL_BOUNDS=Object.freeze({minX:-324,maxX:324,minZ:-300,maxZ:300});
@@ -14,17 +14,26 @@ export const HIGHWALL_PRESETS=Object.freeze([
 // Metres are converted once. Every physical panel is shared by renderer and
 // navigation/collision; decorations do not silently become extra hitboxes.
 export function highwallLayout({gateClosed=true,revision=1}={}){
- const pieces=[];
- const box=(id,x,z,width,depth,height=HIGHWALL_HEIGHT,bottom=0,kind='wall')=>pieces.push({id,x,z,hx:width/2,hz:depth/2,bottom,top:bottom+height,kind});
+ const pieces=[],modules=[];
+ const place=(id,moduleId,x,z,options={})=>modules.push({id,moduleId,x,z,...options});
+ const box=(id,x,z,width,depth,height=HIGHWALL_HEIGHT,bottom=0,kind='wall')=>{
+  if(id==='service-gate'){pieces.push({id,x,z,hx:width/2,hz:depth/2,bottom,top:bottom+height,kind});return;}
+  const moduleId=kind==='step'?'stairs':kind==='deck'||kind==='roof'?'raised-platform':kind==='post'?'tall-pillar':kind==='cover'?'low-wall':'tall-wall';
+  place(id,moduleId,x,z,{span:width,depth,height,y:bottom});
+ };
  const wall=(id,x,z,length,axis='z')=>{
-  const count=Math.ceil(length/30),size=length/count;
-  for(let i=0;i<count;i++)box(`${id}-${i}`,x+(axis==='x'?(i+.5)*size-length/2:0),z+(axis==='z'?(i+.5)*size-length/2:0),axis==='x'?size:KIT.wall.depth,axis==='z'?size:KIT.wall.depth);
+  const halves=Math.max(1,Math.round(length/16)),total=halves*16;let along=-total/2,index=0;
+  while(along<total/2){const span=Math.min(32,total/2-along),center=along+span/2;
+   place(`${id}-${index++}`,span===16?'tall-half-wall':'tall-wall',x+(axis==='x'?center:0),z+(axis==='z'?center:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
+   along+=span;
+   if(along<total/2)place(`${id}-support-${index}`,'tall-pillar',x+(axis==='x'?along:0),z+(axis==='z'?along:0),{height:HIGHWALL_HEIGHT+2,rotation:axis==='x'?0:90});
+  }
+  for(const side of[-1,1])place(`${id}-end-${side}`,'tall-end-cap',x+(axis==='x'?side*total/2:0),z+(axis==='z'?side*total/2:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
  };
  // Repeated vertical spines, with generous transverse junctions and loops.
  for(const [i,x]of[-286,-208,-130,-52].entries()){
   for(const[j,z]of[-220,-100,20,140].entries()){
    wall(`spine-${i}-${j}`,x,z,72);
-   for(const side of[-1,1])box(`pier-${i}-${j}-${side}`,x,z+side*32,KIT.pier.width,KIT.pier.depth,HIGHWALL_HEIGHT,0,'post');
   }
  }
  for(const [i,[x,z,len]]of[[-247,-160,78],[-169,-40,78],[-91,80,78],[-247,200,78],[-91,-280,78]].entries())wall(`cross-${i}`,x,z,len,'x');
@@ -39,10 +48,7 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  wall('compound-south-west',-281,282,64,'x');
  wall('compound-south-east',-80,282,100,'x');
  for(const [i,[x,z]]of[[-302,-274],[-302,270],[-28,-274]].entries()){
-  const t=KIT.tower;
-  box(`tower-${i}-shaft`,x,z,t.width,t.depth,t.shaft,0,'tower');
-  for(const dx of[-10,10])for(const dz of[-10,10])box(`tower-${i}-post-${dx}-${dz}`,x+dx,z+dz,4,4,t.opening,t.shaft,'post');
-  box(`tower-${i}-roof`,x,z,t.width,t.depth,t.roof,t.shaft+t.opening,'roof');
+  place(`tower-${i}`,'tall-tower',x,z);
  }
  // Roofed links stay outside the armored lane. They protect infantry, not tanks.
  for(const z of[-160,80]){
@@ -53,8 +59,18 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  for(const[i,[x,z,w,d]]of[[180,-185,24,8],[265,-115,8,26],[206,-20,28,8],[62,25,20,8],[82,-40,8,20],[-244,96,18,6],[-166,-220,18,6]].entries())box(`cover-${i}`,x,z,w,d,7,0,'cover');
  // Raised observation post: shallow native step-up treads, open vulnerable sides.
  box('observation-deck',242,234,76,32,10,0,'deck');
- for(let i=0;i<5;i++)box(`post-step-${i}`,235,277-i*6,28,6,2+i*2,0,'step');
+ place('post-stairs','stairs',235,265,{span:28,depth:30,height:10});
  box('observation-parapet',242,218,76,4,6,10,'cover');
+ place('observation-bunker','bunker',242,234,{span:76,depth:32,height:28,y:10});
+ place('bunker-threshold','stairs',242,253,{span:16,depth:6,height:2,y:10});
+ // The eastern tower has a continuous physical stair route, not a navigation marker.
+ place('tower-access','stairs',-28,-210,{span:16,depth:96,height:48});
+ place('yard-barricade','barricade',220,-100);
+ place('yard-sandbags','sandbag-barrier',276,-190);
+ place('yard-fence','fence',180,-260);
+ place('observation-hardpoint','aa-hardpoint',-28,-274,{y:66});
+ // A fortified frame uses the existing service gate's real seventy-unit opening.
+ place('north-gate-frame','tall-gate-frame',-169,80,{span:94,height:HIGHWALL_HEIGHT+8,depth:16});
  // One repeatable edit proves routes invalidate when geometry changes.
  if(gateClosed)box('service-gate',-169,80,70,6,HIGHWALL_HEIGHT,0,'gate');
  const signs=[
@@ -66,7 +82,8 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  ];
  // Freestanding route boards have physical supports, rather than floating in space.
  for(const [i,s]of signs.entries())for(const side of[-1,1])box(`sign-support-${i}-${side}`,s.x+side*(s.w/2-2),s.z,2,2,s.y+s.w/8,0,'post');
- return {version:1,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,signs,
+ for(const module of modules)pieces.push(...fortificationPlacement(module).solids);
+ return {version:2,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,modules,signs,
   zones:[{id:'infantry',x:-169,z:-40,width:300,depth:490},{id:'armor',x:66,z:0,width:100,depth:570},{id:'air',x:233,z:-110,width:168,depth:320}],
   blue:[{x:-247,z:240},{x:-229,z:240},{x:-247,z:222},{x:-229,z:222}],
   red:[{x:-169,z:0},{x:-151,z:0},{x:-169,z:-18},{x:-151,z:-18}],
