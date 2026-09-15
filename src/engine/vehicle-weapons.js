@@ -128,7 +128,7 @@ export function fireVehicleWeapon(game, actor, caster) {
     pos: new THREE.Vector3(pos.x, pos.y, pos.z), vel,
     damage: s.damage, radius: s.radius, blast: s.blast, power: s.power,
     life: s.life, grav: 0, kb: s.kb ?? 0, dtype: s.dtype || 'physical',
-    color: s.color || '#f8cf85', launchCover: actor.cover,
+    color: s.color || '#f8cf85', launchCover: actor.cover, launchCaster: caster,
     ...(s.bullet ? { bullet: true, ballistic: true, weapon: 'rifle' } : {}),
   });
   actor.recoilT = Math.max(actor.recoilT || 0, s.recoil || 0);

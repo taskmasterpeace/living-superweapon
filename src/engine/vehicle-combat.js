@@ -87,5 +87,11 @@ export class VehicleHull {
 
 export function attachVehicleHull(game, actor) {
   if (actor.hull) return actor.hull;
+  // ⚠ GIANT platforms (carrier, mothership — span > 200) must NOT register a
+  // hull cover: a 500u cover box blankets the map for LOS, fog, AI sight and
+  // every placement scan (measured: it swallowed the research-lab pad rings
+  // and killed the PowerWorld practice transition). A capital-ship damage
+  // model needs per-section receivers — a RECORDED GAP, not a giant box.
+  if (actor.giant) return null;
   return new VehicleHull(game, actor);
 }
