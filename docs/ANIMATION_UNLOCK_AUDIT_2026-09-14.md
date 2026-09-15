@@ -1,5 +1,10 @@
 # Animation unlock audit — 14 September 2026
 
+> Expanded after the user supplied their full 73-entry Fab library: see
+> [download plan and corrected coverage distinctions](FAB_LIBRARY_DOWNLOAD_PLAN_2026-09-14.md).
+> Dual Sword Kit, Rifle/Pistol Starter and Animalia are now reported owned sources;
+> their local files and current-model integration have not yet been verified.
+
 ## Decision
 
 Finish the current-model aerial catch/carry/throw/recovery sequence first. Use its
