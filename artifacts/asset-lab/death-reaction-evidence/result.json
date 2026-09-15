@@ -1,0 +1,159 @@
+{
+  "base": "http://localhost:5180",
+  "takes": [
+    "Paid_AS_KG_Front_Getup",
+    "Paid_AS_KG_Back_Getup",
+    "Death01",
+    "Death02",
+    "Hit_Knockback",
+    "IdleToLay",
+    "LayToIdle",
+    "KipUp",
+    "LiftAir_Fall",
+    "LiftAir_Fall_Impact"
+  ],
+  "reviews": [
+    {
+      "take": "Paid_AS_KG_Front_Getup",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "Paid_AS_KG_Back_Getup",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "Death01",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "Death02",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "Hit_Knockback",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "IdleToLay",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "LayToIdle",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "KipUp",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "LiftAir_Fall",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    },
+    {
+      "take": "LiftAir_Fall_Impact",
+      "views": [
+        "front",
+        "side"
+      ],
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
+    }
+  ],
+  "errors": [],
+  "acceptance": "Rig playback captured; visual acceptance requires inspecting frames."
+}

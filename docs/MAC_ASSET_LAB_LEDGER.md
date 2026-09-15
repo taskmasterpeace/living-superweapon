@@ -75,3 +75,41 @@ Status ladder: `source-available → mapped candidate → visually accepted → 
 
 ### Scale Lab lineup — NOT STARTED (next)
 ### Import-ready package/handoff — see `docs/MAC_ASSET_LAB_HANDOFF.md`
+
+## 2026-09-15 — Mission A: Death & Reaction Presentation Set (branch `asset-lab-death-set`)
+
+### Source library — BLOCKED, precise transfer request filed
+- Windows PC (192.168.1.251) unreachable: no ping, no SMB/SSH/RDP, no ARP entry.
+- `docs/TRANSFER_REQUEST_ANIMATIONS.md`: exact source dir (incl. required
+  `fbx-audit.json` + `source-manifest.json`), file types, 2–4 GB estimate, destination
+  `~/PowerWorldAssets/animations/2026-09-14`, archive fallback, verification commands.
+- Policy honored: NO substitutes assigned to purchased-library slots.
+
+### Death & Reaction registry — 20 slots (11 satisfied, 9 awaiting-source)
+- `tools/build-death-reaction-registry.mjs` → `public/models/modular-hero/death-reaction-registry.json`.
+- Satisfied with rig evidence: death.impact-front.a (Death01, standing grounded death —
+  Highwall-ready), death.impact-rear.a (Death02, prone ending), knockdown.impact-front.heavy
+  (Hit_Knockback, nonlethal), collapse.weakened, airborne death chain (3),
+  getup.from-prone + getup.from-supine (**purchased KG pack clips**), getup.kipup,
+  getup.from-supine.slow. Every slot: full runtime metadata per Mission A schema.
+- Awaiting source (KG pack): left/right-impact deaths, front/rear variety, prone death,
+  crouched death, rear knockdown, staggers.
+- Convention documented: slot ids = IMPACT direction; older bank fall-direction
+  semantics preserved via bankSemantic mapping (no ids rewritten).
+
+### Rig evidence — 100 frames on the ACTUAL modular hero rig
+- `tools/death-reaction-evidence.mjs` (generalizes paid-motion-browser) via
+  `animation-library.html`, checkout-identity verified (asset-lab-death-set · 109ec08).
+- 10 takes × front+side × 5 phases → `artifacts/asset-lab/death-reaction-evidence/`.
+- Visual pass performed on frames: KG Front_Getup (prone→kneel→stand, no penetration),
+  Death01 final supine flat, Death02 final prone flat, Hit_Knockback front-impact read,
+  LiftAir_Fall_Impact settled supine. No limb distortion observed in inspected frames.
+- animation-page.js now also loads warworld-motion-bank.json into the library preview
+  ("135 source clips + 30 studies loaded").
+
+### Rejections this pass
+- None newly rejected on this Mac (nothing unusable among the 11). Prior PC-side
+  rejections stand (heavy-lift/get-up sources with floor penetration —
+  `docs/PURCHASED_MOTION_PIPELINE_2026-09-14.md`). Rejection criteria are armed in the
+  mission doc for KG intake (spin, distortion, unexplained translation, floor
+  penetration, unclear direction, bad final pose, un-settleable endings).
