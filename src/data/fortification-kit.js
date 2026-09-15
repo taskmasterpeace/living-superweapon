@@ -6,6 +6,9 @@ const wallSockets=(w,h=48)=>[{id:'west',position:[-w/2,0,0],normal:[-1,0,0],type
 const def=(id,w,h,d,recipe,extra={})=>Object.freeze({id,dimensions:{width:w,height:h,depth:d},footprint:{grid:4,width:w,depth:d},rotations:[0,90,180,270],materialFamily:'warworld-fortification-ivory-red-v1',recipe,collision:'recipe-box-union',navigation:{obstruction:'solids',openings:[]},visibility:'opaque-solids',projectiles:'solid-blocking',sockets:wallSockets(w,h),mounts:[],traversalLinks:[],interactions:[],damageState:null,...extra});
 const deviceMount=(id,position,type)=>({id,position,normal:[0,1,0],type});
 export const FORTIFICATION_MODULES=Object.freeze(Object.fromEntries([
+ def('tall-long-wall',128,48,12,'wall'),
+ def('tall-long-curve',128,48,128,'curve',{sockets:[{id:'west',position:[-64,0,-58],normal:[-1,0,0],type:'wall'},{id:'south',position:[58,0,64],normal:[0,0,1],type:'wall'}]}),
+ ...['gate','door'].flatMap(type=>['closed','open','damaged','destroyed'].map(state=>def(`${type}-${state}`,type==='gate'?64:24,type==='gate'?52:28,16,'portal',{damageState:state==='damaged'||state==='destroyed'?state:null,portalState:state,navigation:{obstruction:'solids',openings:state==='open'||state==='destroyed'?[{width:type==='gate'?40:16,height:type==='gate'?44:24}]:[]}}))),
  def('tall-wall',32,48,12,'wall'),def('tall-half-wall',16,48,12,'wall'),
  def('tall-corner',32,48,32,'corner',{sockets:[{id:'west',position:[-16,0,-10],normal:[-1,0,0],type:'wall'},{id:'south',position:[10,0,16],normal:[0,0,1],type:'wall'}]}),
  def('tall-end-cap',8,48,16,'pillar'),def('tall-pillar',12,52,16,'pillar'),
@@ -52,6 +55,33 @@ export function fortificationRecipe(moduleId,options={}){
  };
  switch(definition.recipe){
  case 'wall':panel(0,0,w,h,d);break;
+ case 'curve':{
+  // Faceted quarter-circle, with the exact same strip union used for collision.
+  for(let x=-64;x<64;x+=2){
+   const near=x+64,far=near+2;
+   const z0=64-Math.sqrt(Math.max(0,128**2-near**2));
+   const z1=64-Math.sqrt(Math.max(0,116**2-far**2));
+   const depth=z1-z0,center=(z0+z1)/2;
+   box(x+1,2.5,center,2,5,depth,'base');
+   const core=box(x+1,25,center,2,40,depth,'armor');
+   box(x+1,46.5,center,2,3,depth,'frame');
+   for(const side of[-1,1])skin(core,x+1,32,center+side*(depth/2-.01),2,2,.02,'accent');
+  }break;
+ }
+ case 'portal':{
+  const state=definition.portalState,post=moduleId.startsWith('gate-')?12:4,lintel=moduleId.startsWith('gate-')?8:4,opening=w-post*2,clear=h-lintel;
+  for(const side of[-1,1])panel(side*(w-post)/2,0,post,h,d);
+  if(state!=='destroyed')box(0,h-lintel/2,0,opening,lintel,d,'frame');
+  if(state==='closed'||state==='damaged'){
+   const leaf=box(0,clear/2,0,opening,clear,8,'inset','gate');
+   for(const side of[-1,1]){
+    skin(leaf,0,clear/2,side*3.99,1.5,clear-2,.02,'accent');
+    if(state==='damaged')for(let i=0;i<6;i++)skin(leaf,(i%2?1:-1)*opening*.15,clear*(.2+i*.11),side*3.99,opening*.42,1.2,.02,'frame');
+   }
+  }
+  if(state==='destroyed')for(const side of[-1,1])box(side*(w/2-post*.7),h*.65,0,post*.6,2,d*.75,'inset');
+  break;
+ }
  case 'corner':{const t=moduleId==='low-corner'?8:12;panel(0,-d/2+t/2,w,h,t);const p=box(w/2-t/2,h/2,t/2,t,h,d-t,'frame');for(const s of[-1,1])skin(p,w/2-t/2+s*(t/2-.12),h/2,t/2,.2,h-4,d-t-2,'armor');break;}
  case 'pillar':{box(0,2,0,w,4,d,'base');for(const side of[-1,1]){box(0,5,side*d*.29,w*.84,6,d*.4,'base');box(0,8,side*d*.22,w*.72,4,d*.32,'base');}const p=box(0,h/2,0,w*.62,h-6,d*.48,'armor');box(0,h-2,0,w,4,d,'frame');box(0,h-5,0,w*.8,3,d*.7,'base');for(const s of[-1,1])skin(p,0,h*.6,s*(d*.24-.01),w*.22,h*.42,.02,'accent');break;}
  case 'gate-frame':{const post=Math.min(12,w*.2),lintel=Math.min(8,h*.25);for(const s of[-1,1]){panel(s*(w-post)/2,0,post,h,d);}box(0,h-lintel/2,0,w-post*2,lintel,d,'frame');break;}

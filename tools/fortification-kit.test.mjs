@@ -4,7 +4,7 @@ import {FORTIFICATION_MODULES,fortificationRecipe,fortificationPlacement,fortifi
 import {buildFortificationKit,fortificationSurfaceBuffers} from '../src/engine/fortification-kit.js';
 
 test('every module has physical data and skins contained in their own source solid',()=>{
- assert.equal(Object.keys(FORTIFICATION_MODULES).length,28);
+ assert.equal(Object.keys(FORTIFICATION_MODULES).length,38);
  for(const id of Object.keys(FORTIFICATION_MODULES)){
   const r=fortificationRecipe(id);assert.ok(r.solids.length,id);assert.ok(r.definition.sockets.length,id);
   for(const v of r.visuals){const p=r.solids.find(p=>p.id===v.solid);assert.ok(p,`${id}: missing solid`);for(const [axis,size]of[['x','width'],['y','height'],['z','depth']])assert.ok(Math.abs(v[axis]-p[axis])+v[size]/2<=p[size]/2+.00001,`${id}: ${v.material} skin outside ${axis}`);}

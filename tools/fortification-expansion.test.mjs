@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {fortificationPlacement as place,fortificationRecipe,fortificationSocketsConnect as connects} from '../src/data/fortification-kit.js';
+test('long panel replaces four panels with fewer solids and matching sockets',()=>{const p=place({id:'long',moduleId:'tall-long-wall'});assert.equal(p.dimensions.width,128);assert.ok(p.solids.length<4*fortificationRecipe('tall-wall').solids.length);assert.ok(connects(p.sockets[1],place({id:'next',moduleId:'tall-wall',x:80}).sockets[0]));});
+test('portal states physically match their declared passage',()=>{for(const type of ['gate','door'])for(const state of ['closed','open','damaged','destroyed']){const p=place({id:'p',moduleId:`${type}-${state}`});assert.equal(p.solids.some(b=>Math.abs(b.x)<b.hx&&Math.abs(b.z)<b.hz&&b.bottom<10&&b.top>10),state==='closed'||state==='damaged');}});
+test('curve is hollow and connects to long wall',()=>{const p=place({id:'curve',moduleId:'tall-long-curve'});assert.ok(connects(place({id:'wall',moduleId:'tall-long-wall',x:-128,z:-58}).sockets[1],p.sockets[0]));assert.equal(p.solids.some(b=>Math.abs(-60-b.x)<b.hx&&Math.abs(60-b.z)<b.hz),false);});

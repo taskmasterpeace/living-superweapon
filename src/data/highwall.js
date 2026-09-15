@@ -23,8 +23,8 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  };
  const wall=(id,x,z,length,axis='z')=>{
   const halves=Math.max(1,Math.round(length/16)),total=halves*16;let along=-total/2,index=0;
-  while(along<total/2){const span=Math.min(32,total/2-along),center=along+span/2;
-   place(`${id}-${index++}`,span===16?'tall-half-wall':'tall-wall',x+(axis==='x'?center:0),z+(axis==='z'?center:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
+  while(along<total/2){const span=total/2-along>=128?128:Math.min(32,total/2-along),center=along+span/2;
+   place(`${id}-${index++}`,span===128?'tall-long-wall':span===16?'tall-half-wall':'tall-wall',x+(axis==='x'?center:0),z+(axis==='z'?center:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
    along+=span;
    if(along<total/2)place(`${id}-support-${index}`,'tall-pillar',x+(axis==='x'?along:0),z+(axis==='z'?along:0),{height:HIGHWALL_HEIGHT+2,rotation:axis==='x'?0:90});
   }
