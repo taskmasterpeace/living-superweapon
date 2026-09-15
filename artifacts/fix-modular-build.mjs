@@ -1,0 +1,1 @@
+import fs from 'node:fs';let p='src/tool/character-foundation.js',s=fs.readFileSync(p,'utf8');s=s.replace('const renderer=new','async function main(){\nconst renderer=new');s+='\n}\nmain().catch(error=>{console.error(error);document.querySelector("#status").textContent="Character failed to load: "+error.message;});\n';fs.writeFileSync(p,s);

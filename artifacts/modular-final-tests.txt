@@ -1,0 +1,54 @@
+(node:33024) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (315.1384ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (724.0112ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (157.8382ms)
+✔ wake authoring survives presentation serialization with validated limits (1.1774ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (22.2578ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (19.7817ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (40.8861ms)
+(node:62504) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (391.173ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (471.5501ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (38.6379ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (119.8526ms)
+✔ a late asset load cannot install a body on a disposed fighter (72.6988ms)
+✔ native animation ticks advance the installed authored body (109.1992ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (56.0536ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (36.4438ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.0571ms)
+✔ untrusted profiles reject unsupported keys before labels can reach the inspector DOM (3.1865ms)
+✔ strafe targets roundtrip through saved profiles and production definitions (1.1769ms)
+✔ legacy five-pose profiles acquire new strafe defaults without altering authored joints or storage (0.6473ms)
+✔ presentation authoring module exists (0.0858ms)
+✔ combat camera preset changes only camera and remains undoable (2.4261ms)
+✔ an edited profile affects geometry data without mutating powers or source definition (0.3948ms)
+✔ saved profiles roundtrip and remain isolated per fighter (0.4564ms)
+✔ malformed import cannot poison geometry or exceed safe camera ranges (0.5633ms)
+✔ purple is reserved for KIVULI, including hidden colour fields (0.4065ms)
+✔ corrupt saved data is not overwritten by a later save (0.3488ms)
+✔ storage write failures are reported to the caller (0.3228ms)
+✔ undo redo save and new edits preserve expected draft history (0.3362ms)
+✔ unknown saved hero IDs do not add roster citizens (0.3324ms)
+✔ installer applies valid profile and reports corrupt entries without blocking game boot (0.503ms)
+✔ portable authored body, motion families, and equipment references roundtrip exactly (0.5951ms)
+✔ authored asset maps reject malformed structure but retain unknown portable references (0.5293ms)
+✔ untouched SOL profiles preserve its shipped lead fist, including partial authored overrides (0.1492ms)
+✔ all shipped frame and color defaults can be saved without normalization (13.3668ms)
+✔ deliberate flight style reset replaces pose targets without mutating the draft or source defaults (0.8838ms)
+(node:77260) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ saving an untouched profile preserves production flight joints for every shipped hero (40733.7238ms)
+✔ environment response survives profile export and rejects invalid mass (0.6669ms)
+✔ emblem selection roundtrips into native figures without editing combat stats (460.7355ms)
+✔ shared ground approach assignment roundtrips without changing flight or source roster (1.0367ms)
+✔ older profiles keep native melee defaults and invalid families are rejected (0.4919ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41408.0611

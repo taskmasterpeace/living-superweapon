@@ -1,0 +1,36 @@
+(node:105464) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (244.4853ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (476.054ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (134.5508ms)
+✔ wake authoring survives presentation serialization with validated limits (0.6972ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (16.6014ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (20.0556ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (40.7897ms)
+(node:105352) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (293.2274ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (269.6795ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (38.1698ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (90.8791ms)
+✔ a late asset load cannot install a body on a disposed fighter (72.1737ms)
+✔ native animation ticks advance the installed authored body (79.5744ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (34.9378ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (104.2475ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (0.9276ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (37.2744ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (28.4369ms)
+✔ mapped source bank retains complete valid hand tracks and required actual takes (59.1765ms)
+✔ equipment options exclude intersecting replacement meshes and preserve the skeleton (44.8787ms)
+✔ infected flight arms hang down without translating the actor or bone joints (48.4274ms)
+✔ costume surfaces and COH-style choices roundtrip with validation (1.5919ms)
+✔ props follow the real authored palms throughout sword clips without changing hands (73.7409ms)
+✔ unavailable dedicated and two-handed sources are declared explicitly (1.2341ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1365.9388

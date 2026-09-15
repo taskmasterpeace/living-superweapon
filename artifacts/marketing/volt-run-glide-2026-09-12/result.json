@@ -1,0 +1,52 @@
+{
+  "setup": "Controlled grounded start on desert outskirts; native W, double Shift hold, Space jump/glide and releases. No launch velocity or airborne state supplied.",
+  "run": {
+    "position": [
+      -50,
+      0,
+      -450.4017968684861
+    ],
+    "velocity": [
+      0,
+      0,
+      357.42737543215463
+    ],
+    "ki": 42.10685199999996,
+    "flying": false,
+    "gliding": false,
+    "onFoot": true
+  },
+  "glide": {
+    "position": [
+      -50,
+      5.3168706,
+      -280.18110102053095
+    ],
+    "velocity": [
+      0,
+      1.2299999999999978,
+      177.12962053415873
+    ],
+    "ki": 45.85225600000003,
+    "flying": false,
+    "gliding": true,
+    "onFoot": false
+  },
+  "end": {
+    "position": [
+      -50,
+      0,
+      -214.3559127482637
+    ],
+    "velocity": [
+      0,
+      0,
+      0
+    ],
+    "ki": 54.888192000000146,
+    "flying": false,
+    "gliding": false,
+    "onFoot": true
+  },
+  "errors": []
+}

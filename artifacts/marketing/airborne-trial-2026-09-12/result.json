@@ -1,0 +1,40 @@
+{
+  "setup": "Controlled ground placement; native held Space takeoff and V strike",
+  "player": {
+    "flying": true,
+    "y": 29.603476449356872
+  },
+  "target": {
+    "flying": true,
+    "y": 25.0241691727288,
+    "hp": 116.61762584863692
+  },
+  "records": [
+    {
+      "trial": "airborne",
+      "time": 1.1051999999999995,
+      "amount": 13.382374151363075,
+      "blocked": false,
+      "hp": 116.61762584863692,
+      "playerKi": 81.71816799999945,
+      "healthLost": 13.38237415136308,
+      "guardEnergySpent": 0,
+      "result": "CONTACT",
+      "incoming": false,
+      "move": "light"
+    },
+    {
+      "trial": "airborne",
+      "kind": "jab",
+      "time": 0.9925999999999987,
+      "contacts": 1,
+      "approach": true,
+      "distance": 10.000049877423221,
+      "startup": 0.1,
+      "active": 0.06,
+      "recovery": 0.14,
+      "result": "contact"
+    }
+  ],
+  "errors": []
+}

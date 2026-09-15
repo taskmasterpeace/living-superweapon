@@ -1,0 +1,25 @@
+{
+  "before": 120,
+  "capacity": 130,
+  "events": [
+    {
+      "kind": "sample-dropped",
+      "time": 0.5836000000000023,
+      "name": "MERC"
+    },
+    {
+      "kind": "sample-collected",
+      "time": 0.6813840000000019,
+      "name": "MERC"
+    },
+    {
+      "kind": "research-upgrade",
+      "time": 1.304872,
+      "name": "MERC",
+      "rank": 1
+    }
+  ],
+  "carried": null,
+  "errors": [],
+  "staging": "Native selection/portal, native V KO of staged one-HP enemy, native E pickup/analysis. Controlled positions at sample and terminal; not a full travel/navigation proof."
+}

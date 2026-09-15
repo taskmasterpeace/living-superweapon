@@ -1,0 +1,81 @@
+(node:102576) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 0.79 (139.1267ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (59.1324ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (52.8742ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 30Hz (98.6105ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 60Hz (106.5223ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 120Hz (122.0765ms)
+✔ explicit saved hover joints remain authoritative through validation and production (84.6943ms)
+✔ hero flight/brake/hover/guard transitions retain continuous joints and fixed limb lengths (298.3226ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 5
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1198.4871
+
+✖ failing tests:
+
+test at tools\hero-hover.baseline-check.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 0.79 (139.1267ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.baseline-check.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\hero-hover.baseline-check.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (59.1324ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.baseline-check.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\hero-hover.baseline-check.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (52.8742ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.baseline-check.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

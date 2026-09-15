@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "lateRetreat": false,
+  "result": {
+    "start": {
+      "hp": 115,
+      "pos": [
+        0,
+        0,
+        46.8
+      ],
+      "hero": "rage"
+    },
+    "hero": "rage",
+    "pos": [
+      0,
+      0,
+      -4.147280970815558
+    ],
+    "flight": false,
+    "hp": 76.525,
+    "records": [
+      {
+        "trial": "stationary",
+        "time": 1.003700000000008,
+        "amount": 38.475,
+        "blocked": false,
+        "hp": 76.525,
+        "playerKi": 53.46320000000011,
+        "healthLost": 38.474999999999994,
+        "guardEnergySpent": 0,
+        "guardBreakReason": null,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "heavy"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 72,
+        "entryFamily": "bound",
+        "trial": "stationary",
+        "kind": "power",
+        "time": 0.665900000000005,
+        "contacts": 1,
+        "approach": true,
+        "distance": 46.8,
+        "startup": 0.34,
+        "active": 0.09,
+        "recovery": 0.4,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ]
+  },
+  "errors": [],
+  "staging": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability."
+}

@@ -1,0 +1,17 @@
+(node:29704) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (193.7925ms)
+✔ cruise-fists survives profile and drives current modular cruising body (105.6329ms)
+✔ cruise-palms survives profile and drives current modular cruising body (106.0754ms)
+✔ cruise-one survives profile and drives current modular cruising body (111.6473ms)
+✔ cruise-bent survives profile and drives current modular cruising body (101.246ms)
+✔ open cruise palms yield to carried contact, grab, attack and occupied hand (27.7886ms)
+✔ cruise bent and palms preserve identical torso and pelvis orientation (119.9814ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1090.5367

@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "session": {
+    "phase": "acceptance",
+    "fixtures": [
+      {
+        "kind": "melee",
+        "trial": "stationary",
+        "distance": 60,
+        "facing": "front",
+        "clearTargetInvulnerability": false,
+        "status": "staged",
+        "result": {
+          "time": 0.05410000000000037,
+          "player": 1,
+          "target": 2,
+          "hero": "sol",
+          "targetHp": 120
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "strike",
+      "scheme": "touch",
+      "move": [
+        1,
+        0
+      ],
+      "holdMs": null,
+      "until": "melee-charged",
+      "requestedAt": "2026-09-13T05:42:26.883Z",
+      "status": "dispatched",
+      "simulationBefore": 0.15410000000000038,
+      "chargeAtRelease": 0.6452800000000017,
+      "released": true,
+      "movementReleased": true,
+      "simulationAfter": 1.1704
+    }
+  ],
+  "capturedAt": "2026-09-13T05:42:35.911Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 1.2954999999999985,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "player": {
+      "id": 1,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        9.694031596854474,
+        0,
+        58.27109500227462
+      ],
+      "velocity": [
+        1.0413222822938635,
+        0,
+        -3.593793215827424
+      ],
+      "hp": 130,
+      "energy": 70.6749199999998,
+      "alive": true,
+      "flying": false,
+      "meleeState": "startup",
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": {
+        "family": "rush",
+        "point": [
+          15.193071416348904,
+          14.4,
+          -76.5
+        ]
+      }
+    },
+    "target": {
+      "id": 2,
+      "hero": "merc",
+      "class": "soldier",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 120,
+      "energy": 65.22913599999998,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "merc",
+        "class": "soldier",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "hp": 120,
+        "energy": 65.22913599999998,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "grabbing": null,
+        "grabbedBy": null,
+        "grabState": null,
+        "launchTime": 0,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 78.32505218667643,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 86.1850678945656,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 97.24648316571694,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 97.70932873650477,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 112.41837504700577,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 115.98930967839499,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 7,
+    "drill": {
+      "kind": "stationary",
+      "records": []
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "scenario": "air-approach",
+  "startedAt": "2026-09-13T06:04:26.025Z",
+  "runnerRevision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+    "trackedDiffHash": "de83f291a8a81f38faf1486bb4b8d6529ea30469b046343a4dd8e803df184607"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T06:04:45.255Z",
+  "error": {
+    "message": "Expected values to be strictly equal:\n\nundefined !== 2\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nundefined !== 2\n\n    at file:///D:/lsw/.worktrees/combat-release-review/tools/air-approach-browser.mjs:12:52\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)"
+  }
+}

@@ -1,0 +1,35 @@
+(node:99840) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ heavy ingestion samples the actual hook and recovery, without substituting the old cross (187.4329ms)
+✔ bare-handed power uses the hook while occupied grips retain their weapon-compatible motion (173.6126ms)
+✔ heavy preference is independent from light punches and survives validated custom profiles (27.0097ms)
+✔ heavy source keeps root authority, fixed arm lengths and planted feet through startup, contact and recovery (846.9064ms)
+✔ aerial heavy motion keeps flight legs and converges to the same source phase at 30/60/120 Hz (94.5707ms)
+✔ real Fighter and melee updates freeze the active heavy clock during hitstop, then resume it (80.1083ms)
+(node:91536) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sleepT cancels startup and discards buffered melee (97.0048ms)
+✔ sleepT cancels active and discards buffered melee (41.3181ms)
+✔ sleepT cancels recover and discards buffered melee (33.9453ms)
+✔ downedT cancels startup and discards buffered melee (28.524ms)
+✔ downedT cancels active and discards buffered melee (27.9ms)
+✔ downedT cancels recover and discards buffered melee (28.4896ms)
+(node:48576) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ phase priority exposes interruption and distinguishes combo permission from cooldown (1.408ms)
+✔ contact between pose samples supplies current phase and energy without changing history (0.179ms)
+✔ trial captures both actors phase changes and native remaining timers (164.1775ms)
+✔ team contact updates teammate health rather than the opponent (0.1719ms)
+(node:92020) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a moving rendered torso cannot tunnel through a committed fist at legal flight speed (56.1337ms)
+✔ production contact frames wait for both final poses and discard old teleport history (38.7504ms)
+✔ the production resolver catches moving victims in either entity order, but not blinks or interruptions (277.5329ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1679.2795

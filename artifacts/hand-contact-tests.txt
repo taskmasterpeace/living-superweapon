@@ -1,0 +1,173 @@
+(node:88748) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ an occupied off-hand carries its shield outside the rendered torso during authored punches (153.5525ms)
+✔ an active grounded punch plants a strike stance instead of running through contact (112.5901ms)
+✔ light-strike source preference is validated and retained in character profiles (2.2768ms)
+✖ the rendered target core follows the source core axis without importing its different bind lean (4.2522ms)
+✖ the hips keep the source fighting base instead of inheriting the full shoulder twist (1.1471ms)
+✔ both hands keep fixed reach, grounded support and a stationary simulation root through the whole strike (1354.9489ms)
+✔ authored stance and hit offsets cannot survive interruption or a mid-strike form replacement (2010.7096ms)
+✔ source phase is stable across frame rates and hitstop while aerial leg poses remain owned by flight (409.0963ms)
+✔ switching the committed hand mirrors the fighting stance and preserves the reachable contact point (121.2577ms)
+✔ full startup/contact/recovery playback has no angular reset or pole flip (982.2331ms)
+(node:71108) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ heavy ingestion samples the actual hook and recovery, without substituting the old cross (2.8438ms)
+✔ bare-handed power uses the hook while occupied grips retain their weapon-compatible motion (146.8821ms)
+✔ heavy preference is independent from light punches and survives validated custom profiles (30.1498ms)
+✔ heavy source keeps root authority, fixed arm lengths and planted feet through startup, contact and recovery (959.1733ms)
+✔ aerial heavy motion keeps flight legs and converges to the same source phase at 30/60/120 Hz (134.0208ms)
+✔ real Fighter and melee updates freeze the active heavy clock during hitstop, then resume it (103.1054ms)
+(node:77416) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ RAGE catches walking retreat with native contact at 20Hz (301.9057ms)
+✔ post-commit sideways evade escapes at 20Hz (170.69ms)
+✔ RAGE catches walking retreat with native contact at 30Hz (166.3701ms)
+✔ post-commit sideways evade escapes at 30Hz (179.9568ms)
+✔ RAGE catches walking retreat with native contact at 60Hz (191.6253ms)
+✔ post-commit sideways evade escapes at 60Hz (208.2176ms)
+✔ RAGE catches walking retreat with native contact at 120Hz (248.6292ms)
+✔ post-commit sideways evade escapes at 120Hz (237.6119ms)
+✔ WEBLINE catches retreat from 20u at 20Hz (143.9066ms)
+✔ WEBLINE committed pounce permits dodge from 20u at 20Hz (149.3615ms)
+✔ WEBLINE catches retreat from 27u at 20Hz (139.7441ms)
+✔ WEBLINE committed pounce permits dodge from 27u at 20Hz (130.9373ms)
+✔ WEBLINE catches retreat from 20u at 30Hz (141.1041ms)
+✔ WEBLINE committed pounce permits dodge from 20u at 30Hz (136.5275ms)
+✔ WEBLINE catches retreat from 27u at 30Hz (174.5843ms)
+✔ WEBLINE committed pounce permits dodge from 27u at 30Hz (138.9368ms)
+✔ WEBLINE catches retreat from 20u at 60Hz (167.9133ms)
+✔ WEBLINE committed pounce permits dodge from 20u at 60Hz (157.2575ms)
+✔ WEBLINE catches retreat from 27u at 60Hz (161.2879ms)
+✔ WEBLINE committed pounce permits dodge from 27u at 60Hz (156.2825ms)
+✔ WEBLINE catches retreat from 20u at 120Hz (208.4506ms)
+✔ WEBLINE committed pounce permits dodge from 20u at 120Hz (211.0619ms)
+✔ WEBLINE catches retreat from 27u at 120Hz (216.1307ms)
+✔ WEBLINE committed pounce permits dodge from 27u at 120Hz (244.8951ms)
+✔ sol long approach catches retreat at 35u / 30Hz (209.3132ms)
+✔ sol long approach allows sideways dodge at 30Hz (186.0551ms)
+✔ webline long approach catches retreat at 55u / 30Hz (149.7257ms)
+✔ webline long approach allows sideways dodge at 30Hz (134.5107ms)
+✔ rage long approach catches retreat at 65u / 30Hz (130.905ms)
+✔ rage long approach allows sideways dodge at 30Hz (142.1456ms)
+✔ jelani long approach catches retreat at 50u / 30Hz (141.1966ms)
+✔ jelani long approach allows sideways dodge at 30Hz (143.3072ms)
+✔ sol long approach catches retreat at 35u / 60Hz (248.4518ms)
+✔ sol long approach allows sideways dodge at 60Hz (208.6131ms)
+✔ webline long approach catches retreat at 55u / 60Hz (158.9635ms)
+✔ webline long approach allows sideways dodge at 60Hz (168.1938ms)
+✔ rage long approach catches retreat at 65u / 60Hz (156.1031ms)
+✔ rage long approach allows sideways dodge at 60Hz (168.2909ms)
+✔ jelani long approach catches retreat at 50u / 60Hz (164.5467ms)
+✔ jelani long approach allows sideways dodge at 60Hz (159.091ms)
+✔ sol long approach catches retreat at 35u / 120Hz (291.7013ms)
+✔ sol long approach allows sideways dodge at 120Hz (283.7069ms)
+✔ webline long approach catches retreat at 55u / 120Hz (205.3561ms)
+✔ webline long approach allows sideways dodge at 120Hz (202.2018ms)
+✔ rage long approach catches retreat at 65u / 120Hz (190.2125ms)
+✔ rage long approach allows sideways dodge at 120Hz (199.6598ms)
+✔ jelani long approach catches retreat at 50u / 120Hz (202.9752ms)
+✔ jelani long approach allows sideways dodge at 120Hz (199.1485ms)
+✔ retreat trainer starts walking before a long-range character commits (73.4164ms)
+✔ jelani catches retreat begun after commitment at 30Hz (162.5922ms)
+✔ jelani still allows post-commit lateral dodge from rest at 30Hz (127.4291ms)
+✔ sol catches retreat begun after commitment at 30Hz (200.1569ms)
+✔ sol still allows post-commit lateral dodge from rest at 30Hz (170.0088ms)
+✔ rage catches retreat begun after commitment at 30Hz (126.6571ms)
+✔ rage still allows post-commit lateral dodge from rest at 30Hz (118.3102ms)
+✔ webline catches retreat begun after commitment at 30Hz (125.2401ms)
+✔ webline still allows post-commit lateral dodge from rest at 30Hz (119.1049ms)
+✔ jelani catches retreat begun after commitment at 60Hz (141.7316ms)
+✔ jelani still allows post-commit lateral dodge from rest at 60Hz (182.9204ms)
+✔ sol catches retreat begun after commitment at 60Hz (208.8472ms)
+✔ sol still allows post-commit lateral dodge from rest at 60Hz (195.4976ms)
+✔ rage catches retreat begun after commitment at 60Hz (149.1237ms)
+✔ rage still allows post-commit lateral dodge from rest at 60Hz (145.5528ms)
+✔ webline catches retreat begun after commitment at 60Hz (146.3592ms)
+✔ webline still allows post-commit lateral dodge from rest at 60Hz (165.6256ms)
+✔ jelani catches retreat begun after commitment at 120Hz (215.1953ms)
+✔ jelani still allows post-commit lateral dodge from rest at 120Hz (203.3345ms)
+✔ sol catches retreat begun after commitment at 120Hz (248.2845ms)
+✔ sol still allows post-commit lateral dodge from rest at 120Hz (239.7473ms)
+✔ rage catches retreat begun after commitment at 120Hz (188.4088ms)
+✔ rage still allows post-commit lateral dodge from rest at 120Hz (205.2948ms)
+✔ webline catches retreat begun after commitment at 120Hz (215.7585ms)
+✔ webline still allows post-commit lateral dodge from rest at 120Hz (187.5745ms)
+✔ JELANI retreat begins 50ms into startup at 30Hz (120.5765ms)
+✔ JELANI retreat begins 50ms into startup at 60Hz (173.1282ms)
+✔ JELANI retreat begins 50ms into startup at 120Hz (242.869ms)
+✔ late retreat frame and facing 15/-1 (116.4917ms)
+✔ late retreat frame and facing 15/1 (110.6835ms)
+✔ late retreat frame and facing 20/-1 (111.7497ms)
+✔ late retreat frame and facing 20/1 (115.343ms)
+✔ late retreat frame and facing 24/-1 (126.1492ms)
+✔ late retreat frame and facing 24/1 (116.18ms)
+✔ late retreat frame and facing 30/-1 (118.5063ms)
+✔ late retreat frame and facing 30/1 (150.5983ms)
+✔ late retreat frame and facing 60/-1 (164.2442ms)
+✔ late retreat frame and facing 60/1 (166.6276ms)
+✔ late retreat frame and facing 120/-1 (200.9562ms)
+✔ late retreat frame and facing 120/1 (202.3496ms)
+✔ slow frame still permits lateral dodge 15/-1 (102.8808ms)
+✔ slow frame still permits lateral dodge 15/1 (129.5836ms)
+✔ slow frame still permits lateral dodge 20/-1 (167.7435ms)
+✔ slow frame still permits lateral dodge 20/1 (208.6856ms)
+✔ slow frame still permits lateral dodge 24/-1 (339.0705ms)
+✔ slow frame still permits lateral dodge 24/1 (203.0633ms)
+ℹ tests 110
+ℹ suites 0
+ℹ pass 107
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16866.876
+
+✖ failing tests:
+
+test at tools\authored-strike.test.mjs:58:1
+✖ the rendered target core follows the source core axis without importing its different bind lean (4.2522ms)
+  Error: ENOENT: no such file or directory, open 'D:\lsw\.worktrees\combat-release-review\assets-src\quaternius\AnimationLibrary_Godot_Standard.gltf'
+      at async open (node:internal/fs/promises:636:25)
+      at async readFile (node:internal/fs/promises:1273:14)
+      at async Promise.all (index 0)
+      at async loadSource (file:///D:/lsw/.worktrees/combat-release-review/tools/lib/quaternius-source.mjs:15:19)
+      at async TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/authored-strike.test.mjs:59:15)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\lsw\\.worktrees\\combat-release-review\\assets-src\\quaternius\\AnimationLibrary_Godot_Standard.gltf'
+  }
+
+test at tools\authored-strike.test.mjs:68:1
+✖ the hips keep the source fighting base instead of inheriting the full shoulder twist (1.1471ms)
+  Error: ENOENT: no such file or directory, open 'D:\lsw\.worktrees\combat-release-review\assets-src\quaternius\AnimationLibrary_Godot_Standard.gltf'
+      at async open (node:internal/fs/promises:636:25)
+      at async readFile (node:internal/fs/promises:1273:14)
+      at async Promise.all (index 0)
+      at async loadSource (file:///D:/lsw/.worktrees/combat-release-review/tools/lib/quaternius-source.mjs:15:19)
+      at async TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/authored-strike.test.mjs:69:15)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\lsw\\.worktrees\\combat-release-review\\assets-src\\quaternius\\AnimationLibrary_Godot_Standard.gltf'
+  }
+
+test at tools\heavy-strike.test.mjs:19:1
+✖ heavy ingestion samples the actual hook and recovery, without substituting the old cross (2.8438ms)
+  Error: ENOENT: no such file or directory, open 'D:\lsw\.worktrees\combat-release-review\assets-src\quaternius\library-2\UAL2_Standard.glb'
+      at async open (node:internal/fs/promises:636:25)
+      at async readFile (node:internal/fs/promises:1273:14)
+      at async Module.loadHeavySource (file:///D:/lsw/.worktrees/combat-release-review/tools/lib/quaternius-source.mjs:31:14)
+      at async TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/heavy-strike.test.mjs:21:15)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\lsw\\.worktrees\\combat-release-review\\assets-src\\quaternius\\library-2\\UAL2_Standard.glb'
+  }

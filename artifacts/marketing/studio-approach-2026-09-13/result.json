@@ -1,0 +1,91 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "hero": "jelani",
+      "start": [
+        0,
+        0,
+        0
+      ],
+      "gap": 39,
+      "maxHeight": 0.1,
+      "first": {
+        "position": [
+          0,
+          0,
+          34.1
+        ],
+        "damage": 10.995712,
+        "contacts": 1
+      },
+      "replay": {
+        "position": [
+          0,
+          0,
+          34.1
+        ],
+        "damage": 10.995712,
+        "contacts": 1
+      }
+    },
+    {
+      "hero": "rage",
+      "start": [
+        0,
+        0,
+        0
+      ],
+      "gap": 46.800000000000004,
+      "maxHeight": 1.1,
+      "first": {
+        "position": [
+          0,
+          0,
+          48.416712448590914
+        ],
+        "damage": 38.475,
+        "contacts": 1
+      },
+      "replay": {
+        "position": [
+          0,
+          0,
+          48.416712448590914
+        ],
+        "damage": 38.475,
+        "contacts": 1
+      }
+    },
+    {
+      "hero": "sol",
+      "start": [
+        0,
+        0,
+        0
+      ],
+      "gap": 26,
+      "maxHeight": 0,
+      "first": {
+        "position": [
+          0,
+          0,
+          21.584932
+        ],
+        "damage": 9.443200000000001,
+        "contacts": 1
+      },
+      "replay": {
+        "position": [
+          0,
+          0,
+          21.584932
+        ],
+        "damage": 9.443200000000001,
+        "contacts": 1
+      }
+    }
+  ],
+  "errors": [],
+  "staging": "Authoring simulation: production Fighter/MeleeSystem on empty Studio stage; deterministic seek, not native gameplay input or obstacle acceptance."
+}

@@ -1,0 +1,24 @@
+{
+  "setup": "Ordinary selection; seeded saved desert rain, controlled portal approach position, native Digit3, E ready and W crossing.",
+  "result": {
+    "state": "field",
+    "room": false,
+    "sameWeather": true,
+    "weather": "rain",
+    "time": 0.020799999999999274,
+    "trainingDisposed": true,
+    "trainingLayers": 0,
+    "stockBefore": {
+      "soldier": 0,
+      "lsw": 3
+    },
+    "stockAfter": {
+      "soldier": 0,
+      "lsw": 2
+    },
+    "deployed": 1,
+    "manifest": 1,
+    "roomWalls": 0
+  },
+  "errors": []
+}

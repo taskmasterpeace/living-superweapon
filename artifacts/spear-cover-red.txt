@@ -1,0 +1,93 @@
+(node:35392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ one paid physical spear winds up in hand and releases once through production slot (88.2854ms)
+✔ outbound guidance turns toward live aim with bounded angular speed (33.2924ms)
+✔ first swept body contact embeds, follows victim, waits and does not redamage (60.675ms)
+✔ recall costs no energy and catches the same object; a new throw reuses it (29.2926ms)
+✔ clearing or removing the slot disposes all spear resources and ownership (22.7765ms)
+✔ optional creator catalog exposes a guided spear with black body and crimson tip (0.0963ms)
+✖ thin cover catches the spear at 30Hz and does not auto-return (36.0901ms)
+✖ thin cover catches the spear at 60Hz and does not auto-return (39.4734ms)
+✖ thin cover catches the spear at 120Hz and does not auto-return (52.648ms)
+✔ return cannot teleport through a newly intervening wall and can retry from a clear route (29.5961ms)
+✔ busy hands leave a safe waiting spear and freeing a hand catches the original mesh (27.0468ms)
+✔ freeze cancels an unreleased throw and zero-time preview cannot advance windup (23.3506ms)
+✔ slot retirement disposes the owned spear exactly once (26.4615ms)
+✔ death retirement disposes the owned spear exactly once (20.3883ms)
+✔ reset retirement disposes the owned spear exactly once (19.7834ms)
+✔ phase and allied bodies cannot acquire a hostile spear embed or damage (51.2701ms)
+✔ studio supports the optional type and validates real steering bounds (15.4811ms)
+✔ the released spear tip points at aim before it leaves the articulated hand (14.8973ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 15
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 886.9522
+
+✖ failing tests:
+
+test at tools\guided-spear.test.mjs:37:29
+✖ thin cover catches the spear at 30Hz and does not auto-return (36.0901ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/guided-spear.test.mjs:38:421)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\guided-spear.test.mjs:37:29
+✖ thin cover catches the spear at 60Hz and does not auto-return (39.4734ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/guided-spear.test.mjs:38:421)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\guided-spear.test.mjs:37:29
+✖ thin cover catches the spear at 120Hz and does not auto-return (52.648ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/guided-spear.test.mjs:38:421)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "rage-approach",
+  "startedAt": "2026-09-13T06:36:14.383Z",
+  "runnerRevision": "4c60e0a1c44e606a39aa7304b3ae0b8dc008a9f4",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "4c60e0a1c44e606a39aa7304b3ae0b8dc008a9f4",
+    "trackedDiffHash": "d6f317a03b875cd88bd554a20a67979e69428197b8bd66ef85783c6346e7e9a6"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:36:36.320Z",
+  "staging": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability."
+}

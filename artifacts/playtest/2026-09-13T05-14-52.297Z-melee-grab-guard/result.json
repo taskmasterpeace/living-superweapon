@@ -1,0 +1,181 @@
+{
+  "passed": true,
+  "facing": "front",
+  "attack": "grab",
+  "observation": [
+    {
+      "time": 0.1041999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.1541999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.20419999999999888,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.2333999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.2833999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.2960999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3168999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3668999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3835000000000018,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.39610000000000034,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.42530000000000107,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4378000000000011,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4503000000000011,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4628000000000011,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4753000000000011,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4878000000000011,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5003999999999996,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5128999999999996,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5628999999999996,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5838999999999996,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5962000000000025,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6088999999999996,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6172000000000024,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6255000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.633800000000001,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6463999999999995,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6547000000000024,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6631000000000002,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.671300000000001,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7047000000000024,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7173000000000009,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7256000000000002,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7380000000000017,
+      "guard": true,
+      "incoming": 0
+    }
+  ],
+  "hit": null,
+  "grab": {
+    "holder": 1,
+    "victim": 2,
+    "reciprocal": true,
+    "released": true
+  },
+  "errors": [],
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense or charged-heavy counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

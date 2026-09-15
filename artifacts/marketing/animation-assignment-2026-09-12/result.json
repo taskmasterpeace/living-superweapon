@@ -1,0 +1,120 @@
+{
+  "setup": "UI assigns marker draft to VEGAS, normal game entry and native V strike, observer records original animation sampling. No forced strike or animation.",
+  "hero": "vega",
+  "assigned": {
+    "jab": {
+      "version": 1,
+      "id": "strike/jab",
+      "take": "Punch_Jab",
+      "duration": 0.8333333134651184,
+      "sourceContactStart": 0.21666666666666667,
+      "sourceContactEnd": 0.3333333333333333,
+      "contactStart": 0.1,
+      "contactEnd": 0.4
+    }
+  },
+  "trace": [
+    {
+      "state": "startup",
+      "actual": 0.01659999999999855,
+      "expected": 0.01659999999999855
+    },
+    {
+      "state": "startup",
+      "actual": 0.03759999999999855,
+      "expected": 0.03759999999999855
+    },
+    {
+      "state": "startup",
+      "actual": 0.07500000000000001,
+      "expected": 0.07500000000000001
+    },
+    {
+      "state": "active",
+      "actual": 0.14250000000000002,
+      "expected": 0.14250000000000002
+    },
+    {
+      "state": "active",
+      "actual": 0.14250000000000002,
+      "expected": 0.14250000000000002
+    },
+    {
+      "state": "active",
+      "actual": 0.26799999999999274,
+      "expected": 0.2679999999999927
+    },
+    {
+      "state": "active",
+      "actual": 0.39299999999999274,
+      "expected": 0.3929999999999927
+    },
+    {
+      "state": "recover",
+      "actual": 0.4727380919030735,
+      "expected": 0.4727380919030735
+    },
+    {
+      "state": "recover",
+      "actual": 0.5114285663196019,
+      "expected": 0.5114285663196019
+    },
+    {
+      "state": "recover",
+      "actual": 0.5504285645314579,
+      "expected": 0.5504285645314579
+    },
+    {
+      "state": "recover",
+      "actual": 0.5761190395440363,
+      "expected": 0.5761190395440362
+    },
+    {
+      "state": "recover",
+      "actual": 0.6018095145566089,
+      "expected": 0.6018095145566089
+    },
+    {
+      "state": "recover",
+      "actual": 0.6274999895691871,
+      "expected": 0.6274999895691871
+    },
+    {
+      "state": "recover",
+      "actual": 0.6534999883770931,
+      "expected": 0.6534999883770931
+    },
+    {
+      "state": "recover",
+      "actual": 0.6798095109803324,
+      "expected": 0.6798095109803324
+    },
+    {
+      "state": "recover",
+      "actual": 0.7181904616015274,
+      "expected": 0.7181904616015274
+    },
+    {
+      "state": "recover",
+      "actual": 0.7441904604094335,
+      "expected": 0.7441904604094334
+    },
+    {
+      "state": "recover",
+      "actual": 0.756880936018056,
+      "expected": 0.756880936018056
+    },
+    {
+      "state": "recover",
+      "actual": 0.7825714110306285,
+      "expected": 0.7825714110306285
+    },
+    {
+      "state": "recover",
+      "actual": 0.8215714092424903,
+      "expected": 0.8215714092424903
+    }
+  ],
+  "removed": true,
+  "errors": []
+}

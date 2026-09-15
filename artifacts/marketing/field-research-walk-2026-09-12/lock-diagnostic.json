@@ -1,0 +1,26 @@
+{
+  "camMode": "chase",
+  "cam": [
+    -105.55252622195266,
+    14.4,
+    -309.15986780011247
+  ],
+  "dir": [
+    0,
+    -2.826904932362595e-11,
+    1
+  ],
+  "angle": 19.60602387914336,
+  "yaw": 0,
+  "pitch": 0,
+  "vis": 1,
+  "alive": true,
+  "foe": true,
+  "los": true,
+  "phase": false,
+  "inert": false,
+  "blind": 0,
+  "banished": null,
+  "aimHit": "cover",
+  "lookActive": true
+}

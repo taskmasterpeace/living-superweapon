@@ -1,0 +1,59 @@
+(node:70984) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ three-tier boxing releases at the actual .18 and .55 boundaries (0.9239ms)
+✔ two-tier and restricted styles do not advertise unavailable straight attacks (0.1228ms)
+✔ clinch shows body blow and finisher; full charge remains bounded (0.1292ms)
+✔ native release and advertised region agree across styles and thresholds (0.3345ms)
+✖ hitstop freezes preparation without changing selected region (0.2271ms)
+✔ three real resources, normalized guard and no invented form (1.167ms)
+✔ a temporary buff is separate from appearance (0.1465ms)
+✔ critical resource bounds and infinite energy (0.0987ms)
+✔ flight speed stays inside the player panel with a proportional trail (0.1438ms)
+✔ expired status is removed and guard break is not ordinary stagger (0.136ms)
+✔ guard break persists through regeneration and small nonzero break threshold (0.1605ms)
+✔ real sprint multiplier appears with remaining duration (0.1169ms)
+✔ guard-break countdown uses actual recovery rate at tenth-second precision (0.1242ms)
+✖ stun timer is already wall-clock seconds and must not be recovered twice (0.6267ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 12
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 242.0792
+
+✖ failing tests:
+
+test at tools\melee-charge-meter.test.mjs:29:1
+✖ hitstop freezes preparation without changing selected region (0.2271ms)
+  TypeError: f.muzzle is not a function
+      at MeleeSystem.chargeUpdate (file:///D:/lsw/.worktrees/combat-release-review/src/engine/melee.js:245:19)
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/melee-charge-meter.test.mjs:29:210)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+
+test at tools\player-status.test.mjs:15:1
+✖ stun timer is already wall-clock seconds and must not be recovered twice (0.6267ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/player-status.test.mjs:15:145)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

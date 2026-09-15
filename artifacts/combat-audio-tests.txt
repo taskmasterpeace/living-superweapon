@@ -1,0 +1,38 @@
+(node:51552) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ energy-funded block stays silent; actual exhaustion emits one guard-break cue (157.4494ms)
+✔ grab recording only follows a completed capture (interrupted=false) (95.7214ms)
+✔ grab recording only follows a completed capture (interrupted=true) (72.1561ms)
+(node:38376) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ funded sustained guard protects all HP at 30 Hz (54.1072ms)
+✔ funded sustained guard protects all HP at 60 Hz (17.4755ms)
+✔ funded sustained guard protects all HP at 120 Hz (15.6779ms)
+✔ energy exhaustion admits only the unpaid portion and breaks guard (14.3896ms)
+✔ exact final energy pays the hit completely, then opens the guard (15.3466ms)
+✔ guard crush opens a funded defender without secretly bypassing energy (13.5291ms)
+✔ strong shields improve energy economy instead of allowing chip (10.8266ms)
+✔ funded guard spends energy before the personal armor pool (13.6907ms)
+✔ funded guard spends energy before the personal shield pool (10.2459ms)
+✔ only unpaid guard overflow reaches personal armor, then breaks the guard once (11.2262ms)
+✔ only unpaid guard overflow reaches personal shield, then breaks the guard once (10.135ms)
+✔ authored beam efficiency changes the energy bill and unpaid overflow, not incoming damage (11.4179ms)
+✔ infinite core cannot be drained but still has a breakable guard meter (9.8328ms)
+✔ rear hits and unblockable grabs bypass the energy shield (20.7999ms)
+✔ ground guard admits only frontal energy-funded contact (front) (10.4553ms)
+✔ ground guard admits only frontal energy-funded contact (rear) (10.2324ms)
+✔ air guard admits only frontal energy-funded contact (front) (10.6532ms)
+✔ air guard admits only frontal energy-funded contact (rear) (10.399ms)
+✔ legacy city chip rules remain explicit outside PowerWorld (11.6044ms)
+✔ PowerWorld grounded actors get the same funded guard without granting flight (9.3173ms)
+✔ block feedback names energy spent and reports only unpaid health loss (9.8479ms)
+✔ blocked pressure suppresses ordinary energy regeneration for flying PowerWorld actors (9.2854ms)
+✔ blocked pressure suppresses ordinary energy regeneration for grounded PowerWorld actors (9.1358ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 604.2666

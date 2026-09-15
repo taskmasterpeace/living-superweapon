@@ -1,0 +1,1 @@
+const fs=require('fs');let p='src/tool/character-foundation.js';let s=fs.readFileSync(p,'utf8').replace("for(const key of ['aura','auraState'","for(const key of ['hoodie','handModule','auraOrigin','glowRegion','tattooRegion','aura','auraState'").replace("for(const key of ['mustache','unlitBlack'","for(const key of ['businessSuit','mustache','unlitBlack'");fs.writeFileSync(p,s);

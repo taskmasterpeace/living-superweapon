@@ -1,0 +1,53 @@
+{
+  "imported": {
+    "bindings": 37,
+    "decoded": 37,
+    "loops": 7,
+    "wired": 6
+  },
+  "events": [
+    {
+      "id": "rotor",
+      "source": "synthesized-placeholder",
+      "name": null,
+      "loop": true,
+      "time": 5.992,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "rotor",
+      "accepted": false,
+      "reason": "sfx-cooldown-or-concurrency",
+      "time": 5.992
+    },
+    {
+      "id": "jet",
+      "source": "synthesized-placeholder",
+      "name": null,
+      "loop": true,
+      "time": 5.992,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "jet",
+      "accepted": false,
+      "reason": "sfx-cooldown-or-concurrency",
+      "time": 5.992
+    },
+    {
+      "id": "heavy",
+      "source": "chosen-recording",
+      "name": "heavy.wav",
+      "loop": false,
+      "time": 15.210666666666667,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,1958 @@
+{
+  "commit": "77e7e59",
+  "source": "Source defaults; no personal browser profiles; neutral hover preview, not gameplay validation",
+  "errors": [],
+  "roster": [
+    {
+      "id": "sol",
+      "name": "SOL",
+      "threat": "Very High",
+      "strength": 8,
+      "flightTier": 3,
+      "role": "Bruiser / Beam",
+      "abilities": [
+        {
+          "name": "Heat Ray",
+          "type": "beam"
+        },
+        {
+          "name": "Arctic Breath",
+          "type": "cone"
+        },
+        {
+          "name": "Sky Smash",
+          "type": "melee"
+        },
+        {
+          "name": "Solar Flare",
+          "type": "projectile"
+        },
+        {
+          "name": "Heat Flurry",
+          "type": "volley"
+        },
+        {
+          "name": "Super Dash",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "kano",
+      "name": "KANO",
+      "threat": "Very High",
+      "strength": 6,
+      "role": "All-Rounder",
+      "abilities": [
+        {
+          "name": "Wave Cannon",
+          "type": "beam"
+        },
+        {
+          "name": "Comet Rush",
+          "type": "rush"
+        },
+        {
+          "name": "Ki Blast",
+          "type": "projectile"
+        },
+        {
+          "name": "Snap Transit",
+          "type": "teleport"
+        },
+        {
+          "name": "Flash Step",
+          "type": "dash"
+        },
+        {
+          "name": "Star Sphere",
+          "type": "growingorb"
+        }
+      ]
+    },
+    {
+      "id": "vega",
+      "name": "VEGAS",
+      "threat": "Very High",
+      "strength": 7,
+      "role": "Charge Artillery",
+      "abilities": [
+        {
+          "name": "Volley",
+          "type": "volley"
+        },
+        {
+          "name": "Violet Lance",
+          "type": "beam"
+        },
+        {
+          "name": "Nova Burst",
+          "type": "charge"
+        },
+        {
+          "name": "Rush Combo",
+          "type": "melee"
+        },
+        {
+          "name": "Burst Dash",
+          "type": "dash"
+        },
+        {
+          "name": "Final Arc",
+          "type": "beam"
+        }
+      ]
+    },
+    {
+      "id": "aurum",
+      "name": "AURUM",
+      "threat": "High",
+      "strength": 5,
+      "role": "Constructs",
+      "abilities": [
+        {
+          "name": "Will Fist",
+          "type": "construct"
+        },
+        {
+          "name": "Will Hammer",
+          "type": "construct"
+        },
+        {
+          "name": "Barrier",
+          "type": "construct"
+        },
+        {
+          "name": "Sentry",
+          "type": "construct"
+        },
+        {
+          "name": "Emerald Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Will Surge",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "nova",
+      "name": "NOVA",
+      "threat": "Extreme",
+      "strength": 5,
+      "role": "Sky Artillery",
+      "abilities": [
+        {
+          "name": "Star Lance",
+          "type": "beam"
+        },
+        {
+          "name": "Nova Core",
+          "type": "charge"
+        },
+        {
+          "name": "Plasma Orb",
+          "type": "projectile"
+        },
+        {
+          "name": "Solar Wind",
+          "type": "cone"
+        },
+        {
+          "name": "Ember Spray",
+          "type": "volley"
+        },
+        {
+          "name": "Sun Step",
+          "type": "dash"
+        },
+        {
+          "name": "Meteor Storm",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "rime",
+      "name": "RIME",
+      "threat": "High",
+      "strength": 4,
+      "flightTier": 2,
+      "role": "Cryo Control",
+      "abilities": [
+        {
+          "name": "Frost Breath",
+          "type": "cone"
+        },
+        {
+          "name": "Shard Volley",
+          "type": "volley"
+        },
+        {
+          "name": "Ice Wall",
+          "type": "construct"
+        },
+        {
+          "name": "Cryo Beam",
+          "type": "beam"
+        },
+        {
+          "name": "Glacier Spike",
+          "type": "projectile"
+        },
+        {
+          "name": "Ice Skate",
+          "type": "dash"
+        },
+        {
+          "name": "Absolute Zero",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "volt",
+      "name": "VOLT",
+      "threat": "Moderate",
+      "strength": 3,
+      "flightTier": 0,
+      "role": "Speed / Lightning",
+      "abilities": [
+        {
+          "name": "Lightning Flurry",
+          "type": "rush"
+        },
+        {
+          "name": "Arc Beam",
+          "type": "beam"
+        },
+        {
+          "name": "Chain Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Static Field",
+          "type": "cone"
+        },
+        {
+          "name": "Zap Step",
+          "type": "teleport"
+        },
+        {
+          "name": "Blink",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "warden",
+      "name": "WARDEN",
+      "threat": "High",
+      "strength": 8,
+      "flightTier": 2,
+      "role": "Control / Slam",
+      "abilities": [
+        {
+          "name": "Force Push",
+          "type": "cone"
+        },
+        {
+          "name": "Graviton",
+          "type": "projectile"
+        },
+        {
+          "name": "Singularity",
+          "type": "growingorb"
+        },
+        {
+          "name": "Anchor Slam",
+          "type": "melee"
+        },
+        {
+          "name": "Phase",
+          "type": "teleport"
+        },
+        {
+          "name": "Slide",
+          "type": "dash"
+        },
+        {
+          "name": "Collapse",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "hive",
+      "name": "HIVE",
+      "threat": "Moderate",
+      "strength": 3,
+      "flightTier": 1,
+      "role": "Summoner",
+      "abilities": [
+        {
+          "name": "Drone Swarm",
+          "type": "summon"
+        },
+        {
+          "name": "Sentinel",
+          "type": "construct"
+        },
+        {
+          "name": "Formic Sting",
+          "type": "projectile"
+        },
+        {
+          "name": "Hunter Pack",
+          "type": "summon"
+        },
+        {
+          "name": "Scatter",
+          "type": "cone"
+        },
+        {
+          "name": "Scramble",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "pyre",
+      "name": "PYRE",
+      "threat": "Very High",
+      "strength": 7,
+      "flightTier": 2,
+      "role": "Fire Bruiser",
+      "abilities": [
+        {
+          "name": "Fireball",
+          "type": "projectile"
+        },
+        {
+          "name": "Flamethrower",
+          "type": "cone"
+        },
+        {
+          "name": "Magma Bomb",
+          "type": "charge"
+        },
+        {
+          "name": "Burning Fist",
+          "type": "melee"
+        },
+        {
+          "name": "Cinder Burst",
+          "type": "volley"
+        },
+        {
+          "name": "Flare Dash",
+          "type": "dash"
+        },
+        {
+          "name": "Rain of Fire",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "torch",
+      "name": "TORCH",
+      "threat": "High",
+      "strength": 4,
+      "flightTier": 3,
+      "role": "Fire Flyer / Air",
+      "abilities": [
+        {
+          "name": "Flame Jet",
+          "type": "beam"
+        },
+        {
+          "name": "Fire Blast",
+          "type": "cone"
+        },
+        {
+          "name": "Fireball",
+          "type": "projectile"
+        },
+        {
+          "name": "Flaming Fist",
+          "type": "melee"
+        },
+        {
+          "name": "Ember Storm",
+          "type": "volley"
+        },
+        {
+          "name": "Jet Dash",
+          "type": "dash"
+        },
+        {
+          "name": "Supernova",
+          "type": "nova"
+        }
+      ]
+    },
+    {
+      "id": "apex",
+      "name": "APEX",
+      "threat": "Extreme",
+      "strength": 8,
+      "role": "Absorb / Regen",
+      "abilities": [
+        {
+          "name": "Wave Cannon",
+          "type": "beam"
+        },
+        {
+          "name": "Tail Sweep",
+          "type": "melee"
+        },
+        {
+          "name": "Consume",
+          "type": "lifedrain"
+        },
+        {
+          "name": "Afterimage",
+          "type": "teleport"
+        },
+        {
+          "name": "Regenerate",
+          "type": "buff"
+        },
+        {
+          "name": "Burst Step",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "specter",
+      "name": "SPECTER",
+      "threat": "High",
+      "strength": 6,
+      "role": "Phase / Flight",
+      "abilities": [
+        {
+          "name": "Solar Beam",
+          "type": "beam"
+        },
+        {
+          "name": "Density Punch",
+          "type": "melee"
+        },
+        {
+          "name": "Intangibility",
+          "type": "phase"
+        },
+        {
+          "name": "Stone Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Max Density",
+          "type": "buff"
+        },
+        {
+          "name": "Phase Step",
+          "type": "dash"
+        },
+        {
+          "name": "Solar Nova",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "vanguard",
+      "name": "VANGUARD",
+      "threat": "Very High",
+      "strength": 9,
+      "role": "Air Combat / Invuln",
+      "abilities": [
+        {
+          "name": "Eye Beam",
+          "type": "beam"
+        },
+        {
+          "name": "Flying Tackle",
+          "type": "melee"
+        },
+        {
+          "name": "Thunderclap",
+          "type": "cone"
+        },
+        {
+          "name": "Sky Combo",
+          "type": "rush"
+        },
+        {
+          "name": "Blitz",
+          "type": "dash"
+        },
+        {
+          "name": "Unbreakable",
+          "type": "buff"
+        }
+      ]
+    },
+    {
+      "id": "kraken",
+      "name": "KRAKEN",
+      "threat": "Very High",
+      "strength": 8,
+      "flightTier": 1,
+      "role": "Tentacle Grappler",
+      "abilities": [
+        {
+          "name": "Abyssal Grab",
+          "type": "tentacle"
+        },
+        {
+          "name": "Riptide Lash",
+          "type": "melee"
+        },
+        {
+          "name": "Corrosive Ink",
+          "type": "cone"
+        },
+        {
+          "name": "Abyss Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Deep Hunger",
+          "type": "buff"
+        },
+        {
+          "name": "Surge",
+          "type": "dash"
+        },
+        {
+          "name": "Leviathan Maw",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "rift",
+      "name": "RIFT",
+      "threat": "High",
+      "strength": 3,
+      "flightTier": 2,
+      "role": "Portal Tactician",
+      "abilities": [
+        {
+          "name": "Rift Ray",
+          "type": "beam"
+        },
+        {
+          "name": "Dimensional Door",
+          "type": "portal"
+        },
+        {
+          "name": "Fracture Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Step Through",
+          "type": "teleport"
+        },
+        {
+          "name": "Slip",
+          "type": "dash"
+        },
+        {
+          "name": "Event Horizon",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "titan",
+      "name": "TITAN",
+      "threat": "High",
+      "strength": 9,
+      "flightTier": 2,
+      "role": "Armored Juggernaut",
+      "abilities": [
+        {
+          "name": "Twin Cannon",
+          "type": "beam"
+        },
+        {
+          "name": "Pulse Rifle",
+          "type": "rifle"
+        },
+        {
+          "name": "Reactor Burst",
+          "type": "charge"
+        },
+        {
+          "name": "Vent Blast",
+          "type": "cone"
+        },
+        {
+          "name": "Thruster Dash",
+          "type": "dash"
+        },
+        {
+          "name": "Annihilator Array",
+          "type": "beam"
+        }
+      ]
+    },
+    {
+      "id": "sarge",
+      "name": "SARGE",
+      "threat": "Low",
+      "strength": 4,
+      "flightTier": 0,
+      "role": "Human Arsenal",
+      "abilities": [
+        {
+          "name": "Service Carbine",
+          "type": "rifle"
+        },
+        {
+          "name": "Frag Grenade",
+          "type": "projectile"
+        },
+        {
+          "name": "Plasma Blade",
+          "type": "melee"
+        },
+        {
+          "name": "Breaching Shotgun",
+          "type": "rifle"
+        },
+        {
+          "name": "Stim Shot",
+          "type": "buff"
+        },
+        {
+          "name": "Combat Roll",
+          "type": "dash"
+        },
+        {
+          "name": "Airstrike",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "merc",
+      "name": "MERC",
+      "threat": "Low",
+      "strength": 3,
+      "flightTier": 0,
+      "role": "Gun Combat",
+      "abilities": [
+        {
+          "name": "Blaster Rifle",
+          "type": "rifle"
+        },
+        {
+          "name": "Charged Pistol",
+          "type": "charge"
+        },
+        {
+          "name": "Scatter Blaster",
+          "type": "rifle"
+        },
+        {
+          "name": "Thermal Detonator",
+          "type": "projectile"
+        },
+        {
+          "name": "Heavy Pistol",
+          "type": "rifle"
+        },
+        {
+          "name": "Combat Roll",
+          "type": "dash"
+        },
+        {
+          "name": "Rail Detonator",
+          "type": "projectile"
+        }
+      ]
+    },
+    {
+      "id": "kivuli",
+      "name": "KIVULI",
+      "threat": "High",
+      "strength": 4,
+      "flightTier": 2,
+      "role": "Gas Controller",
+      "abilities": [
+        {
+          "name": "Choking Veil",
+          "type": "cone"
+        },
+        {
+          "name": "Solid Smoke",
+          "type": "construct"
+        },
+        {
+          "name": "Gas Form",
+          "type": "phase"
+        },
+        {
+          "name": "Creeping Cloud",
+          "type": "projectile"
+        },
+        {
+          "name": "Second Wind",
+          "type": "buff"
+        },
+        {
+          "name": "Vapor Slip",
+          "type": "dash"
+        },
+        {
+          "name": "Asphyxia",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "gale",
+      "name": "GALE",
+      "threat": "Low",
+      "strength": 3,
+      "flightTier": 0,
+      "role": "Archer / Trick Arrows",
+      "abilities": [
+        {
+          "name": "Longshot",
+          "type": "bow"
+        },
+        {
+          "name": "Concussion Shot",
+          "type": "projectile"
+        },
+        {
+          "name": "Switch Broadheads",
+          "type": "quiver"
+        },
+        {
+          "name": "Ranger Knife",
+          "type": "melee"
+        },
+        {
+          "name": "Deadeye",
+          "type": "buff"
+        },
+        {
+          "name": "Tumble",
+          "type": "dash"
+        },
+        {
+          "name": "Arrow Storm",
+          "type": "volley"
+        }
+      ]
+    },
+    {
+      "id": "stefanos",
+      "name": "KING STEFANOS",
+      "threat": "Very High",
+      "strength": 5,
+      "flightTier": 3,
+      "role": "Formed Explosives",
+      "abilities": [
+        {
+          "name": "Formed Charge",
+          "type": "projectile"
+        },
+        {
+          "name": "Mote Storm",
+          "type": "volley"
+        },
+        {
+          "name": "Concussive Form",
+          "type": "cone"
+        },
+        {
+          "name": "Pressure Sphere",
+          "type": "charge"
+        },
+        {
+          "name": "Propelled Slip",
+          "type": "dash"
+        },
+        {
+          "name": "THE MARLETTA",
+          "type": "facebomb"
+        }
+      ]
+    },
+    {
+      "id": "sandra",
+      "name": "SANDRA",
+      "threat": "High",
+      "strength": 4,
+      "flightTier": 0,
+      "role": "LSW Hunter",
+      "abilities": [
+        {
+          "name": "Twin Pistols",
+          "type": "rifle"
+        },
+        {
+          "name": "Suppressed SMG",
+          "type": "rifle"
+        },
+        {
+          "name": "The Ring Sees",
+          "type": "buff"
+        },
+        {
+          "name": "Pistol Whip",
+          "type": "melee"
+        },
+        {
+          "name": "Tracker Round",
+          "type": "projectile"
+        },
+        {
+          "name": "Slip the Frame",
+          "type": "dash"
+        },
+        {
+          "name": "Clean Extraction",
+          "type": "rush"
+        }
+      ]
+    },
+    {
+      "id": "ironclad",
+      "name": "IRONCLAD",
+      "threat": "High",
+      "strength": 7,
+      "flightTier": 3,
+      "role": "Powered Armor",
+      "abilities": [
+        {
+          "name": "Repulsor Bolts",
+          "type": "rifle"
+        },
+        {
+          "name": "Unibeam",
+          "type": "beam"
+        },
+        {
+          "name": "Micro-Missiles",
+          "type": "projectile"
+        },
+        {
+          "name": "Flare Vent",
+          "type": "cone"
+        },
+        {
+          "name": "Vector Thrust",
+          "type": "dash"
+        },
+        {
+          "name": "Housewarming Party",
+          "type": "beam"
+        }
+      ]
+    },
+    {
+      "id": "rage",
+      "name": "RAGE",
+      "threat": "Very High",
+      "strength": 10,
+      "flightTier": 0,
+      "role": "Pure Strength",
+      "abilities": [
+        {
+          "name": "Smash",
+          "type": "melee"
+        },
+        {
+          "name": "Thunder Clap",
+          "type": "cone"
+        },
+        {
+          "name": "Boulder",
+          "type": "projectile"
+        },
+        {
+          "name": "Rampage",
+          "type": "rush"
+        },
+        {
+          "name": "Bull Charge",
+          "type": "dash"
+        },
+        {
+          "name": "WORLD BREAKER",
+          "type": "nova"
+        }
+      ]
+    },
+    {
+      "id": "stormcall",
+      "name": "STORMCALL",
+      "threat": "Very High",
+      "strength": 9,
+      "flightTier": 3,
+      "role": "Storm God",
+      "abilities": [
+        {
+          "name": "Axe Cleave",
+          "type": "melee"
+        },
+        {
+          "name": "Hurled Axe",
+          "type": "projectile"
+        },
+        {
+          "name": "Godblast",
+          "type": "charge"
+        },
+        {
+          "name": "Tempest Breath",
+          "type": "cone"
+        },
+        {
+          "name": "Bolt Dash",
+          "type": "dash"
+        },
+        {
+          "name": "SKYFALL",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "webline",
+      "name": "WEBLINE",
+      "threat": "High",
+      "strength": 6,
+      "flightTier": 0,
+      "role": "Web Acrobat",
+      "abilities": [
+        {
+          "name": "Web Snare",
+          "type": "tentacle"
+        },
+        {
+          "name": "Spider Flurry",
+          "type": "rush"
+        },
+        {
+          "name": "Web Darts",
+          "type": "projectile"
+        },
+        {
+          "name": "Sting Kick",
+          "type": "melee"
+        },
+        {
+          "name": "Danger Sense",
+          "type": "buff"
+        },
+        {
+          "name": "Web Zip",
+          "type": "grapple"
+        }
+      ]
+    },
+    {
+      "id": "ripclaw",
+      "name": "RIPCLAW",
+      "threat": "High",
+      "strength": 6,
+      "flightTier": 0,
+      "role": "Regenerating Slasher",
+      "abilities": [
+        {
+          "name": "Ripping Claws",
+          "type": "melee"
+        },
+        {
+          "name": "Lunge Shred",
+          "type": "melee"
+        },
+        {
+          "name": "Berserker Slashes",
+          "type": "rush"
+        },
+        {
+          "name": "Intimidate",
+          "type": "cone"
+        },
+        {
+          "name": "Regeneration",
+          "type": "buff"
+        },
+        {
+          "name": "Pounce Step",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "majesty",
+      "name": "MAJESTY",
+      "threat": "Extreme",
+      "strength": 8,
+      "flightTier": 3,
+      "role": "Cosmic Powerhouse",
+      "abilities": [
+        {
+          "name": "Photon Stream",
+          "type": "beam"
+        },
+        {
+          "name": "Star Barrage",
+          "type": "volley"
+        },
+        {
+          "name": "Nova Fist",
+          "type": "charge"
+        },
+        {
+          "name": "Comet Punch",
+          "type": "melee"
+        },
+        {
+          "name": "Light Speed",
+          "type": "dash"
+        },
+        {
+          "name": "Supernova Lance",
+          "type": "beam"
+        }
+      ]
+    },
+    {
+      "id": "mystward",
+      "name": "MYSTWARD",
+      "threat": "Very High",
+      "strength": 4,
+      "flightTier": 2,
+      "role": "Mystic Defender",
+      "abilities": [
+        {
+          "name": "Crimson Bands",
+          "type": "projectile"
+        },
+        {
+          "name": "Seraphim Shield",
+          "type": "construct"
+        },
+        {
+          "name": "Fold Space",
+          "type": "teleport"
+        },
+        {
+          "name": "Eldritch Whip",
+          "type": "beam"
+        },
+        {
+          "name": "Vishanti Ward",
+          "type": "buff"
+        },
+        {
+          "name": "Cloak Drift",
+          "type": "dash"
+        },
+        {
+          "name": "Sigil Rain",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "onyx",
+      "name": "ONYX",
+      "threat": "High",
+      "strength": 7,
+      "flightTier": 0,
+      "role": "Kinetic Duelist",
+      "abilities": [
+        {
+          "name": "Kinetic Claws",
+          "type": "melee"
+        },
+        {
+          "name": "Hunt Sequence",
+          "type": "rush"
+        },
+        {
+          "name": "Kimoyo Dart",
+          "type": "projectile"
+        },
+        {
+          "name": "Sonic Overload",
+          "type": "cone"
+        },
+        {
+          "name": "Kinetic Release",
+          "type": "buff"
+        },
+        {
+          "name": "Shadow Step",
+          "type": "dash"
+        },
+        {
+          "name": "Kinetic Burst",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "chainfire",
+      "name": "CHAINFIRE",
+      "threat": "Very High",
+      "strength": 7,
+      "flightTier": 1,
+      "role": "Hellfire Chains",
+      "abilities": [
+        {
+          "name": "Hellfire Chain",
+          "type": "tentacle"
+        },
+        {
+          "name": "Soul Furnace",
+          "type": "cone"
+        },
+        {
+          "name": "Brimstone Ball",
+          "type": "projectile"
+        },
+        {
+          "name": "Chain Lash",
+          "type": "melee"
+        },
+        {
+          "name": "Penance Stare",
+          "type": "buff"
+        },
+        {
+          "name": "Hell Ride",
+          "type": "dash"
+        },
+        {
+          "name": "Rain of Hellfire",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "tempest",
+      "name": "TEMPEST",
+      "threat": "Very High",
+      "strength": 4,
+      "flightTier": 3,
+      "role": "Weather Control",
+      "abilities": [
+        {
+          "name": "Chain Lightning",
+          "type": "beam"
+        },
+        {
+          "name": "Gale Force",
+          "type": "cone"
+        },
+        {
+          "name": "Hail Volley",
+          "type": "volley"
+        },
+        {
+          "name": "Flash Freeze",
+          "type": "cone"
+        },
+        {
+          "name": "Storm Domain",
+          "type": "weather"
+        },
+        {
+          "name": "Tailwind",
+          "type": "dash"
+        },
+        {
+          "name": "Stormfront",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "knightfall",
+      "name": "KNIGHTFALL",
+      "threat": "Moderate",
+      "strength": 5,
+      "flightTier": 0,
+      "role": "Tactical Vigilante",
+      "abilities": [
+        {
+          "name": "Blade Fan",
+          "type": "volley"
+        },
+        {
+          "name": "Cross Counter",
+          "type": "melee"
+        },
+        {
+          "name": "Smoke Vanish",
+          "type": "teleport"
+        },
+        {
+          "name": "Caustic Charges",
+          "type": "mine"
+        },
+        {
+          "name": "Grapnel Line",
+          "type": "grapple"
+        },
+        {
+          "name": "Cape Slip",
+          "type": "dash"
+        },
+        {
+          "name": "Wing Support",
+          "type": "construct"
+        }
+      ]
+    },
+    {
+      "id": "aegis",
+      "name": "AEGIS",
+      "threat": "Very High",
+      "strength": 9,
+      "flightTier": 2,
+      "role": "Warrior Princess",
+      "abilities": [
+        {
+          "name": "God-Forged Blade",
+          "type": "melee"
+        },
+        {
+          "name": "Golden Lasso",
+          "type": "tentacle"
+        },
+        {
+          "name": "Aegis Wave",
+          "type": "charge"
+        },
+        {
+          "name": "Shield Shout",
+          "type": "cone"
+        },
+        {
+          "name": "War Stride",
+          "type": "dash"
+        },
+        {
+          "name": "Wrath of Themyscira",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "olympus",
+      "name": "OLYMPUS",
+      "threat": "Very High",
+      "strength": 8,
+      "flightTier": 3,
+      "role": "Divine Champion",
+      "abilities": [
+        {
+          "name": "Living Lightning",
+          "type": "beam"
+        },
+        {
+          "name": "Thunder Fist",
+          "type": "melee"
+        },
+        {
+          "name": "Thunderbolt",
+          "type": "charge"
+        },
+        {
+          "name": "Static Storm",
+          "type": "volley"
+        },
+        {
+          "name": "Mercury Step",
+          "type": "dash"
+        },
+        {
+          "name": "JUDGMENT BOLT",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "marshal",
+      "name": "MARSHAL",
+      "threat": "Very High",
+      "strength": 8,
+      "flightTier": 3,
+      "role": "Phasing Telepath",
+      "abilities": [
+        {
+          "name": "Alien Vision",
+          "type": "beam"
+        },
+        {
+          "name": "Density Hammer",
+          "type": "melee"
+        },
+        {
+          "name": "Ghost Body",
+          "type": "phase"
+        },
+        {
+          "name": "Mind Skip",
+          "type": "teleport"
+        },
+        {
+          "name": "Wraith Dash",
+          "type": "dash"
+        },
+        {
+          "name": "Dominion",
+          "type": "mindcontrol"
+        }
+      ]
+    },
+    {
+      "id": "circuit",
+      "name": "CIRCUIT",
+      "threat": "High",
+      "strength": 8,
+      "flightTier": 2,
+      "role": "Cybernetic Arsenal",
+      "abilities": [
+        {
+          "name": "Sonic Cannon",
+          "type": "rifle"
+        },
+        {
+          "name": "White Noise Beam",
+          "type": "beam"
+        },
+        {
+          "name": "Shock Grapple",
+          "type": "projectile"
+        },
+        {
+          "name": "Overload Vent",
+          "type": "cone"
+        },
+        {
+          "name": "Servo Burst",
+          "type": "dash"
+        },
+        {
+          "name": "BOOYAH Cannon",
+          "type": "beam"
+        }
+      ]
+    },
+    {
+      "id": "trench",
+      "name": "TRENCH",
+      "threat": "High",
+      "strength": 8,
+      "flightTier": 0,
+      "role": "Ocean Sovereign",
+      "abilities": [
+        {
+          "name": "Trident Pierce",
+          "type": "melee"
+        },
+        {
+          "name": "The Drowned Court",
+          "type": "summon"
+        },
+        {
+          "name": "Riptide",
+          "type": "cone"
+        },
+        {
+          "name": "Harpoon Throw",
+          "type": "projectile"
+        },
+        {
+          "name": "Current Ride",
+          "type": "dash"
+        },
+        {
+          "name": "MAELSTROM",
+          "type": "growingorb"
+        }
+      ]
+    },
+    {
+      "id": "decibel",
+      "name": "DECIBEL",
+      "threat": "Moderate",
+      "strength": 4,
+      "flightTier": 0,
+      "role": "Sonic Screamer",
+      "abilities": [
+        {
+          "name": "Siren Scream",
+          "type": "cone"
+        },
+        {
+          "name": "Combat Cadence",
+          "type": "rush"
+        },
+        {
+          "name": "Heel Turn",
+          "type": "melee"
+        },
+        {
+          "name": "Focused Note",
+          "type": "projectile"
+        },
+        {
+          "name": "Staccato Step",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "coldsnap",
+      "name": "COLDSNAP",
+      "threat": "Moderate",
+      "strength": 3,
+      "flightTier": 0,
+      "role": "Cryo Gunslinger",
+      "abilities": [
+        {
+          "name": "Cold Gun",
+          "type": "rifle"
+        },
+        {
+          "name": "Flash Frost",
+          "type": "cone"
+        },
+        {
+          "name": "Glacier Wall",
+          "type": "construct"
+        },
+        {
+          "name": "Cryo Charge",
+          "type": "projectile"
+        },
+        {
+          "name": "Cold Read",
+          "type": "buff"
+        },
+        {
+          "name": "Getaway",
+          "type": "dash"
+        },
+        {
+          "name": "Absolute Frost",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "foundry",
+      "name": "CRUCIBLE",
+      "threat": "High",
+      "strength": 9,
+      "flightTier": 1,
+      "role": "Hammer Engineer",
+      "abilities": [
+        {
+          "name": "Foundry Hammer",
+          "type": "melee"
+        },
+        {
+          "name": "Hammer Toss",
+          "type": "projectile"
+        },
+        {
+          "name": "Rivet Gun",
+          "type": "rifle"
+        },
+        {
+          "name": "Forge Vent",
+          "type": "cone"
+        },
+        {
+          "name": "Piston Drive",
+          "type": "dash"
+        },
+        {
+          "name": "Orbital Forge",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "talon",
+      "name": "TALON",
+      "threat": "Low",
+      "strength": 5,
+      "flightTier": 0,
+      "role": "Acrobat Duelist",
+      "abilities": [
+        {
+          "name": "Escrima Cross",
+          "type": "melee"
+        },
+        {
+          "name": "Flying Grayson",
+          "type": "rush"
+        },
+        {
+          "name": "Wing-Ding Fan",
+          "type": "volley"
+        },
+        {
+          "name": "Staff Sweep",
+          "type": "melee"
+        },
+        {
+          "name": "Tumbler",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "abeo",
+      "name": "ABEO",
+      "threat": "High",
+      "strength": 9,
+      "flightTier": 0,
+      "role": "Metal Bodyguard",
+      "abilities": [
+        {
+          "name": "Iron Palm",
+          "type": "melee"
+        },
+        {
+          "name": "Shockwave Stomp",
+          "type": "cone"
+        },
+        {
+          "name": "Shrapnel Fist",
+          "type": "projectile"
+        },
+        {
+          "name": "Guard Break",
+          "type": "melee"
+        },
+        {
+          "name": "Bulwark Rush",
+          "type": "dash"
+        },
+        {
+          "name": "Foundation Breaker",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "jelani",
+      "name": "JELANI",
+      "threat": "High",
+      "strength": 9,
+      "flightTier": 0,
+      "role": "Strength-Speed",
+      "abilities": [
+        {
+          "name": "Piston Blow",
+          "type": "melee"
+        },
+        {
+          "name": "Blur Assault",
+          "type": "rush"
+        },
+        {
+          "name": "Sonic Wake",
+          "type": "cone"
+        },
+        {
+          "name": "Spear Tackle",
+          "type": "melee"
+        },
+        {
+          "name": "Second Wind",
+          "type": "buff"
+        },
+        {
+          "name": "Afterburn",
+          "type": "dash"
+        },
+        {
+          "name": "A Hundred Hands",
+          "type": "rush"
+        }
+      ]
+    },
+    {
+      "id": "kamaria",
+      "name": "KAMARIA",
+      "threat": "High",
+      "strength": 5,
+      "flightTier": 2,
+      "role": "Phasing Guardian",
+      "abilities": [
+        {
+          "name": "Veiled Edge",
+          "type": "melee"
+        },
+        {
+          "name": "Untouchable",
+          "type": "phase"
+        },
+        {
+          "name": "Veil Step",
+          "type": "teleport"
+        },
+        {
+          "name": "Phase Bolt",
+          "type": "projectile"
+        },
+        {
+          "name": "Half-Here",
+          "type": "buff"
+        },
+        {
+          "name": "Slip Veil",
+          "type": "dash"
+        },
+        {
+          "name": "Ten Veils",
+          "type": "rush"
+        }
+      ]
+    },
+    {
+      "id": "ramiro",
+      "name": "RAMIRO",
+      "threat": "Moderate",
+      "strength": 6,
+      "flightTier": 0,
+      "role": "Cartel Hunter",
+      "abilities": [
+        {
+          "name": "Riot Scattergun",
+          "type": "rifle"
+        },
+        {
+          "name": "Service Revolver",
+          "type": "rifle"
+        },
+        {
+          "name": "Nightstick",
+          "type": "melee"
+        },
+        {
+          "name": "Gas Canister",
+          "type": "projectile"
+        },
+        {
+          "name": "Duck & Cover",
+          "type": "dash"
+        },
+        {
+          "name": "Backup Called",
+          "type": "summon"
+        }
+      ]
+    },
+    {
+      "id": "jawah",
+      "name": "JAWAH MATU",
+      "threat": "High",
+      "strength": 5,
+      "flightTier": 0,
+      "role": "Sound Absorber",
+      "abilities": [
+        {
+          "name": "Absorption Field",
+          "type": "cone"
+        },
+        {
+          "name": "Dead-Air Palm",
+          "type": "melee"
+        },
+        {
+          "name": "Null Wave",
+          "type": "projectile"
+        },
+        {
+          "name": "Returned Thunder",
+          "type": "cone"
+        },
+        {
+          "name": "Hush",
+          "type": "dash"
+        },
+        {
+          "name": "EVERY SOUND AT ONCE",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "moses",
+      "name": "MOSES APIO",
+      "threat": "High",
+      "strength": 7,
+      "flightTier": 1,
+      "role": "Symbiont Host",
+      "abilities": [
+        {
+          "name": "Atlas Tendrils",
+          "type": "tentacle"
+        },
+        {
+          "name": "Symbiont Fist",
+          "type": "melee"
+        },
+        {
+          "name": "Protocol Surge",
+          "type": "rush"
+        },
+        {
+          "name": "Bio Spike",
+          "type": "projectile"
+        },
+        {
+          "name": "Regenerative Bond",
+          "type": "buff"
+        },
+        {
+          "name": "Adaptive Slip",
+          "type": "dash"
+        }
+      ]
+    },
+    {
+      "id": "dune",
+      "name": "DUNE",
+      "threat": "Moderate",
+      "strength": 6,
+      "flightTier": 0,
+      "role": "Sand Shaper",
+      "abilities": [
+        {
+          "name": "Sandblast",
+          "type": "cone"
+        },
+        {
+          "name": "Sand Rampart",
+          "type": "construct"
+        },
+        {
+          "name": "Fist of the Waste",
+          "type": "projectile"
+        },
+        {
+          "name": "Dust Sentry",
+          "type": "construct"
+        },
+        {
+          "name": "Grain Drift",
+          "type": "dash"
+        },
+        {
+          "name": "SANDSTORM",
+          "type": "meteor"
+        }
+      ]
+    },
+    {
+      "id": "graven",
+      "name": "GRAVEN",
+      "threat": "Very High",
+      "strength": 6,
+      "flightTier": 2,
+      "role": "Gravity Controller",
+      "abilities": [
+        {
+          "name": "Gravity Shear",
+          "type": "cone"
+        },
+        {
+          "name": "Event Well",
+          "type": "growingorb"
+        },
+        {
+          "name": "Dense Star",
+          "type": "projectile"
+        },
+        {
+          "name": "Displacement",
+          "type": "teleport"
+        },
+        {
+          "name": "Zero-G Field",
+          "type": "buff"
+        },
+        {
+          "name": "Slingshot",
+          "type": "dash"
+        },
+        {
+          "name": "SINGULARITY SEED",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "bulwark",
+      "name": "BULWARK",
+      "threat": "High",
+      "strength": 9,
+      "flightTier": 0,
+      "role": "Fortress",
+      "abilities": [
+        {
+          "name": "Rampart Fist",
+          "type": "melee"
+        },
+        {
+          "name": "Bastion Wall",
+          "type": "construct"
+        },
+        {
+          "name": "Repulse Field",
+          "type": "cone"
+        },
+        {
+          "name": "Watchtower",
+          "type": "construct"
+        },
+        {
+          "name": "Hold the Line",
+          "type": "buff"
+        },
+        {
+          "name": "Advance",
+          "type": "dash"
+        },
+        {
+          "name": "SIEGE END",
+          "type": "charge"
+        }
+      ]
+    },
+    {
+      "id": "feral",
+      "name": "FERAL",
+      "threat": "High",
+      "strength": 7,
+      "flightTier": 0,
+      "role": "Beast Rusher",
+      "abilities": [
+        {
+          "name": "Rend",
+          "type": "melee"
+        },
+        {
+          "name": "Pack Hunt",
+          "type": "rush"
+        },
+        {
+          "name": "Apex Roar",
+          "type": "cone"
+        },
+        {
+          "name": "Savage Lunge",
+          "type": "melee"
+        },
+        {
+          "name": "Predator Weave",
+          "type": "dash"
+        },
+        {
+          "name": "NO CAGES",
+          "type": "rush"
+        }
+      ]
+    },
+    {
+      "id": "breach",
+      "name": "BREACH",
+      "threat": "Low",
+      "strength": 4,
+      "flightTier": 0,
+      "role": "Military / Shield Breacher",
+      "abilities": [
+        {
+          "name": "Breach Shotgun",
+          "type": "rifle"
+        },
+        {
+          "name": "Concussion Launcher",
+          "type": "projectile"
+        },
+        {
+          "name": "Shield Check",
+          "type": "melee"
+        },
+        {
+          "name": "Entry Charge",
+          "type": "mine"
+        },
+        {
+          "name": "Field Dressing",
+          "type": "buff"
+        },
+        {
+          "name": "Entry Roll",
+          "type": "dash"
+        },
+        {
+          "name": "Demolition Round",
+          "type": "projectile"
+        }
+      ]
+    },
+    {
+      "id": "recon",
+      "name": "RECON",
+      "threat": "Low",
+      "strength": 3,
+      "flightTier": 0,
+      "role": "Military / Rifle Scout",
+      "abilities": [
+        {
+          "name": "Scout Blaster",
+          "type": "rifle"
+        },
+        {
+          "name": "Charged Sidearm",
+          "type": "charge"
+        },
+        {
+          "name": "Scoped Marksman Rifle",
+          "type": "rifle"
+        },
+        {
+          "name": "Scout Grenade",
+          "type": "projectile"
+        },
+        {
+          "name": "Trauma Patch",
+          "type": "buff"
+        },
+        {
+          "name": "Scout Roll",
+          "type": "dash"
+        },
+        {
+          "name": "Anti-Armor Rocket",
+          "type": "projectile"
+        }
+      ]
+    }
+  ]
+}

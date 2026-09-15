@@ -1,0 +1,23 @@
+{
+  "setup": "Controlled descending ally setup at -28u/s; native E startup/contact catches the falling actor",
+  "player": {
+    "flying": true,
+    "y": 33.09760494284519
+  },
+  "target": {
+    "flying": true,
+    "y": 26.808021695072448,
+    "hp": 130
+  },
+  "records": [],
+  "errors": [],
+  "catch": {
+    "start": {
+      "y": 36.10825550461825,
+      "vy": -28
+    },
+    "y": 34.11806176827781,
+    "vy": 0,
+    "held": true
+  }
+}

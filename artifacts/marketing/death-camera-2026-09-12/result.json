@@ -1,0 +1,9 @@
+{
+  "setup": "Native Space takeoff; controlled lethal takeDamage call with horizontal/vertical launch. Live ragdoll, game loop and camera remain unmodified; render wrapper records observations.",
+  "samples": 58,
+  "eyeDrift": 0,
+  "fovDrift": 0,
+  "bodyTravel": 52.09256167007198,
+  "minAimDot": 0.9999999999999998,
+  "errors": []
+}

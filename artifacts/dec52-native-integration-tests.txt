@@ -1,0 +1,53 @@
+✔ compressed absorbing knots retain their own incoming packet direction (1.4676ms)
+✔ a genuine reversed segment keeps its path tangent even with forward packet velocity (0.1424ms)
+✔ absorption metadata only overrides a tangent for the same receiving body (0.1411ms)
+✔ the first body wins within a traveled segment regardless of entity order (0.1544ms)
+✔ curved path order wins over both entity order and distance from the shooter (0.1151ms)
+✔ an oblique hit returns a path point and a distinct physical near-side surface (0.1421ms)
+✔ a miss outside the envelope does not retain stale contact (0.0905ms)
+✔ the helper never acquires a fighter beyond the actually traveled tip (0.0978ms)
+✔ an advancing receiver carries contact toward the shooter without changing packets (0.1043ms)
+✔ phase and dead bodies do not shield the next solid foe, but hurt invulnerability does (0.1521ms)
+✔ banished fighters are absent while possession's inert body stays solid, surface stop false (0.1679ms)
+✔ banished fighters are absent while possession's inert body stays solid, surface stop true (0.0496ms)
+✔ friendly bodies cannot consume the opposing beam (0.0681ms)
+✔ the caller may remove compatibility padding without changing the physical surface (0.066ms)
+✔ zero-length pending geometry is not a traveled hit and duplicate knots stay safe (0.0757ms)
+✔ a broad thin wall prevents body-padding contact at radius 0.05 (0.1807ms)
+✔ a broad thin wall prevents body-padding contact at radius 1 (0.0532ms)
+✔ a broad thin wall prevents body-padding contact at radius 4 (0.0401ms)
+✔ an occluded early path section does not veto later exposed curved contact (0.0623ms)
+✔ caller-owned outputs retain their vector identities across calls (0.0396ms)
+✔ an occluded envelope entry still finds the first exposed part of that segment (0.0884ms)
+✔ an occluded envelope entry still finds the first exposed part of that segment before another shadow (0.0766ms)
+✔ surface stop puts a broad central beam on the physical near body instead of eight units ahead (0.0485ms)
+✔ surface stop waits when the traveled tip has only entered the inflated envelope (0.0449ms)
+✔ surface stop keeps a lateral beam-width graze but ends it at closest approach (0.0471ms)
+✔ surface stop chooses the actual oblique sphere entry when the centerline intersects the body (0.0348ms)
+✔ surface stop still follows curved source order instead of entity order (0.0462ms)
+✔ surface stop clamps a negative plane only while the segment start remains inside the contact envelope (0.036ms)
+✔ surface stop cannot use its lateral envelope through an adjacent thin wall (0.0852ms)
+✔ an enemy-held teammate stops the beam before its holder, without becoming an AI foe (0.0639ms)
+✔ opt-in quadruped bounds reject beams above its back and accept torso height (0.0716ms)
+(node:104392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native hound bite damages once on contact, misses after withdrawal and owns quadruped bounds (95.7001ms)
+✔ native hound bite misses a withdrawn target and cannot bite through cover (72.046ms)
+✔ Threat Room creature start/clear and delayed cancellation retire native actor and replay uses hound (52.3694ms)
+✔ delayed real modular attachment replaces bound template before capturing any fallback frame (44.7886ms)
+(node:70488) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ review interpolates real rig poses without altering native fighter or shared materials (62.741ms)
+✔ history is bounded and transient effect nodes cannot erase the exchange (0.7103ms)
+✔ review skeleton binds to copied bones instead of the live skeleton (0.4302ms)
+✔ review preserves disabled legacy render layers and enabled modular layers (0.3006ms)
+✔ recording rejects a modular fallback or a not-yet-loaded target (0.6125ms)
+✔ recording identifies both loaded modular fighters (0.1208ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 534.6065

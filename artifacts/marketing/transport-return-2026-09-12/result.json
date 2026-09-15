@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "stop": "lab",
+  "position": [
+    -79.44082800452429,
+    2.2204460492503137e-14,
+    -254.95435832377757
+  ],
+  "origin": [
+    -72.55252622195266,
+    0,
+    -238.32452673857438
+  ],
+  "passengers": 0,
+  "errors": [],
+  "staging": "Native menu and E deployment; staged portal and initial ramp approach. Native W ramp/E sit/Enter outbound/Enter return/J safe exit. No travel time acceleration. Solo flight; full squad and sample carriage are separate acceptance."
+}

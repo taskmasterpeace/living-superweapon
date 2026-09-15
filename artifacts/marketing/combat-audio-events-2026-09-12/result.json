@@ -1,0 +1,53 @@
+{
+  "imported": {
+    "bindings": 37,
+    "decoded": 37,
+    "loops": 7,
+    "wired": 8
+  },
+  "events": [
+    {
+      "id": "jet",
+      "source": "synthesized-placeholder",
+      "name": null,
+      "loop": true,
+      "time": 6.072,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "jet",
+      "accepted": false,
+      "reason": "sfx-cooldown-or-concurrency",
+      "time": 6.072
+    },
+    {
+      "id": "rotor",
+      "source": "synthesized-placeholder",
+      "name": null,
+      "loop": true,
+      "time": 6.072,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "rotor",
+      "accepted": false,
+      "reason": "sfx-cooldown-or-concurrency",
+      "time": 6.077333333333334
+    },
+    {
+      "id": "grab",
+      "source": "chosen-recording",
+      "name": "grab.wav",
+      "loop": false,
+      "time": 15.36,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    }
+  ],
+  "errors": []
+}

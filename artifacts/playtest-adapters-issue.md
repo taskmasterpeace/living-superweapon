@@ -1,0 +1,5 @@
+Local #41 progress: shared melee fixture now logs setup/actor IDs and rejects further fixture calls after named acceptance actions. Parameterized guard scenarios cover front/rear contact, native charged-heavy GUARD BROKEN, and E grab bypass plus intentional release before expiry. Shared action logs include chargeAtRelease; release waits no longer prolong fixed tap holds.
+
+Controller and touch adapters now use real input paths: emulated navigator.getGamepads -> Gamepad.update, and Chromium touch events -> visible touch buttons. Browser guard outcomes passed for both: zero health / 7.1344 guard energy. Touch run includes actual character/squad taps at 844x390. Clips and provenance are local under artifacts/playtest, usage in docs/gameplay/AI_PLAYTEST_RUNNER.md.
+
+Keep OPEN: full context discovery, sticks/multitouch, more scenario migration, full operation, reset/cleanup matrices, physical-device checks, and stronger loaded-content fingerprinting. Passing one guard scenario is not full controller/mobile acceptance.

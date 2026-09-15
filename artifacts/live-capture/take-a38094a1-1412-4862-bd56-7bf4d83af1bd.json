@@ -1,0 +1,16 @@
+{
+  "kind": "live-gameplay",
+  "audio": false,
+  "seconds": 8,
+  "hero": "sol",
+  "scenario": "stationary",
+  "initial": {
+    "hp": 130,
+    "targetHp": 120
+  },
+  "time": 28.786699999999996,
+  "final": {
+    "hp": 130,
+    "targetHp": 120
+  }
+}

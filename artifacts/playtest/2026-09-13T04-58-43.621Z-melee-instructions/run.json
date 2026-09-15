@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scenario": "melee-instructions",
+  "startedAt": "2026-09-13T04:58:43.623Z",
+  "runnerRevision": "8c248b4053a3dbca1348ddc0ab39d0d29a3e9d34",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/approach-teaching-browser.mjs\ntools/jelani-entry-browser.mjs\ntools/webline-chain-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "screenshots",
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "8c248b4053a3dbca1348ddc0ab39d0d29a3e9d34",
+    "trackedDiffHash": "ca6b9b91ce9f155db3a373d21bbbafb900c0ed16fd99e49abb1bd54264545634"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T04:59:01.116Z",
+  "staging": "Native menus, starting position staged at console, E opens selector, browser controls choose/read/start drill."
+}

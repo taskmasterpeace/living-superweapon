@@ -1,0 +1,46 @@
+diff --git a/src/engine/melee.js b/src/engine/melee.js
+index 09ca0eb..8b3e2cc 100644
+--- a/src/engine/melee.js
++++ b/src/engine/melee.js
+@@ -239,6 +239,8 @@ export class MeleeSystem {
+   chargeUpdate(f, dt) {
+     if (f.meleeCharge <= 0) return;
+     if (!this.canAct(f) && !this._canClinch(f)) { f.meleeCharge = 0; return; }
++    // Preparation and its displayed region pause together during impact hitstop.
++    if (f.hitstop > 0) return;
+     f.meleeCharge = Math.min(MELEE_CHARGE_MAX, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
+     const g = this.game;
+     if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {
+diff --git a/src/engine/player-status.js b/src/engine/player-status.js
+index 5c78303..a89b335 100644
+--- a/src/engine/player-status.js
++++ b/src/engine/player-status.js
+@@ -20,7 +20,7 @@ export function playerStatus(p){
+  if(p.frost>0&&!(p.frozenT>0))effects.push({id:'frost',label:`Frost ${Math.round(p.frost*100)}%`,glyph:'defense',remaining:null,harmful:true,hint:'Leave cold to prevent freezing'});
+  add('power',p.buffName||'Power boost','power',p.buffT);
+  condition('frozen','Frozen','defense',p.frozenT/recovery,'Heavy hits shatter ice');
+- condition('stun','Stunned','threat',p.stunT/recovery,'Actions disabled · recover before attacking');
++ condition('stun','Stunned','threat',p.stunT,'Actions disabled · recover before attacking');
+  add('chill','Slowed','agility',p._chill);
+  add('drained','Drained','energy',p.drainedT);
+  add('speed',`Speed +${Math.round(((p.sprintMult||1)-1)*100)}%`,'mobility',p.sprintT);
+diff --git a/tools/melee-charge-meter.test.mjs b/tools/melee-charge-meter.test.mjs
+index b982d84..1d18a64 100644
+--- a/tools/melee-charge-meter.test.mjs
++++ b/tools/melee-charge-meter.test.mjs
+@@ -25,3 +25,5 @@ test('native release and advertised region agree across styles and thresholds',(
+  }
+ });
+ 
++
++test('hitstop freezes preparation without changing selected region',()=>{const system=Object.create(MeleeSystem.prototype);system.canAct=()=>true;system.game={particles:{spawn(){}},world:{shake(){}}};const f={def:{art:'boxing',colors:{}},muzzle:()=>({x:0,y:0,z:0}),meleeCharge:.54,hitstop:.1};system.chargeUpdate(f,.03);assert.equal(f.meleeCharge,.54);assert.equal(meleeChargeState(f).active.id,'cross');});
+diff --git a/tools/player-status.test.mjs b/tools/player-status.test.mjs
+index c89ca5e..f011ceb 100644
+--- a/tools/player-status.test.mjs
++++ b/tools/player-status.test.mjs
+@@ -11,3 +11,5 @@ test('guard break persists through regeneration and small nonzero break threshol
+ test('real sprint multiplier appears with remaining duration',()=>{const p=fighter();p.sprintT=1.8;p.sprintMult=1.6;assert.deepEqual(playerStatus(p).effects,[{id:'speed',label:'Speed +60%',glyph:'mobility',remaining:2}]);});
+ 
+ test('guard-break countdown uses actual recovery rate at tenth-second precision',()=>{const p=fighter();p.guardBreakT=.7;p.sheet={ccRecover:2};assert.equal(playerStatus(p).effects.find(e=>e.id==='guard-break').remaining,.4);p.guardBreakT=.1;assert.equal(playerStatus(p).effects.find(e=>e.id==='guard-break').remaining,.1);p.guardBreakT=0;assert.ok(!playerStatus(p).effects.some(e=>e.id==='guard-break'));});
++
++test('stun timer is already wall-clock seconds and must not be recovered twice',()=>{const p=fighter();p.sheet={ccRecover:2};p.stunT=1.2;assert.equal(playerStatus(p).effects.find(e=>e.id==='stun').remaining,2);});

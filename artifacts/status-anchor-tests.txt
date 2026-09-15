@@ -1,0 +1,29 @@
+(node:33760) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (226.8485ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (142.3176ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (20.7618ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (54.7608ms)
+✔ a late asset load cannot install a body on a disposed fighter (46.4176ms)
+✔ native animation ticks advance the installed authored body (74.4164ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (27.7419ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (83.326ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.1729ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (26.2589ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (29.0473ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (74.7306ms)
+✔ recent ranged poses retain native aim only until their timer expires (61.5093ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (23.8944ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (79.578ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (21.646ms)
+(node:80104) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ status indicators follow final head translation without changing body pose (71.9727ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1269.1427

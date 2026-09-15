@@ -1,0 +1,43 @@
+✔ compressed absorbing knots retain their own incoming packet direction (1.4981ms)
+✔ a genuine reversed segment keeps its path tangent even with forward packet velocity (0.1103ms)
+✔ absorption metadata only overrides a tangent for the same receiving body (0.1314ms)
+✔ the first body wins within a traveled segment regardless of entity order (0.1669ms)
+✔ curved path order wins over both entity order and distance from the shooter (0.1071ms)
+✔ an oblique hit returns a path point and a distinct physical near-side surface (0.1463ms)
+✔ a miss outside the envelope does not retain stale contact (0.083ms)
+✔ the helper never acquires a fighter beyond the actually traveled tip (0.1073ms)
+✔ an advancing receiver carries contact toward the shooter without changing packets (0.0948ms)
+✔ phase and dead bodies do not shield the next solid foe, but hurt invulnerability does (0.1448ms)
+✔ banished fighters are absent while possession's inert body stays solid, surface stop false (0.1513ms)
+✔ banished fighters are absent while possession's inert body stays solid, surface stop true (0.0504ms)
+✔ friendly bodies cannot consume the opposing beam (0.0915ms)
+✔ the caller may remove compatibility padding without changing the physical surface (0.0542ms)
+✔ zero-length pending geometry is not a traveled hit and duplicate knots stay safe (0.0607ms)
+✔ a broad thin wall prevents body-padding contact at radius 0.05 (0.1708ms)
+✔ a broad thin wall prevents body-padding contact at radius 1 (0.0565ms)
+✔ a broad thin wall prevents body-padding contact at radius 4 (0.0432ms)
+✔ an occluded early path section does not veto later exposed curved contact (0.0682ms)
+✔ caller-owned outputs retain their vector identities across calls (0.0439ms)
+✔ an occluded envelope entry still finds the first exposed part of that segment (0.0778ms)
+✔ an occluded envelope entry still finds the first exposed part of that segment before another shadow (0.0685ms)
+✔ surface stop puts a broad central beam on the physical near body instead of eight units ahead (0.0582ms)
+✔ surface stop waits when the traveled tip has only entered the inflated envelope (0.0451ms)
+✔ surface stop keeps a lateral beam-width graze but ends it at closest approach (0.0531ms)
+✔ surface stop chooses the actual oblique sphere entry when the centerline intersects the body (0.0356ms)
+✔ surface stop still follows curved source order instead of entity order (0.0355ms)
+✔ surface stop clamps a negative plane only while the segment start remains inside the contact envelope (0.0474ms)
+✔ surface stop cannot use its lateral envelope through an adjacent thin wall (0.0751ms)
+✔ an enemy-held teammate stops the beam before its holder, without becoming an AI foe (0.0621ms)
+(node:99496) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native hound bite damages once on contact, misses after withdrawal and owns quadruped bounds (94.7142ms)
+✔ native hound bite misses a withdrawn target and cannot bite through cover (75.8198ms)
+✔ Threat Room creature start/clear and delayed cancellation retire native actor and replay uses hound (60.6245ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 543.8099

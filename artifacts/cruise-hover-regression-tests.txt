@@ -1,0 +1,74 @@
+(node:41804) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (212.1471ms)
+✔ cruise-fists survives profile and drives current modular cruising body (118.3785ms)
+✔ cruise-palms survives profile and drives current modular cruising body (114.2107ms)
+✔ cruise-one survives profile and drives current modular cruising body (113.8355ms)
+✔ cruise-bent survives profile and drives current modular cruising body (90.5005ms)
+(node:39940) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hold contact adapts to torso vega/merc (120.8336ms)
+✔ hold contact adapts to torso vega/rage (47.7285ms)
+✔ hold contact adapts to torso rage/vega (50.279ms)
+(node:37536) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hero hover keeps an authored bow outside the thigh volumes at bulk 0.79 (135.6496ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (56.3741ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (53.8735ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 30Hz (33.8147ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 60Hz (41.7525ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 120Hz (56.133ms)
+✔ explicit saved hover joints remain authoritative through validation and production (35.6793ms)
+✔ hero flight/brake/hover/guard transitions retain continuous joints and fixed limb lengths (183.6812ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 14
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 967.6475
+
+✖ failing tests:
+
+test at tools\hero-hover.test.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (56.3741ms)
+  AssertionError [ERR_ASSERTION]: bow penetrates a thigh
+  
+  62 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.test.mjs:41:124)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 62,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\hero-hover.test.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (53.8735ms)
+  AssertionError [ERR_ASSERTION]: bow penetrates a thigh
+  
+  106 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.test.mjs:41:124)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 106,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

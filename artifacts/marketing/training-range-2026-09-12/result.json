@@ -1,0 +1,52 @@
+{
+  "first": 140.5550950113741,
+  "moved": 163.2842628800182,
+  "result": {
+    "hp": 111.1056,
+    "maxHp": 120,
+    "records": [
+      {
+        "trial": "stationary",
+        "time": 0,
+        "amount": 8.894400000000001,
+        "blocked": false,
+        "hp": 111.1056,
+        "playerKi": 85.86673599999924,
+        "healthLost": 8.894400000000005,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "move": "light"
+      },
+      {
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0,
+        "contacts": 1,
+        "approach": true,
+        "distance": 7,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "result": "contact"
+      }
+    ],
+    "machine": true,
+    "visible": [
+      "training-machine"
+    ],
+    "tv": [
+      85,
+      32,
+      -297
+    ],
+    "rings": 6,
+    "security": {
+      "frames": [
+        56
+      ],
+      "shot": "training-security"
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,38 @@
+{
+  "setup": "Controlled placement; native held Q against the scripted native attacker; review opened through trial owner",
+  "records": [
+    {
+      "trial": "defend",
+      "time": 1.1636000000000024,
+      "amount": 0,
+      "blocked": true,
+      "hp": 220,
+      "playerKi": 82.8656,
+      "healthLost": 0,
+      "guardEnergySpent": 7.1344,
+      "result": "BLOCK",
+      "incoming": true,
+      "move": "light"
+    }
+  ],
+  "frames": 40,
+  "nodes": [
+    65,
+    168
+  ],
+  "time": 4.0329,
+  "hp": 220,
+  "targetHp": 120,
+  "paused": {
+    "time": 4.0329,
+    "running": false,
+    "hp": 220,
+    "targetHp": 120
+  },
+  "resumed": {
+    "running": true,
+    "overlay": false,
+    "review": false
+  },
+  "errors": []
+}

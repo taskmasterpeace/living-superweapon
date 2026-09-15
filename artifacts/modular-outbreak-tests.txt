@@ -1,0 +1,21 @@
+(node:47700) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ zombie recipe is independent, grounded, unarmed and uses native melee (1.742ms)
+✔ zombies use a restrained civilian silhouette without superhero spikes or a glowing insignia (56.0315ms)
+✔ undead recipe does not gain human mood dialogue or instant emotional buffs (40.7525ms)
+✔ first wave spawns real actors clear of cover and on sampled terrain (77.1582ms)
+✔ finite waves include a recovery gap and produce exactly one native result (229.5301ms)
+✔ pause and overlays stop the wave timer; defeat has a retry-compatible result (62.2846ms)
+✔ disposal is idempotent and retires only encounter actors (56.6695ms)
+✔ a blocked next wave waits without partial spawns and resumes when open ground is available (115.7424ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 20260911) (319.7183ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 1) (208.8811ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 42) (202.2536ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1732.0079

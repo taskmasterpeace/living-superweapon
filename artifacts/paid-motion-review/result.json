@@ -1,0 +1,39 @@
+{
+  "reviews": [
+    {
+      "take": "Paid_AS_SV_Fly_idle_React",
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "view": "side"
+    },
+    {
+      "take": "Paid_AS_SV_Fly_Front_React",
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "view": "side"
+    },
+    {
+      "take": "Paid_AS_SV_Fly_Catch",
+      "phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "view": "side"
+    }
+  ],
+  "errors": [],
+  "acceptance": "Captured phase review; visual acceptance requires inspecting frames."
+}

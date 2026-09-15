@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "melee-grab-guard",
+  "startedAt": "2026-09-13T05:14:52.298Z",
+  "runnerRevision": "f246653f5ee7e291419d8c110a96beea1b9ece3f",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/scenarios.mjs\ntools/playtest/snapshot.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "attack": "grab"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "f246653f5ee7e291419d8c110a96beea1b9ece3f",
+    "trackedDiffHash": "3a636a98492efdbab3e7ccd95fa4cd4b1a4f84ab93231cfc1b47e419a409a583"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:15:23.722Z",
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense or charged-heavy counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

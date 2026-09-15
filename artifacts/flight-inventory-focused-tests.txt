@@ -1,0 +1,29 @@
+(node:41196) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (209.0581ms)
+✔ cruise-fists survives profile and drives current modular cruising body (111.7056ms)
+✔ cruise-palms survives profile and drives current modular cruising body (107.1977ms)
+✔ cruise-one survives profile and drives current modular cruising body (98.049ms)
+✔ cruise-bent survives profile and drives current modular cruising body (115.0265ms)
+✔ open cruise palms yield to carried contact, grab, attack and occupied hand (26.7021ms)
+✔ cruise bent and palms preserve identical torso and pelvis orientation (121.649ms)
+(node:37672) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (180.2132ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (364.4799ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (96.6663ms)
+✔ wake authoring survives presentation serialization with validated limits (0.6068ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (11.1558ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (10.0695ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (27.2347ms)
+✔ presentation covers every real armory entry once, retaining source identity (0.6986ms)
+✔ unproduced icons stay explicitly missing and footprints stay proposals (0.1706ms)
+✔ master safe area fits square source at every standard renderer size (0.4381ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1135.8547

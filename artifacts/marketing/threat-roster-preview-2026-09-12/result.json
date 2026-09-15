@@ -1,0 +1,15 @@
+{
+  "setup": "Native E station interactions; controlled player placement at each existing-world console. Preview excluded from simulation; selected character enters scripted melee drill, not full-power AI encounter.",
+  "preview": {
+    "id": "sol",
+    "inCombat": false,
+    "count": 1
+  },
+  "fight": {
+    "id": "sol",
+    "preview": false,
+    "count": 2,
+    "mode": "stationary"
+  },
+  "errors": []
+}

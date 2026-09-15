@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "session": {
+    "phase": "acceptance",
+    "fixtures": [
+      {
+        "kind": "melee",
+        "placement": "arena",
+        "trial": "air-defense",
+        "distance": 30,
+        "facing": "front",
+        "clearTargetInvulnerability": false,
+        "status": "staged",
+        "result": {
+          "time": 0.05429999999999927,
+          "player": 1,
+          "target": 2,
+          "hero": "sol",
+          "targetHp": 130
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "up",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "flight-height",
+      "requestedAt": "2026-09-13T06:09:06.467Z",
+      "status": "dispatched",
+      "simulationBefore": 0.10429999999999928,
+      "flightHeightReached": true,
+      "released": true,
+      "simulationAfter": 1.1571
+    }
+  ],
+  "capturedAt": "2026-09-13T06:09:14.291Z",
+  "error": {
+    "name": "TimeoutError",
+    "message": "page.waitForFunction: Timeout 3000ms exceeded."
+  },
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 5.363199999999992,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "inputContext": {
+      "observedOnly": true,
+      "suspended": false,
+      "reason": null,
+      "interaction": {
+        "mode": "acquire",
+        "priority": [
+          "interact",
+          "pickup gear",
+          "lift prop",
+          "grab person"
+        ],
+        "eligibility": "unresolved; proximity, facing and combat state still apply"
+      },
+      "powers": [
+        {
+          "slotId": "lmb",
+          "name": "Heat Ray",
+          "type": "beam",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 4,
+          "energyPerSecond": 16
+        },
+        {
+          "slotId": "rmb",
+          "name": "Arctic Breath",
+          "type": "cone",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": null,
+          "energyPerSecond": 20
+        },
+        {
+          "slotId": "q",
+          "name": "Sky Smash",
+          "type": "melee",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 14,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "e",
+          "name": "Solar Flare",
+          "type": "projectile",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 8,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "f",
+          "name": "Heat Flurry",
+          "type": "volley",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 3,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "shift",
+          "name": "Super Dash",
+          "type": "dash",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 6,
+          "energyPerSecond": null
+        }
+      ],
+      "gadgets": []
+    },
+    "player": {
+      "id": 1,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        0,
+        33.930109976411316,
+        35.50829492317811
+      ],
+      "velocity": [
+        0,
+        1.6950427344953605,
+        9.258440315312589
+      ],
+      "hp": 102.34488048680542,
+      "energy": 115.25481580527644,
+      "alive": true,
+      "flying": true,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": null
+    },
+    "target": {
+      "id": 2,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        0,
+        34.54019787906304,
+        30.450909534208662
+      ],
+      "velocity": [
+        0,
+        -1.0932347423073427,
+        6.346802832407639
+      ],
+      "hp": 130,
+      "energy": 103.74533599999863,
+      "alive": true,
+      "flying": true,
+      "meleeState": "recover",
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": null,
+      "approach": {
+        "family": "flight",
+        "point": [
+          0,
+          38.9956088573788,
+          34.773640535083295
+        ]
+      }
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "sol",
+        "class": null,
+        "pos": [
+          0,
+          34.54019787906304,
+          30.450909534208662
+        ],
+        "velocity": [
+          0,
+          -1.0932347423073427,
+          6.346802832407639
+        ],
+        "hp": 130,
+        "energy": 103.74533599999863,
+        "alive": true,
+        "flying": true,
+        "meleeState": "recover",
+        "guarding": false,
+        "grabbing": null,
+        "grabbedBy": null,
+        "grabState": null,
+        "launchTime": 0,
+        "selectedPower": null,
+        "approach": {
+          "family": "flight",
+          "point": [
+            0,
+            38.9956088573788,
+            34.773640535083295
+          ]
+        }
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71.3958996907625,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 77.67736252580909,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 90.12308697153311,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 91.34464197515923,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 91.34464197515923,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.09512436722596,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.51959567231042,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 106.59535150085613,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 111.78926159677142,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 10,
+    "drill": {
+      "kind": "air-defense",
+      "records": [
+        {
+          "time": 1.1738000000000004,
+          "trial": "air-defense",
+          "result": "CONTACT",
+          "amount": 9.495119513194576,
+          "blocked": false,
+          "healthLost": 9.495119513194581,
+          "guardEnergySpent": 0,
+          "move": "light"
+        },
+        {
+          "time": 3.1632999999999933,
+          "trial": "air-defense",
+          "result": "CONTACT",
+          "amount": 9.08,
+          "blocked": false,
+          "healthLost": 9.079999999999998,
+          "guardEnergySpent": 0,
+          "move": "light"
+        },
+        {
+          "time": 5.167099999999993,
+          "trial": "air-defense",
+          "result": "CONTACT",
+          "amount": 9.08,
+          "blocked": false,
+          "healthLost": 9.079999999999998,
+          "guardEnergySpent": 0,
+          "move": "light"
+        }
+      ]
+    }
+  }
+}

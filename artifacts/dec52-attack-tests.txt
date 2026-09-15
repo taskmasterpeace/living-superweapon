@@ -1,0 +1,15 @@
+✔ real hound follows accepted actions, freezes hitstop and leaves root motion alone (14.2079ms)
+✔ Dec-52 hit interrupts attack and shutdown completes without restarting (16.6787ms)
+✔ remote mech selects accepted ranged and claw attacks by hand (6.4677ms)
+✔ rat clips retain pivots, loop endpoints and diagonal gait (17.7426ms)
+✔ hound clips retain pivots, loop endpoints and diagonal gait (7.8336ms)
+✔ mech clips retain pivots, loop endpoints and diagonal gait (13.2945ms)
+✔ continuous player blends, clamps one-shots, restarts and preserves simulation root (9.3188ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.7833

@@ -1,0 +1,925 @@
+{
+  "version": 1,
+  "scope": "Historical local evidence, not current-build acceptance or physical-device certification. Warnings qualify recorded pass labels.",
+  "runs": [
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw",
+      "scenario": "air-throw",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T06:14:11.062Z",
+      "revision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+      "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, Mouse aims; approach mode uses T lock and V strike, defense mode faces the attacker and holds Q without requiring lock. No altitude, flight flag, motion or damage injection after setup. This tests a hover-target approach or one airborne guard contact, not evasion or full air-combat balance.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\air-carry.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\air-carry.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\air-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\page@5199afd237a2f9dd68c9cad071a140b8.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-14-11.061Z-air-throw\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw",
+      "scenario": "air-throw",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T06:12:53.404Z",
+      "revision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+      "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 5000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw\\page@e392804f3288a65456c29adaf203c2e3.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-12-53.402Z-air-throw\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw",
+      "scenario": "air-throw",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T06:11:53.750Z",
+      "revision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+      "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 5000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw\\page@31356593bc5faa3edc614ac95eb0a4bb.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-11-53.749Z-air-throw\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard",
+      "scenario": "air-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T06:09:43.276Z",
+      "revision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+      "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, Mouse aims and T locks; V approaches and strikes, or Q guards a native trainer attack. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\air-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\page@0b220e847803926396ee7808ac43085d.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-09-43.274Z-air-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard",
+      "scenario": "air-guard",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T06:08:51.360Z",
+      "revision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+      "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 3000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard\\page@1d7ba37a43d55271516c0d0c2e88056e.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-08-51.358Z-air-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach",
+      "scenario": "air-approach",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T06:06:50.315Z",
+      "revision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+      "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, T locks, V approaches and strikes. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\air-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\page@57483e7d2cef59a016513118bfdc8c0a.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-06-50.314Z-air-approach\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach",
+      "scenario": "air-approach",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T06:05:18.538Z",
+      "revision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+      "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 3000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach\\page@9f0fdbbe5b653e4ddafbdb47539aeaed.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-05-18.537Z-air-approach\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach",
+      "scenario": "air-approach",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T06:04:26.025Z",
+      "revision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+      "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "Expected values to be strictly equal:\n\nundefined !== 2\n",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach\\air-contact.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach\\page@0334676791b41a2ae67ab8af613f535f.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-04-26.023Z-air-approach\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset",
+      "scenario": "practice-prop-reset",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T06:01:57.443Z",
+      "revision": "29ee07b4209219b75f0725545641f25bce72cb8a",
+      "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs\ntools/practice-props-browser.mjs",
+      "staged": true,
+      "scope": "One setup relocates a practice rock and player near the reset console. Native E pickup, held E throw, keyboard W walk until reset prompt, then E reset. No post-input relocation or direct reset invocation. This proves restoration after a completed throw, not reset denial while a prop is airborne.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\carry-rock.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\carrying.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\page@f5a3df6737a58ad4fc577fb48a6627af.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\practice-props.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\reset-rocks.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-57.441Z-practice-prop-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset",
+      "scenario": "practice-prop-reset",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T06:01:05.890Z",
+      "revision": "29ee07b4209219b75f0725545641f25bce72cb8a",
+      "trackedChanges": "tools/playtest/scenarios.mjs\ntools/practice-props-browser.mjs",
+      "staged": true,
+      "scope": "One setup relocates a practice rock and player near the reset console. Native E pickup, held E throw, keyboard W walk until reset prompt, then E reset. No post-input relocation or direct reset invocation. This proves restoration after a completed throw, not reset denial while a prop is airborne.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\carry-rock.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\carrying.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\page@14e1aca35bd544c5dec29bcb577f58fa.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\practice-props.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\reset-rocks.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T06-01-05.888Z-practice-prop-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard",
+      "scenario": "melee-grab-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:56:23.592Z",
+      "revision": "c89fca97cd34e09d95a8b677d7c93348448678cc",
+      "trackedChanges": "tools/playtest/snapshot.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\grab-connected.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\grab-connected.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\page@44df9213692974a4b300609f972e7eee.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-56-23.590Z-melee-grab-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset",
+      "scenario": "practice-injury-reset",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:53:56.078Z",
+      "revision": "756b538a431054a86b5b1194ce698624635fe1d9",
+      "trackedChanges": "src/engine/melee-trial.js\ntools/melee-trial.test.mjs\ntools/playtest/scenarios.mjs\ntools/reset-practice-browser.mjs",
+      "staged": true,
+      "scope": "Native menus; one setup positions player facing the reset console and starts the configured trial nearby. Three native beam bursts spend energy, or the defending trainer inflicts actual damage, then E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; KO, carried props and live powers need separate reset cases.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\page@099fc13e2205336981a6b25a2f7f8c3d.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\reset-console.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-53-56.075Z-practice-injury-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset",
+      "scenario": "practice-injury-reset",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:52:14.733Z",
+      "revision": "756b538a431054a86b5b1194ce698624635fe1d9",
+      "trackedChanges": "tools/playtest/scenarios.mjs\ntools/reset-practice-browser.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "Trainer must hurt actual health",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset\\page@884f9d5e5ab08d39e1948c46081fd5e2.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-52-14.732Z-practice-injury-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset",
+      "scenario": "practice-reset",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:50:14.087Z",
+      "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+      "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native menus; one setup positions player facing the reset console and starts a stationary trial nearby. Three native beam bursts spend energy, E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; damage, KO, carried props and live powers need separate reset cases.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\page@328b49df474c4a387c61353c6889b918.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\reset-console.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-50-14.086Z-practice-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset",
+      "scenario": "practice-reset",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:48:55.904Z",
+      "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+      "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 5000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset\\page@21d12bef9d2093d30d905a6e881b8b4e.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-48-55.901Z-practice-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset",
+      "scenario": "practice-reset",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:47:42.535Z",
+      "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+      "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 5000ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset\\page@5ac4ef0b890e662719f1a3ac5f36d22d.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-47-42.527Z-practice-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset",
+      "scenario": "practice-reset",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:46:29.495Z",
+      "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+      "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "Native charged attack must spend energy",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset\\page@1a6b820727ea56b7c13a599138680f0c.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset\\reset-console.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-46-29.494Z-practice-reset\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike",
+      "scenario": "moving-strike",
+      "scheme": "touch",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:42:09.666Z",
+      "revision": "27a9acc414e39aabfee67f5e47e73fb6446c46db",
+      "trackedChanges": "tools/moving-strike-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/scenarios.mjs\ntools/playtest/touch.mjs",
+      "staged": true,
+      "scope": "Native menus (touch taps in touch mode); stationary Threat Room fixture and initial position/camera staged once. Raw emulated controller or browser touch stick and strike go through native polling. Read-only frame observations prove movement during charge; this does not assert target contact or physical controller support.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\moving-strike.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\moving-strike.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\page@fa6aaf1280d3ed49465f6ac514ee8431.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-42-09.664Z-moving-strike\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike",
+      "scenario": "moving-strike",
+      "scheme": "pad",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:39:12.606Z",
+      "revision": "c0a5cd8bdd2dca97a310858e35e44494164a5348",
+      "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/gamepad.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native keyboard menus; stationary Threat Room fixture and initial position/camera staged once. Raw emulated controller stick and strike go through native polling. Read-only frame observations prove movement during charge; this does not assert target contact or physical controller support.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\moving-strike.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\moving-strike.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\page@8c949d4c597b93d574266793f775123f.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-39-12.605Z-moving-strike\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard",
+      "scenario": "gamepad-guard",
+      "scheme": "pad",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:36:41.504Z",
+      "revision": "e4205cefc127310b8c2262221b18b5b2628d586b",
+      "trackedChanges": "tools/guard-drill-browser.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\page@cc1dba374a53ba1de8afee18328592a7.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-36-41.503Z-gamepad-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard",
+      "scenario": "touch-guard",
+      "scheme": "touch",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:35:51.703Z",
+      "revision": "e4205cefc127310b8c2262221b18b5b2628d586b",
+      "trackedChanges": "tools/guard-drill-browser.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\page@035184740fd6baf5c2f44879c3c6eae9.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-51.702Z-touch-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard",
+      "scenario": "melee-grab-guard",
+      "scheme": "touch",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:35:13.721Z",
+      "revision": "e4205cefc127310b8c2262221b18b5b2628d586b",
+      "trackedChanges": "tools/guard-drill-browser.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\grab-connected.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\grab-connected.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\page@3c98af3a6b8ba1109020c69fa302a301.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-35-13.719Z-melee-grab-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush",
+      "scenario": "melee-guard-crush",
+      "scheme": "pad",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:34:40.557Z",
+      "revision": "e4205cefc127310b8c2262221b18b5b2628d586b",
+      "trackedChanges": "tools/guard-drill-browser.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\page@266f9195c355af2921dd6202e20e8b39.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-34-40.555Z-melee-guard-crush\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush",
+      "scenario": "melee-guard-crush",
+      "scheme": "pad",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:32:31.674Z",
+      "revision": "ce1991abf8729c9ca7a1f83b117e1f5cb150dac8",
+      "trackedChanges": "tools/playtest-runner.test.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\page@b2534c84548b086f0fef3e565b8b346d.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-32-31.673Z-melee-guard-crush\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard",
+      "scenario": "melee-grab-guard",
+      "scheme": "touch",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:31:57.738Z",
+      "revision": "ce1991abf8729c9ca7a1f83b117e1f5cb150dac8",
+      "trackedChanges": "tools/playtest-runner.test.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\grab-connected.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\grab-connected.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\page@ca59e1a26fdcb6cca1cf64b8da7889b3.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-31-57.737Z-melee-grab-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard",
+      "scenario": "touch-guard",
+      "scheme": "touch",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:24:57.893Z",
+      "revision": "390b2d3dd5645289bb6232a47e1e9dafadcb4201",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\page@16bea98140141e0f9b64a777f9d4ba82.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-24-57.892Z-touch-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard",
+      "scenario": "gamepad-guard",
+      "scheme": "pad",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:21:24.345Z",
+      "revision": "88e2a61c7368e7221eabe83770f53a8508f61684",
+      "trackedChanges": "src/core/gamepad.js\ntools/guard-drill-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM or browser-emulated gamepad through the real input adapter; menus use keyboard. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\page@181cd3c185d7b24edcf85a375412181e.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-21-24.344Z-gamepad-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear",
+      "scenario": "melee-guard-rear",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:18:56.296Z",
+      "revision": "9246c426041139779d47cd63096a6ff51b6401da",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/jelani-entry-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/diagnostics.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\page@2a4d8c078f0c8b954e2f0e3a340e94a4.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-18-56.295Z-melee-guard-rear\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard",
+      "scenario": "melee-grab-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:16:07.330Z",
+      "revision": "f246653f5ee7e291419d8c110a96beea1b9ece3f",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/scenarios.mjs\ntools/playtest/snapshot.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\grab-connected.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\grab-connected.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\page@990c2c84699cd51a4969153f63ecd3dd.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-16-07.328Z-melee-grab-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard",
+      "scenario": "melee-grab-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:14:52.298Z",
+      "revision": "f246653f5ee7e291419d8c110a96beea1b9ece3f",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/scenarios.mjs\ntools/playtest/snapshot.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense or charged-heavy counterplay only; grab escape/counterstrikes and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\grab-connected.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\grab-connected.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\page@49039c52d9523c1ff3f058c2497c3813.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-14-52.297Z-melee-grab-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush",
+      "scenario": "melee-guard-crush",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:12:20.457Z",
+      "revision": "f5c416dd4b7bc22073548fa0dda4c03763ee7619",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense or charged-heavy counterplay only; grabs and depleted energy remain separate.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\page@f9e8afba18528a0ab77fe77178a228ab.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-12-20.456Z-melee-guard-crush\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush",
+      "scenario": "melee-guard-crush",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:11:19.704Z",
+      "revision": "f5c416dd4b7bc22073548fa0dda4c03763ee7619",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'BLOCK'\n- 'GUARD BROKEN'\n",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush\\page@a541c3c012172be725c6c0fb7b394617.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-11-19.703Z-melee-guard-crush\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard",
+      "scenario": "melee-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:08:56.756Z",
+      "revision": "f58b52928cde6427ab5e9f4e012a3845b05664ec",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; defend trial and initial positions/camera staged once. Shared guard action sends Q through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured facing against a light strike only, not guard crush or grabs.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\page@c2f1c9b836e2446d8649cf92e45a4ae7.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-56.754Z-melee-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear",
+      "scenario": "melee-guard-rear",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:08:16.878Z",
+      "revision": "f58b52928cde6427ab5e9f4e012a3845b05664ec",
+      "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; defend trial and initial positions/camera staged once. Shared guard action sends Q through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured facing against a light strike only, not guard crush or grabs.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\page@43093ec4c23ce5333911b609ae9354db.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-08-16.876Z-melee-guard-rear\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard",
+      "scenario": "melee-guard",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:05:25.259Z",
+      "revision": "393a360d7a26ace77f82c10d5178b57bb3472103",
+      "trackedChanges": "tools/playtest/scenarios.mjs",
+      "staged": true,
+      "scope": "Native character/squad menus; defend trial and initial positions/camera staged once. Shared guard action sends Q through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; funded frontal strike only, not guard crush, rear hits or grabs.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\guard-contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\guard-drill.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\page@85cf9e3a0ecc8606f789f59df969c78f.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-05-25.258Z-melee-guard\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat",
+      "scenario": "melee-retreat",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:03:05.084Z",
+      "revision": "ec7c71bd6911d63d02bd74783150d585914d8c84",
+      "trackedChanges": "tools/jelani-entry-browser.mjs\ntools/playtest/diagnostics.mjs\ntools/playtest/run.mjs\ntools/webline-chain-browser.mjs",
+      "staged": true,
+      "scope": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\approach.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\jelani-entry.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\page@12b4c7e3cbf45eab56ef7fa969ebef60.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-03-05.083Z-melee-retreat\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat",
+      "scenario": "melee-retreat",
+      "scheme": "kbm",
+      "recordedStatus": "failed",
+      "startedAt": "2026-09-13T05:02:16.146Z",
+      "revision": "ec7c71bd6911d63d02bd74783150d585914d8c84",
+      "trackedChanges": "tools/jelani-entry-browser.mjs\ntools/playtest/diagnostics.mjs\ntools/playtest/run.mjs\ntools/webline-chain-browser.mjs",
+      "staged": true,
+      "scope": null,
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": "page.waitForFunction: Timeout 1500ms exceeded.",
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\failed-frames.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\failure.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\failure.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\jelani-entry.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\page@4289e17728ec597bfa3ac478b5d41d06.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-02-16.145Z-melee-retreat\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain",
+      "scenario": "webline-chain",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T05:01:44.185Z",
+      "revision": "ec7c71bd6911d63d02bd74783150d585914d8c84",
+      "trackedChanges": "tools/jelani-entry-browser.mjs\ntools/playtest/diagnostics.mjs\ntools/playtest/run.mjs\ntools/webline-chain-browser.mjs",
+      "staged": true,
+      "scope": "Initial position and camera staged in Threat Room; native mouse-wheel selection and LMB pull, wall hold and Space release. No damage or movement injection during traversal.",
+      "warnings": [
+        "Recorded combat inputs differ from requested scheme"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\chain-pull.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\chain.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\page@0b5c0b700c4b1bced82bb80070ba5c9c.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\run.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T05-01-44.184Z-webline-chain\\wall-hold.png"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-58-43.621Z-melee-instructions",
+      "scenario": "melee-instructions",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T04:58:43.623Z",
+      "revision": "8c248b4053a3dbca1348ddc0ab39d0d29a3e9d34",
+      "trackedChanges": "tools/approach-teaching-browser.mjs\ntools/jelani-entry-browser.mjs\ntools/webline-chain-browser.mjs",
+      "staged": true,
+      "scope": "Native menus, starting position staged at console, E opens selector, browser controls choose/read/start drill.",
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-58-43.621Z-melee-instructions\\instructions.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-58-43.621Z-melee-instructions\\observed-state.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-58-43.621Z-melee-instructions\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-58-43.621Z-melee-instructions\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-54-34.313Z-melee-instructions",
+      "scenario": "melee-instructions",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T04:54:34.315Z",
+      "revision": "8a44f4ceebf9c40b2e36ee8e9353f02097ea70d2",
+      "trackedChanges": "tools/playtest/run.mjs\nvite.config.js",
+      "staged": true,
+      "scope": "Native menus, starting position staged at console, E opens selector, browser controls choose/read/start drill.",
+      "warnings": [
+        "No shared action history; native input coverage not established by this report"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-54-34.313Z-melee-instructions\\instructions.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-54-34.313Z-melee-instructions\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-54-34.313Z-melee-instructions\\run.json"
+      ]
+    },
+    {
+      "directory": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat",
+      "scenario": "melee-retreat",
+      "scheme": "kbm",
+      "recordedStatus": "passed",
+      "startedAt": "2026-09-13T04:51:54.784Z",
+      "revision": "ef4472ac9ae9d7fbe4725cae193571e2e0be38e2",
+      "trackedChanges": "tools/approach-teaching-browser.mjs\ntools/jelani-entry-browser.mjs\ntools/webline-chain-browser.mjs",
+      "staged": true,
+      "scope": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability.",
+      "warnings": [
+        "No shared action history; native input coverage not established by this report",
+        "Server checkout was not verified"
+      ],
+      "error": null,
+      "artifacts": [
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\approach.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\contact.png",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\jelani-entry.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\page@04c7806139f8d6d992410ca4ad88d79f.webm",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\result.json",
+        "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\playtest\\2026-09-13T04-51-54.780Z-melee-retreat\\run.json"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+✔ reject foreign skeleton, missing socket, oversized and invalid geometry (1.3239ms)
+✔ motion interpolates shortest rotation and rejects invalid control timing (1.7468ms)
+✔ parts follow their socket and clean up on replacement (1.1645ms)
+✔ saved character survives readback and corrupt storage is safe (0.2035ms)
+✔ actual neck has independent material and full suit covers dark waist (77.4589ms)
+✔ every blocking study compiles against the actual skeleton (95.1161ms)
+✔ small carrier and large partner preserve hand-to-torso contact (41.9312ms)
+✔ modular defaults retain explicit alternative body choice (0.1708ms)
+(node:30872) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (305.6469ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (196.7219ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (30.1408ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (78.3786ms)
+✔ a late asset load cannot install a body on a disposed fighter (65.6934ms)
+✔ native animation ticks advance the installed authored body (74.5154ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (34.7426ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (96.6875ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.0707ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (35.2642ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (35.8153ms)
+✔ image placements follow real bones, rebuild only on change, and release owned resources (83.1144ms)
+✔ mapped source bank retains complete valid hand tracks and required actual takes (71.6291ms)
+✔ equipment options exclude intersecting replacement meshes and preserve the skeleton (54.4482ms)
+✔ infected flight arms hang down without translating the actor or bone joints (40.6786ms)
+✔ costume surfaces and COH-style choices roundtrip with validation (0.895ms)
+✔ props follow the real authored palms throughout sword clips without changing hands (92.1722ms)
+✔ unavailable dedicated and two-handed sources are declared explicitly (1.734ms)
+(node:50240) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ zombie recipe is independent, grounded, unarmed and uses native melee (1.6205ms)
+✔ zombies use a restrained civilian silhouette without superhero spikes or a glowing insignia (57.5716ms)
+✔ undead recipe does not gain human mood dialogue or instant emotional buffs (38.6442ms)
+✔ first wave spawns real actors clear of cover and on sampled terrain (82.6649ms)
+✔ finite waves include a recovery gap and produce exactly one native result (240.6718ms)
+✔ pause and overlays stop the wave timer; defeat has a retry-compatible result (70.8341ms)
+✔ disposal is idempotent and retires only encounter actors (64.8424ms)
+✔ a blocked next wave waits without partial spawns and resumes when open ground is available (149.2428ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 20260911) (364.0194ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 1) (261.2814ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 42) (245.4756ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2051.4297

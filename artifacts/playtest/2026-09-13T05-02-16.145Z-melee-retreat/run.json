@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "melee-retreat",
+  "startedAt": "2026-09-13T05:02:16.146Z",
+  "runnerRevision": "ec7c71bd6911d63d02bd74783150d585914d8c84",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/jelani-entry-browser.mjs\ntools/playtest/diagnostics.mjs\ntools/playtest/run.mjs\ntools/webline-chain-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "ec7c71bd6911d63d02bd74783150d585914d8c84",
+    "trackedDiffHash": "0fc5fca1e9037b3151a751aea181b776d491d888552ccb2c32b82b87676677f1"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T05:02:34.771Z",
+  "error": {
+    "message": "page.waitForFunction: Timeout 1500ms exceeded.",
+    "stack": "page.waitForFunction: Timeout 1500ms exceeded.\n    at performAction (D:\\lsw\\.worktrees\\combat-release-review\\tools\\playtest\\actions.mjs:21:14)\n    at async file:///D:/lsw/.worktrees/combat-release-review/tools/jelani-entry-browser.mjs:13:58"
+  }
+}

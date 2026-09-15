@@ -1,0 +1,22 @@
+✔ reject foreign skeleton, missing socket, oversized and invalid geometry (0.8646ms)
+✔ motion interpolates shortest rotation and rejects invalid control timing (0.7072ms)
+✔ parts follow their socket and clean up on replacement (1.0716ms)
+✔ saved character survives readback and corrupt storage is safe (0.1802ms)
+✔ actual neck has independent material and full suit covers dark waist (40.2113ms)
+✔ every blocking study compiles against the actual skeleton (88.4096ms)
+✔ small carrier and large partner preserve hand-to-torso contact (25.6787ms)
+✔ modular defaults retain explicit alternative body choice (0.155ms)
+✔ partner release is identical after direct seek and sequential playback (25.0196ms)
+✔ grab studies compile full-body holds and preserve the free-hand choice (45.016ms)
+✔ directional grab previews keep partners upright and align the selected socket at different sizes (28.4327ms)
+✔ full-body loop studies close every joint and animate both arms and legs (1.2445ms)
+✔ kick candidates distinguish chamber, contact and recovery for both legs (0.3613ms)
+✔ left throw preserves hand metadata through export and contact rehearsal (35.1013ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 476.168

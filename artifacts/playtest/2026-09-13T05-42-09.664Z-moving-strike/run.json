@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "moving-strike",
+  "startedAt": "2026-09-13T05:42:09.666Z",
+  "runnerRevision": "27a9acc414e39aabfee67f5e47e73fb6446c46db",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/moving-strike-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/scenarios.mjs\ntools/playtest/touch.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "browser-emulated landscape touch",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "touch"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "27a9acc414e39aabfee67f5e47e73fb6446c46db",
+    "trackedDiffHash": "bdb751532259f88c04c2dc7cdc3a4c69c6147dc39616ab94283adf3766cfe306"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:42:36.557Z",
+  "staging": "Native menus (touch taps in touch mode); stationary Threat Room fixture and initial position/camera staged once. Raw emulated controller or browser touch stick and strike go through native polling. Read-only frame observations prove movement during charge; this does not assert target contact or physical controller support."
+}

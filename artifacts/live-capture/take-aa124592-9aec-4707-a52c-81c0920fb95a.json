@@ -1,0 +1,46 @@
+{
+  "kind": "live-gameplay",
+  "audio": false,
+  "seconds": 12,
+  "models": [
+    {
+      "id": "sol",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    },
+    {
+      "id": "kano",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    }
+  ],
+  "recordedAt": "2026-09-14T19:52:16.195Z",
+  "hero": "sol",
+  "scenario": "stationary",
+  "initial": {
+    "hp": 130,
+    "targetHp": 115
+  },
+  "time": 14.69360000000018,
+  "final": {
+    "hp": 130,
+    "targetHp": 115
+  },
+  "demonstration": {
+    "kind": "native-controller-demonstration",
+    "phase": "approach",
+    "damage": 0,
+    "events": [
+      {
+        "time": 0,
+        "label": "Native takeoff / rear approach"
+      },
+      {
+        "time": 12.003600000000105,
+        "label": "Demonstration failed: timed out in approach"
+      }
+    ]
+  }
+}

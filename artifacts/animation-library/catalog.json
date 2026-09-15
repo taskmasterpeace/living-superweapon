@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "strike/jab",
+      "key": "jab",
+      "label": "jab",
+      "kind": "authored",
+      "category": "Melee",
+      "sourceFile": "src/data/strike-bank.json",
+      "runtime": "src/engine/strike-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Punch_Jab",
+      "duration": 0.8333333134651184,
+      "frames": 51,
+      "loop": false,
+      "side": 1,
+      "contact": {
+        "start": 0.21666666666666667,
+        "end": 0.3333333333333333
+      },
+      "attackProfile": {
+        "file": "src/data/martial.js",
+        "id": "jab"
+      },
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "strike/cross",
+      "key": "cross",
+      "label": "cross",
+      "kind": "authored",
+      "category": "Melee",
+      "sourceFile": "src/data/strike-bank.json",
+      "runtime": "src/engine/strike-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Punch_Cross",
+      "duration": 1,
+      "frames": 61,
+      "loop": false,
+      "side": -1,
+      "contact": {
+        "start": 0.26666666666666666,
+        "end": 0.4666666666666667
+      },
+      "attackProfile": {
+        "file": "src/data/martial.js",
+        "id": "cross"
+      },
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "heavy-strike/power",
+      "key": "power",
+      "label": "power",
+      "kind": "authored",
+      "category": "Melee",
+      "sourceFile": "src/data/heavy-strike-bank.json",
+      "runtime": "src/engine/strike-motion.js",
+      "source": {
+        "author": "Quaternius / Gonzalo Furnier",
+        "pack": "Universal Animation Library 2 — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.itch.io/universal-animation-library-2",
+        "file": "UAL2_Standard.glb",
+        "sha256": {
+          "glb": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Melee_Hook + Melee_Hook_Rec",
+      "duration": 1.066666692495346,
+      "frames": 65,
+      "loop": false,
+      "side": -1,
+      "contact": {
+        "start": 0.3,
+        "end": 0.4
+      },
+      "attackProfile": {
+        "file": "src/data/martial.js",
+        "id": "power"
+      },
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "locomotion/idle",
+      "key": "idle",
+      "label": "idle",
+      "kind": "authored",
+      "category": "Locomotion",
+      "sourceFile": "src/data/locomotion-bank.json",
+      "runtime": "src/engine/ground-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Idle_Loop",
+      "duration": 2.5,
+      "frames": 151,
+      "loop": true,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "locomotion/walk",
+      "key": "walk",
+      "label": "walk",
+      "kind": "authored",
+      "category": "Locomotion",
+      "sourceFile": "src/data/locomotion-bank.json",
+      "runtime": "src/engine/ground-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Walk_Loop",
+      "duration": 1.3333333730697632,
+      "frames": 81,
+      "loop": true,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": [
+        "foot-contact-markers-not-authored"
+      ]
+    },
+    {
+      "id": "locomotion/jog",
+      "key": "jog",
+      "label": "jog",
+      "kind": "authored",
+      "category": "Locomotion",
+      "sourceFile": "src/data/locomotion-bank.json",
+      "runtime": "src/engine/ground-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Jog_Fwd_Loop",
+      "duration": 0.9166666865348816,
+      "frames": 56,
+      "loop": true,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": [
+        "foot-contact-markers-not-authored"
+      ]
+    },
+    {
+      "id": "locomotion/sprint",
+      "key": "sprint",
+      "label": "sprint",
+      "kind": "authored",
+      "category": "Locomotion",
+      "sourceFile": "src/data/locomotion-bank.json",
+      "runtime": "src/engine/ground-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Sprint_Loop",
+      "duration": 0.6666666865348816,
+      "frames": 41,
+      "loop": true,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": [
+        "foot-contact-markers-not-authored"
+      ]
+    },
+    {
+      "id": "jump/takeoff",
+      "key": "takeoff",
+      "label": "takeoff",
+      "kind": "authored",
+      "category": "Jump and landing",
+      "sourceFile": "src/data/jump-bank.json",
+      "runtime": "src/engine/jump-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Jump_Start",
+      "duration": 1.3333333730697632,
+      "frames": 81,
+      "loop": false,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "jump/fall",
+      "key": "fall",
+      "label": "fall",
+      "kind": "authored",
+      "category": "Jump and landing",
+      "sourceFile": "src/data/jump-bank.json",
+      "runtime": "src/engine/jump-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Jump_Loop",
+      "duration": 2.5,
+      "frames": 151,
+      "loop": true,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    },
+    {
+      "id": "jump/landing",
+      "key": "landing",
+      "label": "landing",
+      "kind": "authored",
+      "category": "Jump and landing",
+      "sourceFile": "src/data/jump-bank.json",
+      "runtime": "src/engine/jump-motion.js",
+      "source": {
+        "author": "Quaternius",
+        "pack": "Universal Animation Library — Standard",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+        "mirror": "https://github.com/J-Ponzo/gltf-universal-animation-library/tree/e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+        "file": "AnimationLibrary_Godot_Standard.gltf",
+        "sha256": {
+          "gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+          "bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+        },
+        "basis": "Y-up, +Z-forward; source anatomical R maps to target negative-X L slot",
+        "sampleRate": 60
+      },
+      "take": "Jump_Land",
+      "duration": 1.25,
+      "frames": 76,
+      "loop": false,
+      "side": null,
+      "contact": null,
+      "attackProfile": null,
+      "issues": [],
+      "assignmentStatus": "runtime-policy",
+      "audioStatus": "not-audited",
+      "warnings": []
+    }
+  ]
+}

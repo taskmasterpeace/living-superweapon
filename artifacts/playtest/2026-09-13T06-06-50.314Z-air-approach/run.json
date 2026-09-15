@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "air-approach",
+  "startedAt": "2026-09-13T06:06:50.315Z",
+  "runnerRevision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "36a704f2e7fa78ae27cc65dd5c0d7399e231b610",
+    "trackedDiffHash": "de83f291a8a81f38faf1486bb4b8d6529ea30469b046343a4dd8e803df184607"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:07:16.696Z",
+  "staging": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, T locks, V approaches and strikes. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance."
+}

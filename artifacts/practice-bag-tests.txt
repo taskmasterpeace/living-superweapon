@@ -1,0 +1,27 @@
+(node:19352) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ touch and controller lessons use their action names instead of keyboard prompts (87.7701ms)
+✔ beam contact during a missed punch cannot turn the swing report into contact (59.8009ms)
+✔ native interrupted windup reports loss of control; real resolved punch reports contact (39.5568ms)
+✔ trial replacement owns one native target; disposal preserves player (53.2182ms)
+✔ guard trial uses native guard and rejects unknown scenarios (37.3744ms)
+✔ repeat retains scenario and replaces damaged target without leaking unfinished attempts (51.0274ms)
+✔ lesson describes the actual RAGE tap instead of promising a jab combo (15.6069ms)
+✔ practice restores the same player without issuing stock or refilling consumables (44.8856ms)
+✔ review distinguishes throw damage from subsequent terrain impact (39.0661ms)
+✔ practice refill is unavailable in the field, during active powers, or after KO (40.4324ms)
+✔ trainer KO restores the same rig without spending reserves or issuing consumables (52.4901ms)
+✔ roster preview stays outside combat and selected drill retains native body without powers (84.9604ms)
+✔ live practice teammate uses native AI and stays outside campaign deployment (54.6863ms)
+✔ practice ally KO does not call operation rewards or drop equipment (40.7689ms)
+✔ throw and impact timestamps use simulation time while target control is suspended (30.7955ms)
+✔ training replay keeps the resolved guard failure cause (37.6872ms)
+✔ practice bag is modular and replaces KO after delay while retaining damage records (41.6579ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1169.1403

@@ -1,0 +1,86 @@
+{
+  "passed": true,
+  "before": {
+    "capacity": 120,
+    "player": 1,
+    "target": 6,
+    "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":2},\"committed\":{}}",
+    "rank": 0
+  },
+  "player": 1,
+  "capacity": 130,
+  "rank": 1,
+  "carried": null,
+  "events": [
+    {
+      "kind": "sample-dropped",
+      "time": 1.0232000000000077,
+      "name": "MERC"
+    },
+    {
+      "kind": "sample-collected",
+      "time": 1.1451240000000078,
+      "name": "MERC"
+    },
+    {
+      "kind": "research-upgrade",
+      "time": 3.5510920000000135,
+      "name": "MERC",
+      "rank": 1
+    }
+  ],
+  "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":2},\"committed\":{}}",
+  "targetAlive": false,
+  "actions": [
+    {
+      "action": "strike",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:23:36.006Z",
+      "status": "dispatched",
+      "simulationBefore": 0.7854000000000049,
+      "released": true,
+      "simulationAfter": 0.9773000000000063
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:23:36.575Z",
+      "status": "dispatched",
+      "simulationBefore": 1.1352300000000084,
+      "released": true,
+      "simulationAfter": 1.2084920000000077
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:23:37.732Z",
+      "status": "dispatched",
+      "simulationBefore": 2.030092000000011,
+      "released": true,
+      "simulationAfter": 2.2801920000000093
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:23:41.062Z",
+      "status": "dispatched",
+      "simulationBefore": 3.530192000000012,
+      "released": true,
+      "simulationAfter": 3.6720920000000135
+    }
+  ],
+  "errors": [],
+  "staging": "Native menus; place player at portal console and portal, then lab approach with one stationary one-HP enemy. No position or HP changes after acceptance begins. Native T lock and bounded W walking are explicit browser inputs outside the shared action history. V and E use the shared adapter. Checks KO, collection, door, analysis, capacity and reserve conservation; not transport, fight-again or balance acceptance."
+}

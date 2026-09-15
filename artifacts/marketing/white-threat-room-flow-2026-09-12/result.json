@@ -1,0 +1,19 @@
+{
+  "setup": "Native selection/drill/ready interactions, controlled positioning at stations and portal. TV shows recorded native poses, not captured VFX/video.",
+  "room": {
+    "tvPlaying": true,
+    "frames": 55,
+    "arena": 310
+  },
+  "field": {
+    "state": "field",
+    "roomActive": false,
+    "arena": 32000,
+    "pos": [
+      11.111698217428383,
+      0,
+      66.62983158520316
+    ]
+  },
+  "errors": []
+}

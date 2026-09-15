@@ -1,0 +1,70 @@
+diff --git a/docs/reports/2026-09-11-reference-usage-audit.md b/docs/reports/2026-09-11-reference-usage-audit.md
+index 9355c29..3954668 100644
+--- a/docs/reports/2026-09-11-reference-usage-audit.md
++++ b/docs/reports/2026-09-11-reference-usage-audit.md
+@@ -13,7 +13,7 @@ The references were not all ignored: anyCreature and CMU became real, reproducib
+ | [CMU Motion Capture Database](https://mocap.cs.cmu.edu/) | `cmu-asfamc.js` parses the real Subject 02 ASF plus trial 02_01 AMC and bakes `motion.cmu-walk-02@1`, a 172-frame, 45-value pose-bank clip. Hash-pinned source files, a manifest, viewer playback and adapter tests are present. | **Real authoring integration and one-clip adapter pilot.** | It is not selected by any shipped profile. More importantly, its only clip id is `cmu-walk`, while gameplay locomotion asks for `walk`, `jog` and `sprint`; selecting it as the locomotion package therefore falls back to the bundled clips. No boxing/kick batch (including the previously suggested Subject 135 takes), contact markers or native-game acceptance was done. |
+ | [achrefelouafi/LinearAbiltyCastingThreeJS](https://github.com/achrefelouafi/LinearAbiltyCastingThreeJS) | No local documentation mention, source import, manifest entry, vendored file or dependency was found. | **Not used.** | Its useful mechanisms have not been evaluated against the current hose implementation. The upstream project is MIT-licensed and its [Nova Beam implementation](https://github.com/achrefelouafi/LinearAbiltyCastingThreeJS/blob/main/src/abilities/BeamAbility.js) is plain Three.js/GLSL, so a bounded adaptation is feasible without adopting its app architecture. |
+ | [cortiz2894/charged-blast-vfx](https://github.com/cortiz2894/charged-blast-vfx) | The September 8 effects pass states that supplied repositories were used as visual/architectural references and no source/assets were imported. The original `ChargeGather` implements socket-local inward lines, a near-full readiness ring, fixed buffers, simulation-time motion and the existing charge-to-scale rule. | **Reference-informed original implementation, integrated in gameplay and Studio.** | It does not implement the upstream noisy Fresnel orb, instanced billboard intake, rising torus or projectile shader stack. That was a deliberate bounded WebGL implementation, not a port of the React/Next system. |
+-| [cortiz2894/flow-shield-effect](https://github.com/cortiz2894/flow-shield-effect) | `ShieldSurfaceMaterial` implements the relevant ideas directly in the existing guard mesh: Fresnel edge, animated flow, hex cells, a four-entry local-space hit ring buffer and expanding waves at real accepted contact points. It is wired through fighter/projectile damage and clears on lifecycle boundaries. | **Reference-informed original implementation, integrated.** | The upstream health-color transition and reveal/dissolve system were not adopted. Gameplay guard state remains authoritative, correctly keeping presentation out of damage/protection logic. |
++| [cortiz2894/flow-shield-effect](https://github.com/cortiz2894/flow-shield-effect) | `ShieldSurfaceMaterial` implements the relevant ideas directly in the existing guard mesh: Fresnel edge, animated flow, hex cells, a four-entry local-space hit ring buffer and expanding waves at real accepted contact points. It is wired through fighter/projectile damage and clears on lifecycle boundaries. | **Reference-informed original isssssssssssssssssssmplementation, integrated.** | The upstream health-color transition and reveal/dissolve system were not adopted. Gameplay guard state remains authoritative, correctly keeping presentation out of damage/protection logic. |
+ | [cortiz2894/hologram-particles](https://github.com/cortiz2894/hologram-particles) | `ConstructSurface` area-samples native construct triangles, stores target positions/normals, assembles/dissolves in root-local space and caps each surface at 2,048 `THREE.Points`. It is wired into constructs, including tank sub-surfaces, and lifecycle-tested. | **Reference-informed original implementation, integrated.** | The upstream is a 60,000-particle Three r182 WebGPU/TSL compute system. This project is Three 0.169 WebGL; GPU compute, morphing and interaction were intentionally not imported. The current CPU update is the compatibility implementation, not an incomplete copy of the WebGPU one. |
+ 
+ ## What Linear can save now
+diff --git a/docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md b/docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md
+index 873d81d..5651d42 100644
+--- a/docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md
++++ b/docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md
+@@ -37,9 +37,9 @@ Files: existing weather change set and report; no authoring implementation edits
+ 
+ - [x] Finish weather review fixes; 98/98 combined weather/contact/Studio checks and `npm run build` passed. Native Studio → Hurricane rerun and ordered frames reviewed; visual gaps remain documented.
+ - [x] Commit only the verified weather files and report: `eee9509` on `codex/construct-effects-pass`.
+-- [ ] Obtain the external task's revised commit and clean-checkout reproduction output. Check `git diff --name-only <authoring-base>..<revised-sha>` contains only its three owned directories. Do not assume a clean tracked tree means source inputs are reproducible.
+-- [ ] Use the worktree skill to create branch `codex/sarge-authoring-integration` from the weather checkpoint. Merge the reviewed authoring SHA there, keeping the current checkout and user assets intact. Record both parent SHAs.
+-- [ ] Run `npm --prefix authoring test`, `node authoring/bin/authoring.js reproduce`, and the unchanged existing integration gates before introducing a loader. Source acquisition must follow the cleaned branch's instructions, not copy undocumented local files.
++- [x] Accepted final authoring commit `3224fe7`, with its ownership scan and independently reproduced source inputs. See the integration progress report for source hashes and baseline evidence.
++- [x] Created isolated `codex/sarge-authoring-integration` from `814d322`; merged `5f075f1` as `d7b3bdf`, then final handoff `3224fe7` as `ce7ce60`. Original checkout and running game remain unchanged.
++- [x] Passed 35 authoring tests, 11/11 package reproductions, 88 focused native baseline tests and the production build before introducing the loader.
+ 
+ ## Task 2 — Shared runtime contract and portable profile references (main)
+ 
+@@ -124,4 +124,4 @@ Create `src/tool/studio-catalog.js`, `tools/authored-catalog-browser.mjs`. Modif
+ 
+ ## Current checkpoint
+ 
+-Planning agents have completed read-only seam audits. Their findings are incorporated above: missing stock contract, real moving reload geometry, Sarge sidearm via armory, source/event omissions and multi-wrap defect. Integration has not started, and the external task's revised handoff commit has not yet been accepted.
++Source integration is complete in the isolated worktree at `ce7ce60`. Shared loader/profile infrastructure is implemented at `4d8d284` and under independent review. Motion, equipment contact, Studio selection and native evidence gates remain open; neither source validation nor the loader implementation approves art or gameplay feel.
+diff --git a/tools/cloth-compatible-contact.test.mjs b/tools/cloth-compatible-contact.test.mjs
+index 4fe7004..f16d3fa 100644
+--- a/tools/cloth-compatible-contact.test.mjs
++++ b/tools/cloth-compatible-contact.test.mjs
+@@ -141,3 +141,29 @@ test('a second native surface contact preserves an adjacent active sample veloci
+   assert.ok(-(a.pos.x-a.prev.x+c.pos.x-c.prev.x)/2>=-1e-9,'new sample retains inward velocity');
+  }finally{f.dispose();}
+ });
++
++test('weighted surface velocity uses free corners without crossing a real corner contact',()=>{
++ const f=new Fighter(ROSTER.find(d=>d.id==='sol'));try{
++  f._animate(0);const cloth=new RagdollCape(f.parts,new T.Vector3()),face=[40,41,53].map(i=>cloth.points[i]),[a,b,c]=face;
++  a.pos.set(1.991,5,-2);a.prev.copy(a.pos);cloth.resolveContact(a,new T.Vector3(1.99,5,-2),new T.Vector3(-1,0,0));
++  b.pos.set(2.01,5,2);b.prev.copy(b.pos);b.prev.x+=.1;c.pos.set(4.5,7,2);c.prev.copy(c.pos);
++  const box=new T.Box3(new T.Vector3(0,0,-.1),new T.Vector3(2.004,10,.1));cloth.faces=[face];face.forEach(p=>p.faces=[face]);
++  cloth.bodies=[{box,worldBox:box.clone(),matrix:new T.Matrix4(),inverse:new T.Matrix4()}];cloth.covers=[];cloth.collideSurface({heightAt:()=>0});
++  assert.ok(a.pos.x-a.prev.x<=1e-9,'surface stabilization drove the real corner inward');
++  assert.ok((a.pos.x-a.prev.x+b.pos.x-b.prev.x)/2>=-1e-9,'protecting the corner abandoned the active surface sample');
++  assert.ok(a.pos.x<=1.99+1e-9&&(a.pos.x+b.pos.x)/2>2.004,'both position constraints must remain clear');
++ }finally{f.dispose();}
++});
++
++test('a native vertex contact releases its plane after sliding beyond the finite body face',()=>{
++ const f=new Fighter(ROSTER.find(d=>d.id==='sol'));try{
++  const cloth=new RagdollCape(f.parts,new T.Vector3()),p=cloth.points[40];
++  const box=new T.Box3(new T.Vector3(0,0,-1),new T.Vector3(2,3,1));
++  const body={box,worldBox:box.clone(),matrix:new T.Matrix4(),inverse:new T.Matrix4()};
++  cloth.colliders=[body];cloth.covers=[];p.pos.set(1.999,1,0);p.prev.copy(p.pos);cloth.collide(p,{heightAt:()=>-10});
++  assert.ok(p.pos.x>2,'fixture failed to acquire body face');
++  p.pos.z=2;p.prev.z=2;
++  assert.ok(cloth.resolveContact(p,new T.Vector3(1,1,2),new T.Vector3(-1,0,0)),'finite face left a fictitious infinite plane');
++  assert.ok(Math.abs(p.pos.x-1)<1e-9);
++ }finally{f.dispose();}
++});

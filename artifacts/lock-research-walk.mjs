@@ -1,0 +1,1 @@
+import{readFile,writeFile}from'node:fs/promises';const p='tools/field-research-walk-browser.mjs';let s=await readFile(p,'utf8');const a=s.indexOf('const point=await p.evaluate'),b=s.indexOf("await p.keyboard.press('t')",a);s=s.slice(0,a)+s.slice(b);await writeFile(p,s);

@@ -1,0 +1,38 @@
+{
+  "oneShot": {
+    "playback": {
+      "id": "light",
+      "source": "chosen-recording",
+      "name": "contact-proof.wav",
+      "loop": false,
+      "time": 0.06133333333333333,
+      "native": false
+    },
+    "peak": 0.0026349618565291166
+  },
+  "loop": {
+    "id": "hover",
+    "source": "chosen-recording",
+    "name": "spaceEngineLow_000.mp3",
+    "loop": true,
+    "time": 0.16,
+    "native": false
+  },
+  "transfer": {
+    "source": "chosen-recording",
+    "decoded": true
+  },
+  "native": {
+    "diagnostic": true,
+    "playback": {
+      "id": "light",
+      "source": "chosen-recording",
+      "name": "contact-proof.wav",
+      "loop": false,
+      "time": 0.09066666666666667,
+      "native": true
+    },
+    "peak": 0.024128373712301254
+  },
+  "errors": []
+}

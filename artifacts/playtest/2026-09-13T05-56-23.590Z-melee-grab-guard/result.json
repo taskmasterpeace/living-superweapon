@@ -1,0 +1,334 @@
+{
+  "passed": true,
+  "facing": "front",
+  "attack": "grab",
+  "scheme": "kbm",
+  "actions": [
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:56:41.627Z",
+      "status": "dispatched",
+      "simulationBefore": 0.22519999999999887,
+      "released": true,
+      "simulationAfter": 0.4002999999999974
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:56:46.524Z",
+      "status": "dispatched",
+      "simulationBefore": 0.6411999999999988,
+      "released": true,
+      "simulationAfter": 0.7578999999999996
+    }
+  ],
+  "observation": [
+    {
+      "time": 0.1541999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.20019999999999888,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.22519999999999887,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.2751999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.2876999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.29610000000000036,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.30449999999999816,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3211999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.33360000000000034,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3503999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3627999999999974,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.37539999999999957,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.3878999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.4002999999999974,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.40869999999999884,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.45869999999999883,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4756000000000003,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.4921000000000003,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5046000000000003,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5171000000000002,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5296000000000002,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5380000000000016,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5463000000000009,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5588000000000009,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5743000000000008,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5826999999999987,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5951999999999986,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.5993999999999994,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6078000000000008,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6120000000000015,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6203000000000009,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6286000000000002,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6328000000000009,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6411999999999988,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6493999999999995,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6578000000000009,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6660000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.670300000000001,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6786000000000003,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6826999999999989,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6870000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6911999999999988,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.6995000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7036999999999988,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.707800000000001,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7120000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7161000000000003,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7246000000000002,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7286999999999988,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7370000000000017,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7411999999999987,
+      "guard": false,
+      "incoming": 0
+    },
+    {
+      "time": 0.7453999999999995,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7536999999999988,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7578999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7661999999999989,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7703999999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.778800000000001,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7828999999999996,
+      "guard": true,
+      "incoming": 0
+    }
+  ],
+  "hit": null,
+  "grab": {
+    "holder": 1,
+    "victim": 2,
+    "reciprocal": true,
+    "released": true,
+    "releaseElapsed": 0.14600000000000013
+  },
+  "errors": [],
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

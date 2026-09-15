@@ -1,0 +1,728 @@
+{
+  "ready": {
+    "preset": "corridor",
+    "started": false,
+    "time": 2.1976000000000044,
+    "solids": 103,
+    "scene": 52,
+    "units": [
+      {
+        "id": "hw-0-0",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          240
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-1",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          240
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-2",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          222
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-3",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          222
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-0",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -169,
+          0,
+          0
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-1",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -151,
+          0,
+          0
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-2",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -169,
+          0,
+          -18
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-3",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -151,
+          0,
+          -18
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      }
+    ],
+    "tank": null
+  },
+  "live": {
+    "preset": "corridor",
+    "started": true,
+    "time": 14.576299999999936,
+    "solids": 102,
+    "scene": 53,
+    "units": [
+      {
+        "id": "hw-0-0",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          240
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-1",
+        "team": 0,
+        "hp": 0,
+        "pos": [
+          -195.74612096404238,
+          0,
+          165.60440483594493
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-2",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -151.2755180864734,
+          0,
+          140.87864390982674
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -151,
+            "z": 140
+          },
+          "points": [],
+          "ttl": 1.7623000000000006,
+          "blocked": false
+        }
+      },
+      {
+        "id": "hw-0-3",
+        "team": 0,
+        "hp": 92.6,
+        "pos": [
+          -168.05354750535315,
+          0,
+          147.53411040442262
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -169,
+            "z": 149
+          },
+          "points": [],
+          "ttl": 1.8665000000000005,
+          "blocked": false
+        }
+      },
+      {
+        "id": "hw-1-0",
+        "team": 1,
+        "hp": 0,
+        "pos": [
+          -168.76981810501803,
+          0,
+          124.49751216734379
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -130.915387379748,
+            "z": 112.82535559227956
+          },
+          "points": [],
+          "ttl": 1.9875,
+          "blocked": true
+        }
+      },
+      {
+        "id": "hw-1-1",
+        "team": 1,
+        "hp": 0,
+        "pos": [
+          -136.0386434121667,
+          0,
+          99.2541424417
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -132.0660687493786,
+            "z": 105.00230099197294
+          },
+          "points": [],
+          "ttl": 1.9875,
+          "blocked": true
+        }
+      },
+      {
+        "id": "hw-1-2",
+        "team": 1,
+        "hp": 0,
+        "pos": [
+          -182.70938250918914,
+          0,
+          125.48347542343507
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -197.31256315525616,
+            "z": 145.94771682432955
+          },
+          "points": [
+            {
+              "x": -197.31256315525616,
+              "z": 145.94771682432955
+            }
+          ],
+          "ttl": 1.1865999999999985,
+          "blocked": false
+        }
+      },
+      {
+        "id": "hw-1-3",
+        "team": 1,
+        "hp": 0,
+        "pos": [
+          -185.19664439666462,
+          0,
+          117.67390563414888
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1",
+        "route": {
+          "revision": 2,
+          "goal": {
+            "x": -145.11061394100813,
+            "z": 133.15516842206853
+          },
+          "points": [
+            {
+              "x": -145.11061394100813,
+              "z": 133.15516842206853
+            }
+          ],
+          "ttl": 0.7195000000000014,
+          "blocked": false
+        }
+      }
+    ],
+    "tank": null
+  },
+  "reset": {
+    "preset": "corridor",
+    "started": false,
+    "time": 15.68159999999994,
+    "solids": 103,
+    "scene": 52,
+    "units": [
+      {
+        "id": "hw-0-0",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          240
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-1",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          240
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-2",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          222
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-3",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          222
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-0",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -169,
+          0,
+          0
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-1",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -151,
+          0,
+          0
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-2",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -169,
+          0,
+          -18
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-3",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          -151,
+          0,
+          -18
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      }
+    ],
+    "tank": null
+  },
+  "vehicle": {
+    "preset": "vehicle",
+    "started": false,
+    "time": 16.060999999999943,
+    "solids": 103,
+    "scene": 53,
+    "units": [
+      {
+        "id": "hw-0-0",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          83,
+          0,
+          210
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-1",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          240
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-2",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          222
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-3",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          222
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-0",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          110
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-1",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          92
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-2",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          74
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-3",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          56
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      }
+    ],
+    "tank": {
+      "id": "tank",
+      "pos": {
+        "x": 66,
+        "y": 0,
+        "z": 210
+      }
+    }
+  },
+  "boarded": false,
+  "vehicleAfterDrive": {
+    "preset": "vehicle",
+    "started": false,
+    "time": 18.237899999999897,
+    "solids": 103,
+    "scene": 53,
+    "units": [
+      {
+        "id": "hw-0-0",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          66.53388812968285,
+          2,
+          193.97058378097657
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-1",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          240
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-2",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -247,
+          0,
+          222
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-0-3",
+        "team": 0,
+        "hp": 100,
+        "pos": [
+          -229,
+          0,
+          222
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-0",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          110
+        ],
+        "role": "rifleman",
+        "loadout": "m16",
+        "appearance": "olive",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-1",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          92
+        ],
+        "role": "breacher",
+        "loadout": "pump",
+        "appearance": "desert",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-2",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          74
+        ],
+        "role": "marksman",
+        "loadout": "m24",
+        "appearance": "urban",
+        "model": "faceted-v1"
+      },
+      {
+        "id": "hw-1-3",
+        "team": 1,
+        "hp": 100,
+        "pos": [
+          100,
+          0,
+          56
+        ],
+        "role": "support",
+        "loadout": "saw",
+        "appearance": "winter",
+        "model": "faceted-v1"
+      }
+    ],
+    "tank": {
+      "id": "tank",
+      "pos": {
+        "x": 66.53388812968285,
+        "y": 0,
+        "z": 193.97058378097657
+      }
+    }
+  },
+  "intercept": {
+    "preset": "intercept",
+    "started": false,
+    "time": 19.384799999999878,
+    "solids": 103,
+    "scene": 46,
+    "units": [
+      {
+        "id": "sol",
+        "team": 0,
+        "hp": 130,
+        "pos": [
+          212,
+          90,
+          200
+        ]
+      },
+      {
+        "id": "sol",
+        "team": 1,
+        "hp": 130,
+        "pos": [
+          212,
+          90,
+          -215
+        ]
+      }
+    ],
+    "tank": null
+  },
+  "errors": []
+}

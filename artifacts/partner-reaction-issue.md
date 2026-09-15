@@ -1,0 +1,3 @@
+The character authoring contact rehearsal now supports carry/front/rear/side/neck metadata and correct scaled socket alignment. Browser review of the neck-hold candidate shows the partner inherits an awkward initial actor pose, including raised/bent limbs. This is not a finished victim reaction.
+
+Implement an explicit partner pose channel with idle, grabbed resistance, suspended hold and release reactions. Review complete front/rear/side sequences on small and large partners. Preserve deterministic scrubbing and hand-to-socket alignment; do not let preview posing change gameplay collision or throw physics. Current files: src/engine/character-action-drafts.js, src/engine/character-grab-studies.js.

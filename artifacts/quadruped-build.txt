@@ -1,0 +1,13 @@
+17:36:56 | INFO: Data are loaded, start creating Blender stuff
+17:36:56 | INFO: Blender create Mesh node Cube
+17:36:56 | INFO: glTF import finished in 0.23s
+Blender 4.5.10 LTS (hash 6dc0b208d1b5 built 2026-05-19 01:33:42)
+Warning: Path 'C:\Program Files\Blender Foundation\Blender 4.5\4.5\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Dots Stroke'
+Warning: Path 'C:\Program Files\Blender Foundation\Blender 4.5\4.5\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Material'
+Info: Saved as "Wolf.blend"
+17:36:56 | INFO: Data are loaded, start creating Blender stuff
+17:36:56 | INFO: Blender create Mesh node Cube
+17:36:57 | INFO: glTF import finished in 0.21s
+Info: Saved as "Husky.blend"
+
+Blender quit

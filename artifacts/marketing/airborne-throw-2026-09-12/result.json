@@ -1,0 +1,41 @@
+{
+  "setup": "Controlled ground placement and downward camera aim; native Space takeoff, E grab, hold/release E throw",
+  "player": {
+    "flying": true,
+    "y": 32.4721772616982
+  },
+  "target": {
+    "flying": true,
+    "y": 27.522973033665522,
+    "hp": 88
+  },
+  "records": [
+    {
+      "trial": "airborne",
+      "time": 1.1802999999999992,
+      "amount": 10,
+      "blocked": false,
+      "hp": 120,
+      "playerKi": 83.56279201057959,
+      "healthLost": 10,
+      "guardEnergySpent": 0,
+      "result": "THROW",
+      "incoming": false,
+      "move": "throw"
+    },
+    {
+      "trial": "airborne",
+      "time": 1.1802999999999992,
+      "amount": 32,
+      "blocked": false,
+      "hp": 88,
+      "playerKi": 86.1029368105795,
+      "healthLost": 32,
+      "guardEnergySpent": 0,
+      "result": "TERRAIN IMPACT",
+      "incoming": false,
+      "move": "hit"
+    }
+  ],
+  "errors": []
+}

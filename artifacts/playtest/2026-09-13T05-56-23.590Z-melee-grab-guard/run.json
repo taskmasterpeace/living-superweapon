@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scenario": "melee-grab-guard",
+  "startedAt": "2026-09-13T05:56:23.592Z",
+  "runnerRevision": "c89fca97cd34e09d95a8b677d7c93348448678cc",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/snapshot.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "attack": "grab",
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "c89fca97cd34e09d95a8b677d7c93348448678cc",
+    "trackedDiffHash": "4b90321f14a71052670edac592a27fc9b6322fee681ca79b49f87fe5299b02a2"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:56:47.353Z",
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

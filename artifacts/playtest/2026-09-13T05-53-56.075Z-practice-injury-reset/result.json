@@ -1,0 +1,148 @@
+{
+  "passed": true,
+  "injury": true,
+  "cycles": [
+    {
+      "before": {
+        "player": 1,
+        "target": 2,
+        "kind": "defend",
+        "entities": [
+          1,
+          2
+        ],
+        "hp": 122.8656,
+        "maxHp": 130,
+        "ki": 72.86535999999981,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      },
+      "after": {
+        "player": 1,
+        "target": 3,
+        "kind": "defend",
+        "entities": [
+          1,
+          3
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    },
+    {
+      "before": {
+        "player": 1,
+        "target": 3,
+        "kind": "defend",
+        "entities": [
+          1,
+          3
+        ],
+        "hp": 122.8656,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      },
+      "after": {
+        "player": 1,
+        "target": 4,
+        "kind": "defend",
+        "entities": [
+          1,
+          4
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    },
+    {
+      "before": {
+        "player": 1,
+        "target": 4,
+        "kind": "defend",
+        "entities": [
+          1,
+          4
+        ],
+        "hp": 122.8656,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      },
+      "after": {
+        "player": 1,
+        "target": 5,
+        "kind": "defend",
+        "entities": [
+          1,
+          5
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:54:24.020Z",
+      "status": "dispatched",
+      "simulationBefore": 1.2400999999999947,
+      "released": true,
+      "simulationAfter": 1.3857999999999955
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:54:25.388Z",
+      "status": "dispatched",
+      "simulationBefore": 2.4534999999999942,
+      "released": true,
+      "simulationAfter": 2.553699999999995
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:54:26.704Z",
+      "status": "dispatched",
+      "simulationBefore": 3.6660999999999957,
+      "released": true,
+      "simulationAfter": 3.7576999999999945
+    }
+  ],
+  "errors": [],
+  "staging": "Native menus; one setup positions player facing the reset console and starts the configured trial nearby. Three native beam bursts spend energy, or the defending trainer inflicts actual damage, then E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; KO, carried props and live powers need separate reset cases."
+}

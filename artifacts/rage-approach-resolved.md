@@ -1,0 +1,3 @@
+RAGE follow-up: native Threat Room against KANO at 46.8u passed (115→76.525 HP; 38.475 heavy damage). Re-running the same Studio case after the idle-phase reset from 4c60e0a also passes with identical repeated-seek movement/contact. RAGE is restored to the Studio browser regression alongside JELANI and SOL. No approach range/damage tuning was needed. The earlier authoring miss is resolved for this case; broader dodge/target/range acceptance remains open.
+
+Added local shared-runner command: `node tools/playtest/run.mjs --scenario rage-approach`. Native evidence: `artifacts/playtest/2026-09-13T06-36-14.382Z-rage-approach/`. First attempt against MERC had real contact but an input-observer timeout; that failed evidence is preserved and not treated as a gameplay miss.

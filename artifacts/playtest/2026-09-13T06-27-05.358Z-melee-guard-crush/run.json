@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scenario": "melee-guard-crush",
+  "startedAt": "2026-09-13T06:27:05.359Z",
+  "runnerRevision": "0ab5a4e751ee2722a6a66335998685bdd02712ff",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "src/engine/entity.js\nsrc/engine/melee-trial.js\ntools/energy-guard.test.mjs\ntools/guard-drill-browser.mjs\ntools/melee-trial.test.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "attack": "heavy",
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "0ab5a4e751ee2722a6a66335998685bdd02712ff",
+    "trackedDiffHash": "2bf54ccf35368c1da13806fd3f2fea7df31d5b3c1495ebbad9b633b286859e9d"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:27:27.126Z",
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

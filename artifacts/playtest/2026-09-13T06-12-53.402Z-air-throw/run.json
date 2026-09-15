@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "scenario": "air-throw",
+  "startedAt": "2026-09-13T06:12:53.404Z",
+  "runnerRevision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "throwTarget": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+    "trackedDiffHash": "dc3ad9be2bd6030de3cfd9d8fcf9b4985abe8d9bfa818aad1a7ae43c4a175a55"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T06:13:20.261Z",
+  "error": {
+    "message": "page.waitForFunction: Timeout 5000ms exceeded.",
+    "stack": "page.waitForFunction: Timeout 5000ms exceeded.\n    at D:\\lsw\\.worktrees\\combat-release-review\\tools\\air-approach-browser.mjs:25:40"
+  }
+}

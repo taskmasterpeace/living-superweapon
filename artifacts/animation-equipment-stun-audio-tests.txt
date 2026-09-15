@@ -1,0 +1,45 @@
+(node:52344) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ repeatable demo executes native capture, carry, damage and recovery at 30Hz (279.3599ms)
+✔ repeatable demo executes native capture, carry, damage and recovery at 60Hz (247.3629ms)
+✔ repeatable demo executes native capture, carry, damage and recovery at 120Hz (393.1072ms)
+✔ modular airborne stun demo uses gravity and restores control 30Hz (215.8361ms)
+✔ modular airborne stun demo uses gravity and restores control 60Hz (284.7482ms)
+✔ modular airborne stun demo uses gravity and restores control 120Hz (394.5173ms)
+✔ exact source recommendations avoid guessing ambiguous throwing takes (0.471ms)
+✔ actual GLB props follow chosen hand without changing pose and dispose owned resources (58.2793ms)
+✔ hover and flight switch with hysteresis and never accumulate voices (1.035ms)
+✔ stops on alive (0.1236ms)
+✔ stops on flying (0.0616ms)
+✔ stops on airborne (0.0506ms)
+✔ stops on launchT (0.0711ms)
+✔ stops on grabbedBy (0.0746ms)
+✔ stops on _aircraftVehicle (0.0537ms)
+✔ stops on _scoutVehicle (0.0543ms)
+✔ removal, control transfer, missing recording and library stop are safe (0.1115ms)
+✔ expired launch timer permits controlled flight audio (0.1115ms)
+✔ bundled flight waits for decode, uses one loop and yields to explicit placeholder (0.1354ms)
+✔ chosen flight recording stays authoritative even with a bundled fallback available (0.0613ms)
+✔ flight and guard break map exact imported files with correct loop identity and preload (3.8877ms)
+(node:75652) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ jammer applies its effect once with recording (68.9865ms)
+✔ jammer applies its effect once with existing fallback (30.4022ms)
+✔ jammer rejected spent activation is silent and has no effect (20.7328ms)
+✔ jammer rejected cooldown activation is silent and has no effect (20.707ms)
+✔ jammer rejected noPowers activation is silent and has no effect (20.6856ms)
+✔ jammer bundled sample has exact source provenance and preload (4.9885ms)
+✔ shieldpack applies its effect once with recording (16.2092ms)
+✔ shieldpack applies its effect once with existing fallback (15.8469ms)
+✔ shieldpack rejected spent activation is silent and has no effect (18.4884ms)
+✔ shieldpack rejected cooldown activation is silent and has no effect (15.5748ms)
+✔ shieldpack rejected noPowers activation is silent and has no effect (15.408ms)
+✔ shieldpack bundled sample has exact source provenance and preload (2.4497ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2139.2894

@@ -1,0 +1,54 @@
+{
+  "passed": true,
+  "sameRecord": true,
+  "countStable": true,
+  "visible": true,
+  "carried": false,
+  "held": false,
+  "inFlight": false,
+  "spent": {
+    "carried": true,
+    "visible": false
+  },
+  "actions": [
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:02:13.615Z",
+      "status": "dispatched",
+      "simulationBefore": 0.17810000000000034,
+      "released": true,
+      "simulationAfter": 0.2988999999999996
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "grab-armed",
+      "requestedAt": "2026-09-13T06:02:16.821Z",
+      "status": "dispatched",
+      "simulationBefore": 0.4114999999999979,
+      "throwArmed": true,
+      "released": true,
+      "simulationAfter": 0.7703000000000015
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:02:18.690Z",
+      "status": "dispatched",
+      "simulationBefore": 2.2829999999999897,
+      "released": true,
+      "simulationAfter": 2.39969999999999
+    }
+  ],
+  "errors": [],
+  "staging": "One setup relocates a practice rock and player near the reset console. Native E pickup, held E throw, keyboard W walk until reset prompt, then E reset. No post-input relocation or direct reset invocation. This proves restoration after a completed throw, not reset denial while a prop is airborne."
+}

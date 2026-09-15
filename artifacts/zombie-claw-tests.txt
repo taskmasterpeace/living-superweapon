@@ -1,0 +1,49 @@
+(node:99172) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ equipped bat slot: hit (100.8979ms)
+✔ equipped bat slot: miss (37.7699ms)
+✔ equipped bat slot: startup (33.157ms)
+✔ equipped bat slot: recovery (29.512ms)
+✔ equipped bat slot: hidden (30.9649ms)
+✔ equipped bat slot: detached (30.248ms)
+✔ equipped bat slot: stunned (28.8933ms)
+✔ equipped claws slot: hit (34.6644ms)
+✔ equipped claws slot: miss (35.6592ms)
+✔ equipped claws slot: startup (36.7003ms)
+✔ equipped claws slot: recovery (34.9576ms)
+✔ equipped claws slot: hidden (32.5885ms)
+✔ equipped claws slot: detached (28.8781ms)
+✔ equipped claws slot: stunned (27.0569ms)
+✔ bat catalog and pickup retain the same model identity (0.3208ms)
+✔ paired claws alternate actual attack hands and remove both mounts (27.0781ms)
+(node:101268) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ zombie recipe is independent, grounded, unarmed and uses native melee (1.4151ms)
+✔ zombies use a restrained civilian silhouette without superhero spikes or a glowing insignia (50.3268ms)
+✔ undead recipe does not gain human mood dialogue or instant emotional buffs (34.5683ms)
+✔ first wave spawns real actors clear of cover and on sampled terrain (74.6065ms)
+✔ finite waves include a recovery gap and produce exactly one native result (227.231ms)
+✔ pause and overlays stop the wave timer; defeat has a retry-compatible result (65.3336ms)
+✔ disposal is idempotent and retires only encounter actors (51.5518ms)
+✔ a blocked next wave waits without partial spawns and resumes when open ground is available (115.3721ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 20260911) (295.7656ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 1) (191.8761ms)
+✔ a grounded zombie acquires and damages through native AI, melee and contact (seed 42) (187.3943ms)
+(node:109324) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ healthy left claw chambers outside its own ribs after right arm loss (61.8824ms)
+✔ common zombie rifle headshot is lethal, torso requires two hits (39.1921ms)
+✔ rifle limbs never remove HP; arm disables after four and leg cripples after two (14.9847ms)
+✔ sprinter has lower HP and dies to one rifle torso hit (16.2907ms)
+✔ bullet contacts follow actual head and leg proxies rather than a height guess (15.1553ms)
+✔ ordinary projectile sweep reports anatomical zone and respects intervening cover (15.839ms)
+✔ disabled arms stop claw damage and disabled legs retain a permanent slowdown (14.9818ms)
+✔ one disabled arm prevents two-handed grabs but preserves healthy-arm combat (17.0348ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1615.6106

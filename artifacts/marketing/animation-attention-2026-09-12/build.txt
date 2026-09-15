@@ -1,0 +1,78 @@
+
+> war-world-ascendants@0.1.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 496 modules transformed.
+rendering chunks...
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) D:/lsw/.worktrees/combat-release-review/node_modules/three/examples/jsm/loaders/GLTFLoader.js is dynamically imported by D:/lsw/.worktrees/combat-release-review/src/engine/authored-assets.js but also statically imported by D:/lsw/.worktrees/combat-release-review/src/engine/clone-equipment.js, D:/lsw/.worktrees/combat-release-review/src/engine/frontline-aircraft.js, D:/lsw/.worktrees/combat-release-review/src/engine/frontline-convoy.js, D:/lsw/.worktrees/combat-release-review/src/engine/frontline-outpost.js, D:/lsw/.worktrees/combat-release-review/src/engine/frontline-terrain.js, D:/lsw/.worktrees/combat-release-review/src/engine/research-lab.js, D:/lsw/.worktrees/combat-release-review/src/engine/squad-transport.js, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/assets/news-encode.worker-Bkw4OPQv.js                                                 0.38 kB
+dist/gadget-library.html                                                                   0.62 kB │ gzip:     0.34 kB
+dist/sound-library.html                                                                    0.77 kB │ gzip:     0.36 kB
+dist/animation-library.html                                                                1.02 kB │ gzip:     0.42 kB
+dist/studio.html                                                                           1.74 kB │ gzip:     0.71 kB
+dist/atlas.html                                                                            2.06 kB │ gzip:     1.09 kB
+dist/citygame.html                                                                         2.63 kB │ gzip:     1.10 kB
+dist/powerworld.html                                                                       3.68 kB │ gzip:     1.62 kB
+dist/index.html                                                                            3.68 kB │ gzip:     1.62 kB
+dist/design-decisions.html                                                                 5.83 kB │ gzip:     2.29 kB
+dist/assets/T_Eye_Brown-BWS731Ok.png                                                      35.96 kB
+dist/assets/Ultra Bid For Power 1.0 - Release _DOWNLOAD_ 2-44 screenshot-B4q_q3ld.png    652.78 kB
+dist/assets/Ultra Bid For Power 1.0 - Release _DOWNLOAD_ 1-26 screenshot-fFCJowwC.png  1,429.46 kB
+dist/assets/tokens-BB9EiDPV.css                                                            1.10 kB │ gzip:     0.58 kB
+dist/assets/workshop-page-BTJIL3BH.css                                                     2.15 kB │ gzip:     0.86 kB
+dist/assets/sound-library-CQs8QDV9.css                                                     4.49 kB │ gzip:     1.35 kB
+dist/assets/animationLibrary-IavjqdSy.css                                                  4.56 kB │ gzip:     1.52 kB
+dist/assets/creatorUI-D92m_Wyn.css                                                         4.69 kB │ gzip:     1.53 kB
+dist/assets/creator-DlG-snyj.css                                                           5.23 kB │ gzip:     1.41 kB
+dist/assets/designDecisions-JSlHvzuw.css                                                   9.79 kB │ gzip:     2.78 kB
+dist/assets/player-status-CtZ573NZ.css                                                    12.71 kB │ gzip:     3.49 kB
+dist/assets/overlays-BVFUQvIK.css                                                         15.21 kB │ gzip:     3.47 kB
+dist/assets/studio-CXDg_poP.css                                                           19.30 kB │ gzip:     4.43 kB
+dist/assets/boot-DxqR0EFu.css                                                             24.15 kB │ gzip:     6.54 kB
+dist/assets/citygame-UgBPWhej.js                                                           0.49 kB │ gzip:     0.30 kB
+dist/assets/soundLibrary-CD0QcP2e.js                                                       0.60 kB │ gzip:     0.39 kB
+dist/assets/modulepreload-polyfill-B5Qt9EMX.js                                             0.71 kB │ gzip:     0.40 kB
+dist/assets/gadget-catalog-KQPMghNy.js                                                     0.74 kB │ gzip:     0.43 kB
+dist/assets/atlas-DdUlpj9A.js                                                              0.82 kB │ gzip:     0.54 kB
+dist/assets/preload-helper-C1FmrZbK.js                                                     1.14 kB │ gzip:     0.68 kB
+dist/assets/comet-character-pZ789iKr.js                                                    1.43 kB │ gzip:     0.86 kB
+dist/assets/helion-character-eC15aM38.js                                                   1.85 kB │ gzip:     1.04 kB
+dist/assets/performance-diagnostic-BKYfJTx_.js                                             2.04 kB │ gzip:     1.06 kB
+dist/assets/gadgetLibrary-B7D9FIx3.js                                                      2.53 kB │ gzip:     1.32 kB
+dist/assets/districts-TR7jSB5c.js                                                          4.92 kB │ gzip:     2.38 kB
+dist/assets/ground-C7CrIyUE.js                                                             6.15 kB │ gzip:     3.03 kB
+dist/assets/abilities-BnnfJ7C6.js                                                          9.61 kB │ gzip:     4.26 kB
+dist/assets/transition-D5PvdJUt.js                                                        12.22 kB │ gzip:     5.79 kB
+dist/assets/audio-JoEAE3L2.js                                                             12.50 kB │ gzip:     5.32 kB
+dist/assets/powerworld-16e7hIJe.js                                                        12.71 kB │ gzip:     5.50 kB
+dist/assets/designDecisions-CwwnvxN3.js                                                   12.72 kB │ gzip:     5.26 kB
+dist/assets/pwcam-VHCdYgJP.js                                                             12.76 kB │ gzip:     5.87 kB
+dist/assets/animationLibrary-BlIiu2Vl.js                                                  13.28 kB │ gzip:     5.47 kB
+dist/assets/sound-library-BDCoMq24.js                                                     13.96 kB │ gzip:     5.23 kB
+dist/assets/pwmove-Di4nWMZz.js                                                            14.22 kB │ gzip:     6.77 kB
+dist/assets/pwimpact-CtF58zw8.js                                                          16.67 kB │ gzip:     7.45 kB
+dist/assets/atlasUI-DXFYZ6hr.js                                                           19.07 kB │ gzip:     7.24 kB
+dist/assets/OrbitControls-B5x1L8h_.js                                                     20.55 kB │ gzip:     5.11 kB
+dist/assets/reticle-B-gxsqNW.js                                                           20.84 kB │ gzip:     8.96 kB
+dist/assets/samples-DAciqgrE.js                                                           35.81 kB │ gzip:    11.57 kB
+dist/assets/pw-main-D1uALfH5.js                                                           45.89 kB │ gzip:    15.38 kB
+dist/assets/design-question-options-CKHcwe2M.js                                           54.95 kB │ gzip:    19.19 kB
+dist/assets/audio-CpoWX-0d.js                                                             57.59 kB │ gzip:    17.25 kB
+dist/assets/characters-BJrqGVZS.js                                                        83.76 kB │ gzip:    22.27 kB
+dist/assets/studio-mUlBZsNR.js                                                           145.53 kB │ gzip:    49.32 kB
+dist/assets/boot-CYUwNT-l.js                                                             393.55 kB │ gzip:   120.23 kB
+dist/assets/creatorUI-DtgqZg5d.js                                                        826.44 kB │ gzip:   274.01 kB
+dist/assets/world-units-DRBGQ4xc.js                                                    1,022.97 kB │ gzip:   289.95 kB
+dist/assets/creator-ChlVnGLx.js                                                        1,459.45 kB │ gzip:   666.32 kB
+dist/assets/entity-p0ecEtcv.js                                                         7,224.99 kB │ gzip: 2,256.38 kB
+
+(!) Some chunks are larger than 2500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.20s

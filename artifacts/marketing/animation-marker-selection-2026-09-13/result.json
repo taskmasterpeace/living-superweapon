@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "errors": [],
+  "checks": [
+    "selection isolation",
+    "assigned reload",
+    "draft precedence labeled",
+    "discard restores assignment",
+    "unassign restores source"
+  ]
+}

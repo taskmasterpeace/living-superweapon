@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "scenario": "practice-injury-reset",
+  "startedAt": "2026-09-13T05:52:14.733Z",
+  "runnerRevision": "756b538a431054a86b5b1194ce698624635fe1d9",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/scenarios.mjs\ntools/reset-practice-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "injury": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "756b538a431054a86b5b1194ce698624635fe1d9",
+    "trackedDiffHash": "d3aec02f1ccfc0ae16ee0ef31b1b0b8cf7daed446f382f1a3753a633a376418d"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T05:52:44.362Z",
+  "error": {
+    "message": "Trainer must hurt actual health",
+    "stack": "AssertionError [ERR_ASSERTION]: Trainer must hurt actual health\n    at file:///D:/lsw/.worktrees/combat-release-review/tools/reset-practice-browser.mjs:24:42"
+  }
+}

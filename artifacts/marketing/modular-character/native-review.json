@@ -1,0 +1,29 @@
+{
+  "result": [
+    {
+      "state": "forward",
+      "loaded": true,
+      "targetHp": 1000000000,
+      "error": null
+    },
+    {
+      "state": "hover",
+      "loaded": true,
+      "targetHp": 1000000000,
+      "error": null
+    },
+    {
+      "state": "groundWalk",
+      "loaded": true,
+      "targetHp": 1000000000,
+      "error": null
+    },
+    {
+      "state": "melee",
+      "loaded": true,
+      "targetHp": 1000000000,
+      "error": null
+    }
+  ],
+  "errors": []
+}

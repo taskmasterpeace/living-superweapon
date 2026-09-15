@@ -1,0 +1,25 @@
+{
+  "miss": {
+    "entryReason": "OUT OF ENTRY RANGE",
+    "entryRange": 10,
+    "entryFamily": "step",
+    "trial": "stationary",
+    "kind": "jab",
+    "time": 0.25019999999999715,
+    "contacts": 0,
+    "approach": false,
+    "distance": 12,
+    "startup": 0.1,
+    "active": 0.06,
+    "recovery": 0.14,
+    "result": "no contact"
+  },
+  "result": {
+    "state": "finished",
+    "reason": "STOPPED",
+    "damage": 9.443200000000004,
+    "contacts": 1,
+    "elapsed": 1.4722999999999946
+  },
+  "errors": []
+}

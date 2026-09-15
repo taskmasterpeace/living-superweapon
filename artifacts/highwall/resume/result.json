@@ -1,0 +1,111 @@
+{
+  "setup": "Native E / UI actions with explicitly arranged approach positions for devices; no replacement interaction logic.",
+  "stairs": {
+    "pos": [
+      235,
+      10,
+      256.46565099999947
+    ],
+    "grounded": true
+  },
+  "monitor": {
+    "focused": "monitor",
+    "overlay": true,
+    "feed": 3.049999999999997,
+    "colors": 87,
+    "pos": [
+      220,
+      10,
+      240
+    ],
+    "ammo": 30
+  },
+  "focusHold": {
+    "pos": [
+      220,
+      10,
+      240
+    ],
+    "ammo": 30
+  },
+  "monitorExit": true,
+  "speaker": {
+    "state": "playing",
+    "time": 2.271661
+  },
+  "video": {
+    "state": "playing",
+    "time": 2.878644,
+    "width": 1280
+  },
+  "door": {
+    "fraction": 1,
+    "bottom": 50.126315789473686,
+    "revision": 15
+  },
+  "saved": 4,
+  "resumed": {
+    "preset": "systems",
+    "gate": 1,
+    "units": 4,
+    "held": "m16",
+    "media": [
+      "stopped",
+      "stopped"
+    ]
+  },
+  "outbreakStart": {
+    "units": 22,
+    "blocked": []
+  },
+  "fireBefore": 30,
+  "fireAfter": 28,
+  "reloadStarted": {
+    "active": true,
+    "elapsed": 0.1,
+    "alive": true,
+    "overlay": false
+  },
+  "reloaded": {
+    "loaded": 30,
+    "reserve": 178
+  },
+  "outbreak": {
+    "units": 22,
+    "alive": 20,
+    "events": [],
+    "loot": {
+      "schema": 1,
+      "serial": 2,
+      "dropped": [
+        "unit:16",
+        "unit:17"
+      ],
+      "containers": [
+        {
+          "id": "loot:1",
+          "sourceId": "unit:16",
+          "name": "SPRINTER · backpack",
+          "pos": {
+            "x": -213.36863304778953,
+            "y": 0,
+            "z": 189.65294814990025
+          },
+          "entries": []
+        },
+        {
+          "id": "loot:2",
+          "sourceId": "unit:17",
+          "name": "SHAMBLER · backpack",
+          "pos": {
+            "x": -197.42218531409404,
+            "y": 0,
+            "z": 180.46369693858549
+          },
+          "entries": []
+        }
+      ]
+    }
+  },
+  "errors": []
+}

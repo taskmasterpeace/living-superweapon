@@ -1,0 +1,63 @@
+{
+  "result": {
+    "lessons": [
+      "STATIONARY · Face the target and tap Punch inside your approach range. Tap Punch; repeat for combo · hold/release Punch: charged heavy · hold Block: frontal guard · Grab: grab or interact · Evade: dodge"
+    ],
+    "swings": [
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.2709000000000051,
+        "contacts": 1,
+        "approach": true,
+        "distance": 6,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.6420000000000006,
+        "contacts": 1,
+        "approach": true,
+        "distance": 4.830058052141321,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "cross",
+        "time": 0.9799000000000013,
+        "contacts": 1,
+        "approach": true,
+        "distance": 5.885432251460885,
+        "startup": 0.16,
+        "active": 0.07,
+        "recovery": 0.22,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ],
+    "hp": 81.04679999999999,
+    "max": 120
+  },
+  "errors": []
+}

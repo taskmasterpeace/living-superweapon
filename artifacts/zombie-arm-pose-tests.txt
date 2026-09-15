@@ -1,0 +1,41 @@
+(node:115988) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (278.6107ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (145.9153ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (21.6472ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (54.2941ms)
+✔ a late asset load cannot install a body on a disposed fighter (44.811ms)
+✔ native animation ticks advance the installed authored body (47.6573ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (22.1229ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (63.6253ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (0.9037ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (20.6673ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (22.3194ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (59.6764ms)
+✔ non-disabling zombie limb hits do not permanently replace authored locomotion (84.2433ms)
+✔ recent ranged poses retain native aim only until their timer expires (48.6551ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (20.6928ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (63.1957ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (36.8695ms)
+(node:89684) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ disabled L arm drops its previous attack elbow pose (61.1123ms)
+✔ disabled R arm drops its previous attack elbow pose (25.4899ms)
+(node:94700) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ healthy left claw chambers outside its own ribs after right arm loss (64.1068ms)
+✔ common zombie rifle headshot is lethal, torso requires two hits (48.3667ms)
+✔ rifle limbs never remove HP; arm disables after four and leg cripples after two (16.1666ms)
+✔ sprinter has lower HP and dies to one rifle torso hit (17.9436ms)
+✔ bullet contacts follow actual head and leg proxies rather than a height guess (15.2775ms)
+✔ ordinary projectile sweep reports anatomical zone and respects intervening cover (13.5878ms)
+✔ disabled arms stop claw damage and disabled legs retain a permanent slowdown (13.1637ms)
+✔ one disabled arm prevents two-handed grabs but preserves healthy-arm combat (17.6873ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1243.3573

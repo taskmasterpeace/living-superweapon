@@ -1,0 +1,46 @@
+✔ one shot stops on last frame and never wraps an attack into its start (0.9078ms)
+✔ air fall descends to floor and hover retains clearance without changing simulation (0.1515ms)
+✔ reject foreign skeleton, missing socket, oversized and invalid geometry (0.9994ms)
+✔ motion interpolates shortest rotation and rejects invalid control timing (0.8747ms)
+✔ parts follow their socket and clean up on replacement (1.2922ms)
+✔ saved character survives readback and corrupt storage is safe (0.2312ms)
+✔ actual neck has independent material and full suit covers dark waist (108.7807ms)
+✔ every blocking study compiles against the actual skeleton (166.9222ms)
+✔ small carrier and large partner preserve hand-to-torso contact (36.2095ms)
+✔ two-handed object pickup centers its load between both hands (29.5777ms)
+✔ grab partner does not inherit the editor actor attack pose (37.9081ms)
+✔ modular defaults retain explicit alternative body choice (0.2556ms)
+✔ partner release is identical after direct seek and sequential playback (35.2778ms)
+✔ grab studies compile full-body holds and preserve the free-hand choice (60.6071ms)
+✔ directional grab previews keep partners upright and align the selected socket at different sizes (28.7699ms)
+✔ full-body loop studies close every joint and animate both arms and legs (1.4007ms)
+✔ kick candidates distinguish chamber, contact and recovery for both legs (0.2791ms)
+✔ left throw preserves hand metadata through export and contact rehearsal (37.1922ms)
+✔ combat candidates reach anteriorly on the actual Idle_Loop rig, on both sides (86.6809ms)
+✔ fall candidates keep wrists anterior and elbows flexed on the real rig at quarter phases (197.0707ms)
+✔ grapple study keeps catch hand overhead while free limbs articulate on the real idle rig (46.4683ms)
+✔ infected sprint preserves source cadence and loops its bounded asymmetric arm derivative (399.3753ms)
+(node:95016) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ actual modular pickup keeps physics planted and samples payload reach phases (131.9911ms)
+✔ pickup studies articulate both arms and lower body on the production rig (97.1717ms)
+✔ actual rig: cough hand stays at face, burn hand stays in front at quarter samples (79.1229ms)
+✔ actual rig: flying pickup opens before capture; ground pickup lowers then raises both hands overhead (53.0517ms)
+✔ Idle_Loop baseline: flying pickup opens around payload then closes while reaching forward (38.4417ms)
+(node:114276) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ flying pickup requires actual vertical proximity to prop (69.1982ms)
+✔ lift capacity still rejects a nearby overweight prop (24.1581ms)
+✔ throw and its preview begin at the carried mesh without muzzle teleport (29.4934ms)
+✔ native low-flight pickup initializes the payload before immediate release (21.7545ms)
+✔ native pickup reaches before lift, then hands off to overhead and interruption drops (22.2148ms)
+✔ stun during reach drops current payload without launching it (21.3554ms)
+✔ capacity ratio selects progressively longer easy, effort and struggle lifts (0.6485ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 699.0343

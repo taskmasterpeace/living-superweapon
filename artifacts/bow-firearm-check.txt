@@ -1,0 +1,65 @@
+(node:90796) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sarge rifle: final moving ground socket, target and flash at 30 Hz (197.0151ms)
+✔ merc pistol: final moving ground socket, target and flash at 30 Hz (112.8469ms)
+✔ titan rifle: final moving hover socket, target and flash at 30 Hz (49.2935ms)
+✔ ironclad rifle: final moving fly socket, target and flash at 30 Hz (43.3375ms)
+✔ sarge rifle: final moving ground socket, target and flash at 60 Hz (129.9266ms)
+✔ merc pistol: final moving ground socket, target and flash at 60 Hz (119.5428ms)
+✔ titan rifle: final moving hover socket, target and flash at 60 Hz (62.3851ms)
+✔ ironclad rifle: final moving fly socket, target and flash at 60 Hz (62.4338ms)
+✔ sarge rifle: final moving ground socket, target and flash at 120 Hz (183.2293ms)
+✔ merc pistol: final moving ground socket, target and flash at 120 Hz (178.1131ms)
+✔ titan rifle: final moving hover socket, target and flash at 120 Hz (97.9333ms)
+✔ ironclad rifle: final moving fly socket, target and flash at 120 Hz (99.3065ms)
+✔ registry firearms have real barrel-end sockets; melee weapons do not (0.5855ms)
+✔ shotgun pellets share one final barrel source and one flash, preserving speed variation (30.4474ms)
+✔ a launch-frame portal cannot be undone by the gun muzzle resolver (80.548ms)
+✔ chosen gear mounts on the driven grip, replaces native gear, fires and restores on drop (89.8763ms)
+✖ a held gun survives form replacement without disposed geometry or stale grips (36.9669ms)
+✔ Studio exposes and rehearses firearm holds through the real ability and contact path (283.1308ms)
+✔ a fast aim command steers the actual gun barrel with its zero-spread round (169.7864ms)
+✔ a held slow pistol maintains its ready stance between shots without replaying recoil (322.6793ms)
+✔ close firearm aim 4/18/12 keeps finite speed and converges from the final muzzle (162.0816ms)
+✔ close firearm aim -3/4/12 keeps finite speed and converges from the final muzzle (178.7688ms)
+✔ close firearm aim 0/8/12 keeps finite speed and converges from the final muzzle (212.2672ms)
+✔ a coincident commanded target cannot create an invalid firearm transform (136.8588ms)
+✔ an expiring scavenged weapon pays and emits its last round before being removed (136.9786ms)
+✔ a native firearm resolves against the replacement form on its launch frame (247.6899ms)
+✔ pending held gunfire follows its transferred grip through a launch-frame form replacement (244.2247ms)
+✔ ordinary firearm rounds cannot tunnel through thin cover at 30 Hz (357.1051ms)
+✔ ordinary firearm rounds cannot tunnel through thin cover at 60 Hz (495.0983ms)
+✔ ordinary firearm rounds cannot tunnel through thin cover at 120 Hz (755.998ms)
+✔ bullet hit padding cannot reach a fighter fully behind cover at 30 Hz (141.4033ms)
+✔ bullet hit padding cannot reach a fighter fully behind cover at 60 Hz (161.461ms)
+✔ bullet hit padding cannot reach a fighter fully behind cover at 120 Hz (156.3937ms)
+✔ sarge rifle ground: equipped geometry clears a thin wall through approach/release at 30 Hz (524.4261ms)
+✔ titan rifle hover: equipped geometry clears a thin wall through approach/release at 30 Hz (335.9786ms)
+✔ merc pistol ground: equipped geometry clears a thin wall through approach/release at 30 Hz (401.0836ms)
+✔ sarge rifle ground: equipped geometry clears a thin wall through approach/release at 60 Hz (849.1784ms)
+✔ titan rifle hover: equipped geometry clears a thin wall through approach/release at 60 Hz (590.7394ms)
+✔ merc pistol ground: equipped geometry clears a thin wall through approach/release at 60 Hz (727.9049ms)
+✔ sarge rifle ground: equipped geometry clears a thin wall through approach/release at 120 Hz (1741.3467ms)
+✔ titan rifle hover: equipped geometry clears a thin wall through approach/release at 120 Hz (1040.3778ms)
+✔ merc pistol ground: equipped geometry clears a thin wall through approach/release at 120 Hz (1144.1149ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 41
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13426.5405
+
+✖ failing tests:
+
+test at tools\firearm-emission.test.mjs:101:1
+✖ a held gun survives form replacement without disposed geometry or stale grips (36.9669ms)
+  TypeError: Cannot read properties of null (reading 'traverse')
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/firearm-emission.test.mjs:106:45)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7)

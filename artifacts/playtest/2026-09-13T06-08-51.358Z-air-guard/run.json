@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "scenario": "air-guard",
+  "startedAt": "2026-09-13T06:08:51.360Z",
+  "runnerRevision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "defense": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+    "trackedDiffHash": "bd5856957fad3df826d6a4650d5a918f1d1864d64edf2ea0c313fb5fde017290"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T06:09:14.854Z",
+  "error": {
+    "message": "page.waitForFunction: Timeout 3000ms exceeded.",
+    "stack": "page.waitForFunction: Timeout 3000ms exceeded.\n    at D:\\lsw\\.worktrees\\combat-release-review\\tools\\air-approach-browser.mjs:17:38"
+  }
+}

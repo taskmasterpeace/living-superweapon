@@ -1,0 +1,68 @@
+{
+  "errors": [],
+  "clips": [
+    "A_TPose",
+    "Death01",
+    "Hit_Chest",
+    "Idle_Loop",
+    "Jump_Loop",
+    "Punch_Cross",
+    "Punch_Enter",
+    "Punch_Jab",
+    "Sprint_Loop",
+    "Sword_Attack",
+    "Sword_Idle",
+    "Walk_Loop"
+  ],
+  "nativeHeight": 9.80414873218957,
+  "scale": [
+    5.4795438483039,
+    5.4795438483039,
+    5.4795438483039
+  ],
+  "meshes": 22,
+  "finite": true,
+  "phases": [
+    {
+      "clip": "Punch_Cross",
+      "phase": 0
+    },
+    {
+      "clip": "Punch_Cross",
+      "phase": 0.25
+    },
+    {
+      "clip": "Punch_Cross",
+      "phase": 0.5
+    },
+    {
+      "clip": "Punch_Cross",
+      "phase": 0.75
+    },
+    {
+      "clip": "Punch_Cross",
+      "phase": 1
+    },
+    {
+      "clip": "Sword_Attack",
+      "phase": 0
+    },
+    {
+      "clip": "Sword_Attack",
+      "phase": 0.25
+    },
+    {
+      "clip": "Sword_Attack",
+      "phase": 0.5
+    },
+    {
+      "clip": "Sword_Attack",
+      "phase": 0.75
+    },
+    {
+      "clip": "Sword_Attack",
+      "phase": 1
+    }
+  ],
+  "note": "Showcase playback and native procedural flight adapter. See native-review.json for Studio integration."
+}

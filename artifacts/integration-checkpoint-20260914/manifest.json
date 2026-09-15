@@ -1,0 +1,127 @@
+{
+  "createdAt": "2026-09-14T18:10:34.419Z",
+  "integrationHead": "b78735940515e91222c5e46b3d297f6d3d6a7c4f",
+  "note": "Tracked changes are saved as binary patches. Untracked files are inventoried, not copied; source worktrees remain untouched. Bundle preserves committed refs.",
+  "worktrees": [
+    {
+      "worktree": "D:/lsw",
+      "HEAD": "e28a8cb2ba68b689624fed31bcabf38dcc8a5442",
+      "branch": "refs/heads/codex/playable-campaign-slice",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\00",
+      "untrackedCount": 30040,
+      "trackedStatus": " M docs/COMBAT_MANUAL.md\n M docs/GAMEPLAY.md\n M docs/gameplay/AUTHORING_PIPELINES.md\n M docs/gameplay/TRACKER.md\n M public/authored-assets/catalog.json\n M src/boot.js\n M src/core/combat-selection.js\n M src/core/gamepad.js\n M src/core/input.js\n M src/core/movement-gears.js\n M src/core/power-up-state.js\n M src/core/sound-library.js\n M src/core/touch.js\n M src/data/audio-cues.js\n M src/data/camera-presets.js\n M src/data/characters.js\n M src/data/news.js\n M src/data/visual.js\n M src/data/zombie-encounter.js\n M src/engine/abilities.js\n M src/engine/ability-melee-hit.js\n M src/engine/ai.js\n M src/engine/comic.js\n M src/engine/dual-trigger.styles.js\n M src/engine/entity.js\n M src/engine/fighter-environment-contact.js\n M src/engine/flight-motion.js\n M src/engine/flight-surface-wake.js\n M src/engine/flight-wake.js\n M src/engine/game.js\n M src/engine/hit-feedback.js\n M src/engine/hud.js\n M src/engine/hud.styles.js\n M src/engine/hudBroadcast.js\n M src/engine/hudCodex.js\n M src/engine/hudSelect.js\n M src/engine/hudUtil.js\n M src/engine/melee.js\n M src/engine/person-carry.js\n M src/engine/player-status-view.js\n M src/engine/player-status.css\n M src/engine/player-status.js\n M src/engine/powerworld.js\n M src/engine/projectiles.js\n M src/engine/pwTitle.js\n M src/engine/ragdoll-cape.js\n M src/engine/scout-driving.js\n M src/engine/systems2.js\n M src/engine/world.js\n M src/styles/shell.css\n M src/tool/sound-library.css\n M src/tool/sound-library.js\n M tools/block-bot.test.mjs\n M tools/camera-settings.test.mjs\n M tools/energy-guard.test.mjs\n M tools/flight-presentation.test.mjs\n M tools/flight-surface-wake.test.mjs\n M tools/flight-wake.test.mjs\n M tools/free-look-input.test.mjs\n M tools/gameplay-lock.test.mjs\n M tools/ground-camera-cover.test.mjs\n M tools/ground-camera.test.mjs\n M tools/hit-feedback.test.mjs\n M tools/main-combat-view.test.mjs\n M tools/melee-depth.test.mjs\n M tools/movement-gears.test.mjs\n M tools/news-arena-report.test.mjs\n M tools/person-carry.test.mjs\n M tools/player-status.test.mjs\n M tools/power-up.test.mjs\n M tools/scout-driving.test.mjs\n M tools/zombie-encounter.test.mjs\n M vite.config.js\n"
+    },
+    {
+      "worktree": "D:/lsw/.claude/worktrees/modest-gould-4b1623",
+      "HEAD": "1f57edb971affe83d8a84d981cb8a519a96edc8b",
+      "detached": true,
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\01",
+      "untrackedCount": 0,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.claude/worktrees/sweet-bartik-4f9c55",
+      "HEAD": "8b7c3ad99aafa6c158356b6029a818a88e58eb93",
+      "detached": true,
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\02",
+      "untrackedCount": 0,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/audio-content-pass",
+      "HEAD": "08f882c78a4a5b023312080c3a96461b5469b419",
+      "branch": "refs/heads/codex/audio-content-pass",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\03",
+      "untrackedCount": 1040,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/audio-sfx-gaps",
+      "HEAD": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+      "branch": "refs/heads/codex/audio-all",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\04",
+      "untrackedCount": 358,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/combat-release-review",
+      "HEAD": "b78735940515e91222c5e46b3d297f6d3d6a7c4f",
+      "branch": "refs/heads/codex/playable-integration",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\05",
+      "untrackedCount": 1774,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/combat-speed-repair",
+      "HEAD": "172fe1b9279347236472d91cb5438b101b2d7759",
+      "branch": "refs/heads/codex/combat-speed-repair",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\06",
+      "untrackedCount": 0,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/enterable-building-pilot",
+      "HEAD": "c720c13b08b05129b813a61df75aa218efc1d2ce",
+      "branch": "refs/heads/codex/enterable-building-pilot",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\07",
+      "untrackedCount": 0,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/fleet-arsenal-verify-20260913",
+      "HEAD": "dc4c555838122b5a026c56798d2219653477252b",
+      "detached": true,
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\08",
+      "untrackedCount": 1,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/living-superweapon-registry",
+      "HEAD": "ca6f2ee766645becc4bb9647516c92538366ac6f",
+      "branch": "refs/heads/codex/living-superweapon-registry",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\09",
+      "untrackedCount": 28,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/pw-ground-handling",
+      "HEAD": "4a4365934c0013eabedde6889f6ee2a538c1da97",
+      "branch": "refs/heads/codex/pw-ground-handling",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\10",
+      "untrackedCount": 0,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/pw-launch-inheritance",
+      "HEAD": "92fe9b95044b706ef22e65b0079514d3aa02d513",
+      "branch": "refs/heads/codex/pw-vehicle-sim",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\11",
+      "untrackedCount": 5,
+      "trackedStatus": " M src/engine/game.js\n M src/engine/vehicle-sim.js\n M tools/vehicle-sim.test.mjs\n"
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/pw-operation-audio",
+      "HEAD": "28dbe83ef6d210e96ed1a30a4ffa2f7ba0e66a76",
+      "branch": "refs/heads/codex/pw-operation-audio",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\12",
+      "untrackedCount": 3,
+      "trackedStatus": ""
+    },
+    {
+      "worktree": "D:/lsw/.worktrees/sarge-authoring-integration",
+      "HEAD": "09ef03dcb1580ec2a7a80782194d58ec9b6ed612",
+      "branch": "refs/heads/codex/sarge-authoring-integration",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\13",
+      "untrackedCount": 8049,
+      "trackedStatus": " M docs/reports/2026-09-11-reference-usage-audit.md\n M docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md\n M tools/cloth-compatible-contact.test.mjs\n"
+    },
+    {
+      "worktree": "D:/powerworld-authoring",
+      "HEAD": "3224fe74d9edbf11084be772e97a690c6e9e79bd",
+      "branch": "refs/heads/codex/authoring-pipeline",
+      "checkpoint": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914\\14",
+      "untrackedCount": 9,
+      "trackedStatus": ""
+    }
+  ]
+}

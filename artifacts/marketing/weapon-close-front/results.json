@@ -1,0 +1,56 @@
+[
+  {
+    "weapon": "bat",
+    "view": "front"
+  },
+  {
+    "weapon": "bat",
+    "elapsed": 0.15,
+    "view": "front"
+  },
+  {
+    "weapon": "bat",
+    "elapsed": 0.35,
+    "view": "front"
+  },
+  {
+    "weapon": "bat",
+    "view": "front"
+  },
+  {
+    "weapon": "axe",
+    "view": "front"
+  },
+  {
+    "weapon": "axe",
+    "elapsed": 0.15,
+    "view": "front"
+  },
+  {
+    "weapon": "axe",
+    "elapsed": 0.35,
+    "view": "front"
+  },
+  {
+    "weapon": "axe",
+    "view": "front"
+  },
+  {
+    "weapon": "katana",
+    "view": "front"
+  },
+  {
+    "weapon": "katana",
+    "elapsed": 0.15,
+    "view": "front"
+  },
+  {
+    "weapon": "katana",
+    "elapsed": 0.35,
+    "view": "front"
+  },
+  {
+    "weapon": "katana",
+    "view": "front"
+  }
+]

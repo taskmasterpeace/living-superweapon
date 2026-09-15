@@ -1,0 +1,42 @@
+(node:41704) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ an occupied off-hand carries its shield outside the rendered torso during authored punches (128.9127ms)
+✔ an active grounded punch plants a strike stance instead of running through contact (33.7889ms)
+✔ light-strike source preference is validated and retained in character profiles (2.1435ms)
+✔ the rendered target core follows the source core axis without importing its different bind lean (236.1058ms)
+✔ the hips keep the source fighting base instead of inheriting the full shoulder twist (159.0874ms)
+✔ both hands keep fixed reach, grounded support and a stationary simulation root through the whole strike (584.126ms)
+✔ authored stance and hit offsets cannot survive interruption or a mid-strike form replacement (1195.3878ms)
+✔ source phase is stable across frame rates and hitstop while aerial leg poses remain owned by flight (127.291ms)
+✔ switching the committed hand mirrors the fighting stance and preserves the reachable contact point (30.4343ms)
+✔ full startup/contact/recovery playback has no angular reset or pole flip (376.7214ms)
+(node:9860) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ heavy ingestion samples the actual hook and recovery, without substituting the old cross (160.3194ms)
+✔ bare-handed power uses the hook while occupied grips retain their weapon-compatible motion (149.7582ms)
+✔ heavy preference is independent from light punches and survives validated custom profiles (20.635ms)
+✔ heavy source keeps root authority, fixed arm lengths and planted feet through startup, contact and recovery (769.2364ms)
+✔ aerial heavy motion keeps flight legs and converges to the same source phase at 30/60/120 Hz (95.2651ms)
+✔ real Fighter and melee updates freeze the active heavy clock during hitstop, then resume it (77.0932ms)
+(node:52368) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native purchased bridge contains isolated left jab and right cross with complete source recovery (5.6591ms)
+✔ explicit lab candidate preserves simulation, fixed limb lengths and boot support without claiming contact approval (120.6373ms)
+✔ boxing import retains armed, air, other-style, heavy and author marker fallbacks (19.0215ms)
+✔ quarantined boxing keeps accepted default contact and clears on interruption (175.7228ms)
+✔ default boxing retains continuous native joint playback while purchased candidates are quarantined (132.9464ms)
+(node:53232) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ purchased-motion opt-out survives save, reload and game profile application (2.7681ms)
+✔ paid receiver motion follows the holder clock and never overrides incapacitation (0.5434ms)
+✔ paid overlay keeps simulation and contact body authoritative; only permitted joints move (2.4238ms)
+✔ invalid or duplicate purchased tracks are rejected and absent roles fall back (0.2104ms)
+✔ real modular paid receiver phases retain rear neck contact, fixed limbs and collision roots (257.1685ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3104.5374

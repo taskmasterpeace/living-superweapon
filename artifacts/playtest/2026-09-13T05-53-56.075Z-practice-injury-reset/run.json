@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scenario": "practice-injury-reset",
+  "startedAt": "2026-09-13T05:53:56.078Z",
+  "runnerRevision": "756b538a431054a86b5b1194ce698624635fe1d9",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "src/engine/melee-trial.js\ntools/melee-trial.test.mjs\ntools/playtest/scenarios.mjs\ntools/reset-practice-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "injury": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "756b538a431054a86b5b1194ce698624635fe1d9",
+    "trackedDiffHash": "91fa453323579239b27323e138e16b91509f7d10cc20ed4097bcae77600989b6"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:54:28.080Z",
+  "staging": "Native menus; one setup positions player facing the reset console and starts the configured trial nearby. Three native beam bursts spend energy, or the defending trainer inflicts actual damage, then E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; KO, carried props and live powers need separate reset cases."
+}

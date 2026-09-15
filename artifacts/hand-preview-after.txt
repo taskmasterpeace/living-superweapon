@@ -1,0 +1,15 @@
+(node:85264) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sampled library jab moves visible modular hand and direct seeking is repeatable (191.2772ms)
+(node:90660) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native paired hold preview remains finite, faces holder and never spends resources (false) (153.4048ms)
+✔ native paired hold preview remains finite, faces holder and never spends resources (true) (71.8143ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 737.8627

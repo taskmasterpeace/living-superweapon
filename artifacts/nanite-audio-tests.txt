@@ -1,0 +1,32 @@
+✔ AI pack adds missing recordings and preserves nine bundled defaults and repeating does not replace existing choices (546.4522ms)
+✔ existing recordings, gain, and inactive settings survive the additive import (361.5332ms)
+✔ failed media decode leaves the full previous library unchanged (257.4325ms)
+✔ edits during async decoding are never overwritten by an older import (1.5998ms)
+✔ additive AI pack cannot replace the preferred bundled punch recordings (368.2723ms)
+✔ nanite sound follows formation, break and repair once per transition (1.4455ms)
+✔ untagged loadouts allocate no controller (0.632ms)
+✔ locked source has no active cells; first unlock consumes exactly assembly duration (0.515ms)
+✔ density 0 cannot alter cell or assembly readiness (0.1843ms)
+✔ density 0.75 cannot alter cell or assembly readiness (0.1018ms)
+✔ density 1 cannot alter cell or assembly readiness (0.0841ms)
+✔ shield local absorption conserves damage and repairs only at the exact quiet+reform boundary (0.7662ms)
+✔ large and subdivided elapsed intervals repair identically without consuming quiet twice (0.4166ms)
+✔ a new dent resets only that cell quiet/reform while intact cells remain functional (0.1677ms)
+✔ toggle cannot heal or reset repair; retracted and assembling modules cannot absorb (0.2377ms)
+✔ cannon structural failure disables only its slot without providing armor (0.172ms)
+✔ ineligible shield contact can damage metal but cannot absorb body damage (0.1044ms)
+✔ stale, malformed, absent and broken cells cannot consume a second hit (0.1828ms)
+✔ retirement is idempotent, invalidates epochs, and new life creates undamaged initial assembly (0.5846ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.9947ms)
+✔ bundled mappings resolve catalog cues and existing files (2.7494ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.967ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1526ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.5933ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1619.4052

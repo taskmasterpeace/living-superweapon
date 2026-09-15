@@ -1,0 +1,83 @@
+warning: in the working copy of 'docs/COMBAT_MANUAL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/GAMEPLAY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/gameplay/AUTHORING_PIPELINES.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/gameplay/TRACKER.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/boot.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/combat-selection.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/gamepad.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/input.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/movement-gears.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/power-up-state.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/sound-library.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/touch.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/data/camera-presets.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/data/news.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/data/visual.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/data/zombie-encounter.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/abilities.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/ability-melee-hit.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/ai.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/comic.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/dual-trigger.styles.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/entity.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/fighter-environment-contact.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/flight-motion.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/flight-surface-wake.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/flight-wake.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/game.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hit-feedback.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hud.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hud.styles.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hudBroadcast.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hudCodex.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hudSelect.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/hudUtil.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/melee.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/person-carry.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/player-status-view.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/player-status.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/player-status.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/powerworld.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/projectiles.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/pwTitle.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/ragdoll-cape.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/scout-driving.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/systems2.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/world.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/shell.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/tool/sound-library.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/tool/sound-library.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/block-bot.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/camera-settings.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/energy-guard.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/flight-presentation.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/flight-surface-wake.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/flight-wake.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/free-look-input.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/gameplay-lock.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/ground-camera-cover.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/ground-camera.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/hit-feedback.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/main-combat-view.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/melee-depth.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/movement-gears.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/news-arena-report.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/person-carry.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/power-up.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/zombie-encounter.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'vite.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/engine/vehicle-sim.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/vehicle-sim.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/reports/2026-09-11-reference-usage-audit.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/superpowers/plans/2026-09-10-sarge-authoring-integration.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/cloth-compatible-contact.test.mjs', LF will be replaced by CRLF the next time Git touches it
+{
+  "out": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\integration-checkpoint-20260914-targeted",
+  "worktrees": 15,
+  "dirty": [
+    "D:/lsw",
+    "D:/lsw/.worktrees/combat-release-review",
+    "D:/lsw/.worktrees/pw-launch-inheritance",
+    "D:/lsw/.worktrees/sarge-authoring-integration"
+  ]
+}

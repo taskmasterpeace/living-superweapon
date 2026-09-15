@@ -1,0 +1,11 @@
+{
+  "setup": "Controlled low-health ground placement; native trial opponent supplies lethal attack, automatic KO review, clicked reset and native Q guard",
+  "alive": true,
+  "hp": 130,
+  "sameActor": true,
+  "stockUnchanged": true,
+  "ragdoll": false,
+  "running": true,
+  "scenario": "defend",
+  "errors": []
+}

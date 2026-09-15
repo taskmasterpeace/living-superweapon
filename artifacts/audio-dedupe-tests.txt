@@ -1,0 +1,26 @@
+✔ AI pack adds missing recordings and preserves six bundled defaults and repeating does not replace existing choices (579.9929ms)
+✔ existing recordings, gain, and inactive settings survive the additive import (426.7563ms)
+✔ failed media decode leaves the full previous library unchanged (301.4014ms)
+✔ edits during async decoding are never overwritten by an older import (2.1624ms)
+✔ additive AI pack cannot replace the preferred bundled punch recordings (411.4451ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.5865ms)
+✔ bundled mappings resolve catalog cues and existing files (1.906ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.9322ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1582ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.6334ms)
+✔ every described family can resolve to an audible phase-specific recipe (0.5561ms)
+✔ speech rejects repeated speakers, global overlap and stale events before consuming cooldowns (0.1984ms)
+✔ line, category, anti-repeat, profile and priority policies make independent decisions (0.1683ms)
+✔ a line cooldown is shared across speakers while distinct-line speaker cooldown stays independent (0.8366ms)
+✔ malformed import never replaces valid settings or chosen media (0.6517ms)
+✔ validated local recording survives transfer and a rejected decoder leaves the good binding (0.5525ms)
+✔ native melee contact is replaced as a whole, without original punch layers (2.3837ms)
+✔ custom loop survives reload and transfer, reuse works, invalid catalog is atomic (1.1453ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1798.9457

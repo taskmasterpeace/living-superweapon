@@ -1,0 +1,44 @@
+{
+  "result": {
+    "results": [
+      {
+        "hit": true,
+        "out": {
+          "kind": "cover",
+          "t": 0.75
+        },
+        "box": "box"
+      },
+      {
+        "hit": true,
+        "out": {
+          "kind": "cover",
+          "t": 0.61375
+        },
+        "box": "box"
+      },
+      {
+        "hit": true,
+        "out": {
+          "kind": "cover",
+          "t": 0.7222222222222222
+        },
+        "box": "box"
+      }
+    ],
+    "allBoxes": true,
+    "flat": 0.5,
+    "triangles": false,
+    "portalCleanup": {
+      "detached": true,
+      "restored": true,
+      "absent": true
+    },
+    "fieldCleanup": {
+      "detached": true,
+      "restored": true,
+      "absent": true
+    }
+  },
+  "errors": []
+}

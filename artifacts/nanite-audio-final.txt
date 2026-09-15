@@ -1,0 +1,14 @@
+✔ nanite sound follows formation, break and repair once per transition (1.4311ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.9474ms)
+✔ bundled mappings resolve catalog cues and existing files (2.0395ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.8657ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1533ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.5349ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80.6696

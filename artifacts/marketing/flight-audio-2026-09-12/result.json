@@ -1,0 +1,46 @@
+{
+  "events": [
+    {
+      "id": "flight",
+      "source": "chosen-recording",
+      "name": "flight.wav",
+      "loop": true,
+      "time": 8.610666666666667,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "flight",
+      "source": "chosen-recording",
+      "name": "flight.wav",
+      "loop": true,
+      "time": 11.141333333333334,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "hover",
+      "source": "chosen-recording",
+      "name": "hover.wav",
+      "loop": true,
+      "time": 11.450666666666667,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    },
+    {
+      "id": "flight",
+      "source": "chosen-recording",
+      "name": "flight.wav",
+      "loop": true,
+      "time": 11.490666666666666,
+      "native": true,
+      "accepted": true,
+      "reason": "playing"
+    }
+  ],
+  "active": [],
+  "errors": []
+}

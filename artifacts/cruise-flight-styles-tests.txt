@@ -1,0 +1,122 @@
+(node:41872) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (232.2141ms)
+✔ cruise-fists survives profile and drives current modular cruising body (126.5839ms)
+✔ cruise-palms survives profile and drives current modular cruising body (98.4998ms)
+✔ cruise-one survives profile and drives current modular cruising body (112.3422ms)
+✔ cruise-bent survives profile and drives current modular cruising body (90.1867ms)
+(node:3212) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (183.8804ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (400.3399ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (90.9566ms)
+✔ wake authoring survives presentation serialization with validated limits (0.5896ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (11.3009ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (11.2961ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (24.4861ms)
+(node:42932) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (233.3006ms)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (167.9483ms)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (257.0414ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (90.5397ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (131.2959ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (228.749ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (84.9332ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (120.3389ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (194.1638ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (30 Hz) (69.204ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (30 Hz) (74.9773ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (30 Hz) (85.1006ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (30 Hz) (66.6433ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (60 Hz) (134.5642ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (60 Hz) (132.732ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (60 Hz) (129.7025ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (60 Hz) (114.3548ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (120 Hz) (221.9797ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (120 Hz) (230.42ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (120 Hz) (230.8726ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (120 Hz) (179.3247ms)
+✔ full-body guard still suppresses ranged cruise and releases smoothly (81.7341ms)
+✔ palm forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (338.9764ms)
+✔ optic forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (320.2368ms)
+✔ chest forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (313.14ms)
+✔ rifle forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (284.9866ms)
+(node:19140) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hold contact adapts to torso vega/merc (137.0209ms)
+✔ hold contact adapts to torso vega/rage (53.7667ms)
+✔ hold contact adapts to torso rage/vega (51.1225ms)
+✔ untrusted profiles reject unsupported keys before labels can reach the inspector DOM (2.7538ms)
+✔ strafe targets roundtrip through saved profiles and production definitions (1.0304ms)
+✔ legacy five-pose profiles acquire new strafe defaults without altering authored joints or storage (0.6043ms)
+✔ presentation authoring module exists (0.0766ms)
+✔ combat camera preset changes only camera and remains undoable (2.1978ms)
+✔ an edited profile affects geometry data without mutating powers or source definition (0.3225ms)
+✔ saved profiles roundtrip and remain isolated per fighter (0.3787ms)
+✔ malformed import cannot poison geometry or exceed safe camera ranges (0.5364ms)
+✔ purple is reserved for KIVULI, including hidden colour fields (0.3956ms)
+✔ corrupt saved data is not overwritten by a later save (0.316ms)
+✔ storage write failures are reported to the caller (0.5921ms)
+✔ undo redo save and new edits preserve expected draft history (0.4437ms)
+✔ unknown saved hero IDs do not add roster citizens (0.2959ms)
+✔ installer applies valid profile and reports corrupt entries without blocking game boot (0.4504ms)
+✔ portable authored body, motion families, and equipment references roundtrip exactly (0.5161ms)
+✔ authored asset maps reject malformed structure but retain unknown portable references (0.418ms)
+✔ untouched SOL profiles preserve its shipped lead fist, including partial authored overrides (0.2572ms)
+✖ all shipped frame and color defaults can be saved without normalization (11.0626ms)
+✔ deliberate flight style reset replaces pose targets without mutating the draft or source defaults (0.6061ms)
+(node:40988) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ saving an untouched profile preserves production flight joints for every shipped hero (3455.3049ms)
+✔ environment response survives profile export and rejects invalid mass (0.8738ms)
+✔ emblem selection roundtrips into native figures without editing combat stats (204.9599ms)
+✔ shared ground approach assignment roundtrips without changing flight or source roster (1.0771ms)
+✔ older profiles keep native melee defaults and invalid families are rejected (0.5774ms)
+ℹ tests 65
+ℹ suites 0
+ℹ pass 63
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4923.8591
+
+✖ failing tests:
+
+test at tools\studio-profile.test.mjs:113:1
+✖ all shipped frame and color defaults can be saved without normalization (11.0626ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'mystward: Purple is reserved for KIVULI. Choose another hue.',
+  +   'moses: Purple is reserved for KIVULI. Choose another hue.'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/studio-profile.test.mjs:119:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'mystward: Purple is reserved for KIVULI. Choose another hue.', 'moses: Purple is reserved for KIVULI. Choose another hue.' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tools\studio-profile.test.mjs:135:1
+✖ saving an untouched profile preserves production flight joints for every shipped hero (3455.3049ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5180/powerworld.html
+  Call log:
+  [2m  - navigating to "http://127.0.0.1:5180/powerworld.html", waiting until "load"[22m
+  
+      at TestContext.<anonymous> (D:\lsw\.worktrees\combat-release-review\tools\studio-profile.test.mjs:138:51) {
+    name: 'Error',
+    log: [ '  - navigating to "http://127.0.0.1:5180/powerworld.html", waiting until "load"' ]
+  }

@@ -1,0 +1,43 @@
+(node:93412) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slow chip never earns burst stun (30Hz) (67.8871ms)
+✔ slow chip never earns burst stun (60Hz) (22.7002ms)
+✔ slow chip never earns burst stun (120Hz) (21.1846ms)
+✔ concentrated admitted damage still stuns and drops flight at the unchanged threshold (18.312ms)
+✔ each hit expires independently, including while hitstop owns the frame (20.2232ms)
+✔ the trailing window crosses the first-hit boundary rather than resetting a fixed bucket (16.9847ms)
+✔ no simulation time means no aging, and a full quiet window removes all history (17.3134ms)
+✔ post-stun immunity retains its duration but cannot bank expired damage (17.95ms)
+✔ frozen status still ages old contacts before the fighter can be stunned again (18.9033ms)
+✔ dummy, self, null-source, blocked and rejected hits never populate the burst history (128.131ms)
+✔ KO and respawn cannot carry a previous life damage history (20.1087ms)
+✔ direct stun resets the burst history before another eligible contact (15.3303ms)
+✔ window helper expires exact boundary contacts, coalesces simultaneous hits and clears on reset (0.1509ms)
+✔ long continuous helper traffic keeps only the trailing window through queue compaction (0.8919ms)
+(node:42800) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sleepT cancels startup and discards buffered melee (74.9941ms)
+✔ sleepT cancels active and discards buffered melee (32.6806ms)
+✔ sleepT cancels recover and discards buffered melee (27.1394ms)
+✔ downedT cancels startup and discards buffered melee (29.5342ms)
+✔ downedT cancels active and discards buffered melee (25.7667ms)
+✔ downedT cancels recover and discards buffered melee (22.6413ms)
+(node:12640) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ stun recovery 0.5 applies once at 30 Hz (66.9449ms)
+✔ stun recovery 0.5 applies once at 60 Hz (21.9768ms)
+✔ stun recovery 0.5 applies once at 120 Hz (18.7511ms)
+✔ stun recovery 1 applies once at 30 Hz (18.6788ms)
+✔ stun recovery 1 applies once at 60 Hz (18.872ms)
+✔ stun recovery 1 applies once at 120 Hz (16.8385ms)
+✔ stun recovery 2 applies once at 30 Hz (18.2851ms)
+✔ stun recovery 2 applies once at 60 Hz (14.9925ms)
+✔ stun recovery 2 applies once at 120 Hz (19.9041ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 589.8161

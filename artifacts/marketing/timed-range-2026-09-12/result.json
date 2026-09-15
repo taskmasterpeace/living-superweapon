@@ -1,0 +1,10 @@
+{
+  "result": {
+    "state": "finished",
+    "reason": "STOPPED",
+    "damage": 9.443200000000004,
+    "contacts": 1,
+    "elapsed": 0.6506000000000056
+  },
+  "errors": []
+}

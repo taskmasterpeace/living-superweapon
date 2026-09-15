@@ -1,0 +1,51 @@
+{
+  "results": [
+    {
+      "air": false,
+      "records": [
+        {
+          "entryReason": "ENTRY READY",
+          "entryRange": 40,
+          "entryFamily": "rush",
+          "trial": "stationary",
+          "kind": "jab",
+          "time": 0.3491000000000057,
+          "contacts": 1,
+          "approach": true,
+          "distance": 35,
+          "startup": 0.14828571428571427,
+          "active": 0.06,
+          "recovery": 0.14,
+          "interrupted": false,
+          "result": "contact",
+          "reason": "TARGET CONTACT"
+        }
+      ],
+      "hp": 107.29960392148524
+    },
+    {
+      "air": true,
+      "records": [
+        {
+          "entryReason": "ENTRY READY",
+          "entryRange": 80,
+          "entryFamily": "flight",
+          "trial": "airborne",
+          "kind": "jab",
+          "time": 0.6296999999999959,
+          "contacts": 1,
+          "approach": true,
+          "distance": 70,
+          "startup": 0.24583333333333332,
+          "active": 0.06,
+          "recovery": 0.14,
+          "interrupted": false,
+          "result": "contact",
+          "reason": "TARGET CONTACT"
+        }
+      ],
+      "hp": 120.5568
+    }
+  ],
+  "errors": []
+}

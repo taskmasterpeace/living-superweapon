@@ -1,0 +1,43 @@
+{
+  "proofs": [
+    {
+      "source": "assets-src/modular-character/source/UAL2_Standard.glb",
+      "target": "assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf",
+      "mapped": 53,
+      "omitted": [
+        "index_04_leaf_l",
+        "middle_04_leaf_l",
+        "pinky_04_leaf_l",
+        "ring_04_leaf_l",
+        "thumb_04_leaf_l",
+        "index_04_leaf_r",
+        "middle_04_leaf_r",
+        "pinky_04_leaf_r",
+        "ring_04_leaf_r",
+        "thumb_04_leaf_r",
+        "ball_leaf_l",
+        "ball_leaf_r"
+      ],
+      "errors": [],
+      "maxLocal": 0.0000020465068148690577,
+      "maxWorld": 0.0000020026403232398238,
+      "maxInverseBind": 0.000002154149115085602,
+      "tolerance": 0.0001,
+      "compatible": true
+    },
+    {
+      "source": "assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf",
+      "target": "public/models/modular-hero/modular-hero.glb",
+      "mapped": 53,
+      "omitted": [],
+      "errors": [],
+      "maxLocal": 0.0000013507547498300227,
+      "maxWorld": 0.0000011874661391964025,
+      "maxInverseBind": 0.0000018477439880371094,
+      "tolerance": 0.0001,
+      "compatible": true
+    }
+  ],
+  "entries": 31,
+  "rejected": 0
+}

@@ -1,0 +1,684 @@
+{
+  "method": "Production Highwall deep link, scenario dropdown and native J/W/A/Space/Control keys. Vite live reload disabled to keep the test stable during concurrent edits. No direct enter/drive/exit calls.",
+  "errors": [],
+  "scenarios": {
+    "vehicle": {
+      "before": {
+        "preset": "vehicle",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            78,
+            0,
+            210
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "tank",
+          "position": {
+            "x": 66,
+            "y": 0,
+            "z": 210
+          },
+          "radius": 10.552948951721191,
+          "height": 17.60768,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": []
+        }
+      },
+      "boarded": {
+        "preset": "vehicle",
+        "ready": true,
+        "boarded": "tank",
+        "player": {
+          "position": [
+            66,
+            2,
+            210
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "tank",
+          "position": {
+            "x": 66,
+            "y": 0,
+            "z": 210
+          },
+          "radius": 10.552948951721191,
+          "height": 17.60768,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Battle tank · 0 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "moving": {
+        "preset": "vehicle",
+        "ready": true,
+        "boarded": "tank",
+        "player": {
+          "position": [
+            67.53379810110795,
+            2,
+            205.70587081022006
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "tank",
+          "position": {
+            "x": 67.53379810110795,
+            "y": 0,
+            "z": 205.70587081022006
+          },
+          "radius": 10.552948951721191,
+          "height": 17.60768,
+          "yaw": 2.662267653589793,
+          "speed": 11.034800000000011,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Battle tank · 8 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "afterDrive": {
+        "preset": "vehicle",
+        "ready": true,
+        "boarded": "tank",
+        "player": {
+          "position": [
+            72.11277858794021,
+            2,
+            199.35046847265625
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "tank",
+          "position": {
+            "x": 72.11277858794021,
+            "y": 0,
+            "z": 199.35046847265625
+          },
+          "radius": 10.552948951721191,
+          "height": 17.60768,
+          "yaw": 2.4674026535897937,
+          "speed": 12.423000000000073,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Battle tank · 8 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "exited": {
+        "preset": "vehicle",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            61.98609504682823,
+            0,
+            186.78872498456508
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "tank",
+          "position": {
+            "x": 74.29250137907738,
+            "y": 0,
+            "z": 196.62273555305197
+          },
+          "radius": 10.552948951721191,
+          "height": 17.60768,
+          "yaw": 2.4674026535897937,
+          "speed": 8.321400000000077,
+          "roll": 0,
+          "hips": []
+        }
+      }
+    },
+    "motorcycle": {
+      "before": {
+        "preset": "motorcycle",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            50,
+            0,
+            236
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "motorcycle",
+          "position": {
+            "x": 38,
+            "y": 0,
+            "z": 236
+          },
+          "radius": 6,
+          "height": 6.60348,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": []
+        }
+      },
+      "boarded": {
+        "preset": "motorcycle",
+        "ready": true,
+        "boarded": "motorcycle",
+        "player": {
+          "position": [
+            38,
+            2,
+            236
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "motorcycle",
+          "position": {
+            "x": 38,
+            "y": 0,
+            "z": 236
+          },
+          "radius": 6,
+          "height": 6.60348,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Pursuit motorcycle · 0 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "moving": {
+        "preset": "motorcycle",
+        "ready": true,
+        "boarded": "motorcycle",
+        "player": {
+          "position": [
+            45.86775186325469,
+            2,
+            216.3013717723868
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "motorcycle",
+          "position": {
+            "x": 45.86775186325469,
+            "y": 0,
+            "z": 216.3013717723868
+          },
+          "radius": 6,
+          "height": 6.60348,
+          "yaw": 2.122637552553987,
+          "speed": 47.27840000000012,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Pursuit motorcycle · 33 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "afterDrive": {
+        "preset": "motorcycle",
+        "ready": true,
+        "boarded": "motorcycle",
+        "player": {
+          "position": [
+            70.77926244454878,
+            2,
+            205.51917304168805
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "motorcycle",
+          "position": {
+            "x": 70.77926244454878,
+            "y": 0,
+            "z": 205.51917304168805
+          },
+          "radius": 6,
+          "height": 6.60348,
+          "yaw": 1.6281939588457743,
+          "speed": 28.002204694408015,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Pursuit motorcycle · 19 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "exited": {
+        "preset": "motorcycle",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            74.51056748485627,
+            0,
+            193.82255135831713
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "motorcycle",
+          "position": {
+            "x": 75.08683157521672,
+            "y": 0,
+            "z": 205.00771652018045
+          },
+          "radius": 6,
+          "height": 6.60348,
+          "yaw": 1.622271206558046,
+          "speed": 24.09882890497708,
+          "roll": 0,
+          "hips": []
+        }
+      }
+    },
+    "mech": {
+      "before": {
+        "preset": "mech",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            111,
+            0,
+            218
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "mech-light",
+          "position": {
+            "x": 99,
+            "y": 0,
+            "z": 218
+          },
+          "radius": 7.606937630858187,
+          "height": 16.84211,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": [
+            -0.7451296458090735,
+            -0.7451296458090735,
+            -0.7451296458090735,
+            -0.7451296458090735
+          ]
+        }
+      },
+      "boarded": {
+        "preset": "mech",
+        "ready": true,
+        "boarded": "mech-light",
+        "player": {
+          "position": [
+            99,
+            2,
+            218
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "mech-light",
+          "position": {
+            "x": 99,
+            "y": 0,
+            "z": 218
+          },
+          "radius": 7.606937630858187,
+          "height": 16.84211,
+          "yaw": 3.141592653589793,
+          "speed": 0,
+          "roll": 0,
+          "hips": [
+            -0.7451296458090735,
+            -0.7451296458090735,
+            -0.7451296458090735,
+            -0.7451296458090735
+          ]
+        },
+        "controls": "Light mech · outrider · 0 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "moving": {
+        "preset": "mech",
+        "ready": true,
+        "boarded": "mech-light",
+        "player": {
+          "position": [
+            107.50103551764471,
+            2,
+            212.87208520285824
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "mech-light",
+          "position": {
+            "x": 107.50103551764471,
+            "y": 0,
+            "z": 212.87208520285824
+          },
+          "radius": 7.606937630858187,
+          "height": 16.84211,
+          "yaw": 1.609892653589798,
+          "speed": 23.426000000000048,
+          "roll": 0,
+          "hips": [
+            -1.008572051269016,
+            -0.48168724034913096,
+            -0.48168724034913096,
+            -1.008572051269016
+          ]
+        },
+        "controls": "Light mech · outrider · 16 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "afterDrive": {
+        "preset": "mech",
+        "ready": true,
+        "boarded": "mech-light",
+        "player": {
+          "position": [
+            120.21920359986692,
+            2,
+            215.70899690965533
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "mech-light",
+          "position": {
+            "x": 120.21920359986692,
+            "y": 0,
+            "z": 215.70899690965533
+          },
+          "radius": 7.606937630858187,
+          "height": 16.84211,
+          "yaw": 1.297942653589798,
+          "speed": 12.022800000000052,
+          "roll": 0,
+          "hips": [
+            -0.8723327105337182,
+            -0.6179265810844288,
+            -0.6179265810844288,
+            -0.8723327105337182
+          ]
+        },
+        "controls": "Light mech · outrider · 8 km/hW/S drive · A/D steer · Space brake · Alt + mouse look · J exit"
+      },
+      "exited": {
+        "preset": "mech",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            124.82305343580127,
+            0,
+            203.6983847703432
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "mech-light",
+          "position": {
+            "x": 121.37183176238364,
+            "y": 0,
+            "z": 216.0315401022777
+          },
+          "radius": 7.606937630858187,
+          "height": 16.84211,
+          "yaw": 1.297942653589798,
+          "speed": 0,
+          "roll": 0,
+          "hips": [
+            -0.8230164761869391,
+            -0.6672428154312079,
+            -0.6672428154312079,
+            -0.8230164761869391
+          ]
+        }
+      }
+    },
+    "helicopter": {
+      "before": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            250,
+            0,
+            -238
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 238,
+            "y": 0,
+            "z": -238
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": 0,
+          "roll": 0,
+          "hips": []
+        }
+      },
+      "boarded": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": "helicopter",
+        "player": {
+          "position": [
+            238,
+            2,
+            -238
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 238,
+            "y": 0,
+            "z": -238
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": 0,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Attack helicopter · 0 km/hW/S forward/back · A/D turn · Space rise · Ctrl descend · Alt + mouse look · J exit"
+      },
+      "raised": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": "helicopter",
+        "player": {
+          "position": [
+            238,
+            29.385403915999024,
+            -238
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 238,
+            "y": 27.385403915999024,
+            "z": -238
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": 0,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Attack helicopter · 20 km/hW/S forward/back · A/D turn · Space rise · Ctrl descend · Alt + mouse look · J exit"
+      },
+      "airExitAttempt": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": "helicopter",
+        "player": {
+          "position": [
+            238,
+            37.42049014430657,
+            -238
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 238,
+            "y": 35.42049014430657,
+            "z": -238
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": 0,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Attack helicopter · 9 km/hW/S forward/back · A/D turn · Space rise · Ctrl descend · Alt + mouse look · J exit"
+      },
+      "moving": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": "helicopter",
+        "player": {
+          "position": [
+            235.8553030806744,
+            41.3152612925192,
+            -225.25761712776588
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 235.8553030806744,
+            "y": 39.3152612925192,
+            "z": -225.25761712776588
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": -0.4747200000000033,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Attack helicopter · 36 km/hW/S forward/back · A/D turn · Space rise · Ctrl descend · Alt + mouse look · J exit"
+      },
+      "afterDrive": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": "helicopter",
+        "player": {
+          "position": [
+            229.68053815622633,
+            2.5891077417126533,
+            -203.11915097490967
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": false
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 229.68053815622633,
+            "y": 0.5891077417126531,
+            "z": -203.11915097490967
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": -0.4747200000000033,
+          "roll": 0,
+          "hips": []
+        },
+        "controls": "Attack helicopter · 26 km/hW/S forward/back · A/D turn · Space rise · Ctrl descend · Alt + mouse look · J exit"
+      },
+      "exited": {
+        "preset": "helicopter",
+        "ready": true,
+        "boarded": null,
+        "player": {
+          "position": [
+            256.6506736272443,
+            0,
+            -188.94403907816223
+          ],
+          "alive": true,
+          "flightTier": 0,
+          "visible": true
+        },
+        "vehicle": {
+          "id": "helicopter",
+          "position": {
+            "x": 229.60377478255842,
+            "y": 0,
+            "z": -202.84393023849
+          },
+          "radius": 25.209566116333008,
+          "height": 18.0631,
+          "yaw": -0.4747200000000033,
+          "roll": 0,
+          "hips": []
+        }
+      }
+    }
+  }
+}

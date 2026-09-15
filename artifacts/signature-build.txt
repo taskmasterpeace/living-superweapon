@@ -1,0 +1,121 @@
+20:57:33 | INFO: Data are loaded, start creating Blender stuff
+20:57:33 | INFO: Blender create Mesh node Mannequin
+20:57:34 | INFO: glTF import finished in 0.68s
+Blender 4.5.10 LTS (hash 6dc0b208d1b5 built 2026-05-19 01:33:42)
+Warning: Path 'C:\Program Files\Blender Foundation\Blender 4.5\4.5\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Dots Stroke'
+Warning: Path 'C:\Program Files\Blender Foundation\Blender 4.5\4.5\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Material'
+Info: Saved as "modular-hero.blend"
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+INFO Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.5\4.5\scripts\addons_core\io_scene_gltf2\extern_draco.dll
+20:57:34 | INFO: Starting glTF 2.0 export
+20:57:34 | INFO: Extracting primitive: UpperArm.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.028
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.001
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Belt
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Boot.shaft.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.039
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Calf.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cape
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.063
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.061
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Coat.yoke-1
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Robe.collar
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Deltoid.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: emblem.patch
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: emblemBack.patch
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Face.expression
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.008
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Forearm.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Gauntlet.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.013
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Icosphere.001
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Icosphere.014
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Icosphere.012
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Hair.swept
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.038
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.043
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.002
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.003
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.025
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.037
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.036
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.030
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Robe.trim.front.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Robe.side.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Robe.front.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Shoe.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.035
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Sleeve.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Torn.hem.L
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Torso.waist
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Torso.chest
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.027
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.029
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Cube.005
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Pelvis
+20:57:34 | INFO: Primitives created: 1
+20:57:34 | INFO: Extracting primitive: Wristband.L
+20:57:34 | INFO: Primitives created: 1
+20:57:36 | INFO: Finished glTF 2.0 export in 1.7128465175628662 s
+
+CHARACTER_BUILT 4126 triangles 152 editable pieces 46 runtime groups
+
+Blender quit

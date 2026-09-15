@@ -1,0 +1,28 @@
+{
+  "setup": "Controlled ground placement; native Space takeoff and held Q against an airborne native attacker",
+  "player": {
+    "flying": true,
+    "y": 26.796044541994164
+  },
+  "target": {
+    "flying": true,
+    "y": 26.170053008921627,
+    "hp": 130
+  },
+  "records": [
+    {
+      "trial": "air-defense",
+      "time": 1.5224000000000013,
+      "amount": 0,
+      "blocked": true,
+      "hp": 130,
+      "playerKi": 110.61364999999992,
+      "healthLost": 0,
+      "guardEnergySpent": 9.08,
+      "result": "BLOCK",
+      "incoming": true,
+      "move": "light"
+    }
+  ],
+  "errors": []
+}

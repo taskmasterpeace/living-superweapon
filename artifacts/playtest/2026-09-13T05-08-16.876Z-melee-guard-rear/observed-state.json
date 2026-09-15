@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "action": "guard",
+      "holdMs": 1500,
+      "requestedAt": "2026-09-13T05:08:33.954Z",
+      "status": "dispatched",
+      "simulationBefore": 0.1043000000000011,
+      "released": true,
+      "simulationAfter": 0.4626999999999988
+    },
+    {
+      "action": "guard",
+      "holdMs": 1500,
+      "requestedAt": "2026-09-13T05:08:39.908Z",
+      "status": "dispatched",
+      "simulationBefore": 0.4753999999999995,
+      "released": true,
+      "simulationAfter": 2.0173999999999985
+    }
+  ],
+  "capturedAt": "2026-09-13T05:08:41.633Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 2.200899999999999,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "player": {
+      "id": 1,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        0,
+        0,
+        14.878144314397472
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 122.8656,
+      "energy": 120,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": null
+    },
+    "target": {
+      "id": 2,
+      "hero": "merc",
+      "class": "soldier",
+      "pos": [
+        0,
+        0,
+        9.021315047238533
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 120,
+      "energy": 72.68798399999997,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "launchTime": 0,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "merc",
+        "class": "soldier",
+        "pos": [
+          0,
+          0,
+          9.021315047238533
+        ],
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "hp": 120,
+        "energy": 72.68798399999997,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "launchTime": 0,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71.82850425649178,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 79.10426632499626,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 92.23684663900332,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 98.89379080868697,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 98.89379080868697,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.00007004152457,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 107.039054453223,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 108.9362549066574,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 95,
+        "x": -75,
+        "z": -76,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 109.13196967432638,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 11,
+    "drill": {
+      "kind": "defend",
+      "records": [
+        {
+          "time": 1.1621999999999968,
+          "trial": "defend",
+          "result": "CONTACT",
+          "amount": 7.1344,
+          "blocked": false,
+          "healthLost": 7.134399999999999,
+          "guardEnergySpent": 0,
+          "move": "light"
+        }
+      ]
+    }
+  }
+}

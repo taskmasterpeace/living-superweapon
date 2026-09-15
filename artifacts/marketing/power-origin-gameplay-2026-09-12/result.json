@@ -1,0 +1,110 @@
+{
+  "results": [
+    {
+      "origin": "left",
+      "combined": false,
+      "source": "hand",
+      "hand": "left",
+      "style": "palm",
+      "emissionAge": 0.15739999999999962,
+      "muzzle": [
+        81.88045700842147,
+        8.681885046487077,
+        -56.60225807887399
+      ],
+      "head": [
+        80.00133465576926,
+        9.77684689772096,
+        -60.09373246277561
+      ],
+      "kiSpent": 2.2995199999999656,
+      "face": false,
+      "chest": false
+    },
+    {
+      "origin": "right",
+      "combined": false,
+      "source": "hand",
+      "hand": "right",
+      "style": "palm",
+      "emissionAge": 0.1543000000000002,
+      "muzzle": [
+        78.11867080440085,
+        8.67792066092778,
+        -56.600793821287304
+      ],
+      "head": [
+        79.99873556953061,
+        9.785624167674253,
+        -60.0908917693571
+      ],
+      "kiSpent": 1.5997839999999641,
+      "face": false,
+      "chest": false
+    },
+    {
+      "origin": "paired",
+      "combined": true,
+      "source": "hand",
+      "hand": "right",
+      "style": "two-hand",
+      "emissionAge": 0.15850000000000003,
+      "muzzle": [
+        80.00017900512884,
+        8.719195889094792,
+        -56.72582691213985
+      ],
+      "head": [
+        79.99999766669603,
+        9.71657419950892,
+        -60.0907951204565
+      ],
+      "kiSpent": 1.7007679999999468,
+      "face": false,
+      "chest": false
+    },
+    {
+      "origin": "chest",
+      "combined": false,
+      "source": "chest",
+      "hand": "right",
+      "style": "chest-brace",
+      "emissionAge": 0.1575,
+      "muzzle": [
+        79.97978603812055,
+        7.090230226805559,
+        -58.91257185966473
+      ],
+      "head": [
+        79.99984736156881,
+        9.47782020237218,
+        -60.244945742410096
+      ],
+      "kiSpent": 2.5763359999999835,
+      "face": false,
+      "chest": true
+    },
+    {
+      "origin": "eyes",
+      "combined": false,
+      "source": "face",
+      "hand": "right",
+      "style": "optic-focus",
+      "emissionAge": 0.1543000000000002,
+      "muzzle": [
+        80.00703297613052,
+        9.722987453920512,
+        -59.35454042148682
+      ],
+      "head": [
+        79.999662213969,
+        9.665860223523179,
+        -60.02093504724231
+      ],
+      "kiSpent": 2.182351999999973,
+      "face": true,
+      "chest": false
+    }
+  ],
+  "errors": []
+}

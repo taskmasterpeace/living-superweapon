@@ -1,0 +1,117 @@
+node:internal/modules/esm/get_format:236
+  throw new ERR_UNKNOWN_FILE_EXTENSION(ext, filepath);
+        ^
+
+TypeError [ERR_UNKNOWN_FILE_EXTENSION]: Unknown file extension ".css" for D:\lsw\.worktrees\combat-release-review\src\styles\melee-review.css
+    at Object.getFileProtocolModuleFormat [as file:] (node:internal/modules/esm/get_format:236:9)
+    at defaultGetFormat (node:internal/modules/esm/get_format:262:36)
+    at defaultLoadSync (node:internal/modules/esm/load:158:16)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:776:12)
+    at #loadSync (node:internal/modules/esm/loader:796:49)
+    at ModuleLoader.load (node:internal/modules/esm/loader:762:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:504:31)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:555:36)
+    at afterResolve (node:internal/modules/esm/loader:603:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:609:12) {
+  code: 'ERR_UNKNOWN_FILE_EXTENSION'
+}
+
+Node.js v25.8.0
+✖ tools\cruise-flight-styles.test.mjs (203.2213ms)
+(node:36944) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (156.7883ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (345.8063ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (88.0754ms)
+✔ wake authoring survives presentation serialization with validated limits (0.5499ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (10.5494ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (10.0531ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (22.5472ms)
+(node:34760) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 0.79 (119.6388ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (54.3353ms)
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (49.5566ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 30Hz (32.4751ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 60Hz (37.2662ms)
+✔ hero hover lowers fists and distinguishes tucked/long legs at 120Hz (50.5641ms)
+✔ explicit saved hover joints remain authoritative through validation and production (32.6099ms)
+✔ hero flight/brake/hover/guard transitions retain continuous joints and fixed limb lengths (180.1213ms)
+✔ presentation covers every real armory entry once, retaining source identity (0.6975ms)
+✔ unproduced icons stay explicitly missing and footprints stay proposals (0.1701ms)
+✔ master safe area fits square source at every standard renderer size (0.4297ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 15
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 863.7639
+
+✖ failing tests:
+
+test at tools\cruise-flight-styles.test.mjs:1:1
+✖ tools\cruise-flight-styles.test.mjs (203.2213ms)
+  'test failed'
+
+test at tools\hero-hover.test.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 0.79 (119.6388ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.test.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\hero-hover.test.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.2 (54.3353ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.test.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools\hero-hover.test.mjs:35:34
+✖ hero hover keeps an authored bow outside the thigh volumes at bulk 1.65 (49.5566ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/hero-hover.test.mjs:41:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

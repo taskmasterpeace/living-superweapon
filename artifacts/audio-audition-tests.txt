@@ -1,0 +1,25 @@
+✔ recorded firearm reports lead without synthesizing a second shot (0.5896ms)
+✔ cold recording and unmapped voice retain the existing fallback (0.1465ms)
+✔ every mapped gun is banked, preloaded and backed by a local MP3 (2.5806ms)
+✔ muted and uninitialized audio never trigger recordings (0.2036ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (1.2014ms)
+✔ bundled mappings resolve catalog cues and existing files (2.3951ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (1.0013ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1669ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.9136ms)
+✔ every described family can resolve to an audible phase-specific recipe (0.6018ms)
+✔ speech rejects repeated speakers, global overlap and stale events before consuming cooldowns (0.4234ms)
+✔ line, category, anti-repeat, profile and priority policies make independent decisions (0.3302ms)
+✔ a line cooldown is shared across speakers while distinct-line speaker cooldown stays independent (1.1265ms)
+✔ malformed import never replaces valid settings or chosen media (0.6075ms)
+✔ validated local recording survives transfer and a rejected decoder leaves the good binding (0.6569ms)
+✔ native melee contact is replaced as a whole, without original punch layers (2.9559ms)
+✔ custom loop survives reload and transfer, reuse works, invalid catalog is atomic (1.0789ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.5244

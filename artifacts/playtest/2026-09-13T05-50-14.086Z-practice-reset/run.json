@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "practice-reset",
+  "startedAt": "2026-09-13T05:50:14.087Z",
+  "runnerRevision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+    "trackedDiffHash": "b127f2850c359eab7d987c7276dec13b3eb32bb005d67ae6423717d9e369e821"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:50:42.983Z",
+  "staging": "Native menus; one setup positions player facing the reset console and starts a stationary trial nearby. Three native beam bursts spend energy, E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; damage, KO, carried props and live powers need separate reset cases."
+}

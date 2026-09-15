@@ -1,0 +1,20 @@
+[
+  {
+    "label": "axe",
+    "t": 1.4,
+    "state": "active",
+    "damage": 43.702760000000005
+  },
+  {
+    "label": "sword",
+    "t": 1.1666666666666667,
+    "state": "active",
+    "damage": 0
+  },
+  {
+    "label": "bat-preview",
+    "t": 1.4,
+    "state": "active",
+    "damage": 38.15838
+  }
+]

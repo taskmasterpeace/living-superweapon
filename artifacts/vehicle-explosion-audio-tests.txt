@@ -1,0 +1,19 @@
+✔ AI pack adds missing recordings and preserves nine bundled defaults and repeating does not replace existing choices (548.292ms)
+✔ existing recordings, gain, and inactive settings survive the additive import (360.2027ms)
+✔ failed media decode leaves the full previous library unchanged (259.8417ms)
+✔ edits during async decoding are never overwritten by an older import (1.5538ms)
+✔ additive AI pack cannot replace the preferred bundled punch recordings (366.5025ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.5637ms)
+✔ bundled mappings resolve catalog cues and existing files (2.2174ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.9921ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1655ms)
+✔ vehicle destruction uses an existing explosion recording without a placeholder oscillator (0.1259ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.5124ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1610.5835

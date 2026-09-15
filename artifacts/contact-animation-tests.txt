@@ -1,0 +1,26 @@
+(node:112648) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./tools/helpers/character-css-loader.mjs", pathToFileURL("./")); register("./tools/helpers/character-css-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:112648) Warning: `--localstorage-file` was provided without a valid path
+✔ original punch and sword skeleton motion survives export, including finger tips (280.0319ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (172.8005ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (23.7236ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (60.534ms)
+✔ a late asset load cannot install a body on a disposed fighter (55.6664ms)
+✔ native animation ticks advance the installed authored body (60.8734ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (30.8596ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (74.8576ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (0.9123ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (25.4197ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (26.9357ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (60.0734ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (22.243ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (60.2988ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1275.8005

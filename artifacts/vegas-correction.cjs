@@ -1,0 +1,1 @@
+const fs=require('fs');const p='src/engine/modular-costume.js';let s=fs.readFileSync(p,'utf8');s=s.replace("vegas:{name:'Vegas · black and old gold',frame:'hero',hair:'swept'","vegas:{name:'Vegas · black and old gold',frame:'hero',hair:'none'").replace("emblem:'V',cape:true","emblem:'V',cape:false");fs.writeFileSync(p,s);

@@ -1,0 +1,74 @@
+{
+  "setup": "Controlled clear-ground start; native W, Space and Control flight/landing. No velocity or animation overrides.",
+  "states": [
+    {
+      "name": "climb",
+      "hero": "rime",
+      "position": [
+        -50,
+        40.13938327103822,
+        -551.9647996563302
+      ],
+      "velocity": [
+        0,
+        16.91294649756376,
+        19.8975873463165
+      ],
+      "flying": true,
+      "board": true,
+      "pitch": -0.03573004909815822
+    },
+    {
+      "name": "cruise",
+      "hero": "rime",
+      "position": [
+        -50,
+        45.964986949400284,
+        -522.6304717166925
+      ],
+      "velocity": [
+        0,
+        0.015548821108774168,
+        26.10868461005686
+      ],
+      "flying": true,
+      "board": true,
+      "pitch": 0.08811904482734584
+    },
+    {
+      "name": "descent",
+      "hero": "rime",
+      "position": [
+        -50,
+        38.20152584051291,
+        -504.67779988031907
+      ],
+      "velocity": [
+        0,
+        -16.6518965992951,
+        19.99349931369728
+      ],
+      "flying": true,
+      "board": true,
+      "pitch": 0.2065783964060585
+    },
+    {
+      "name": "landed",
+      "hero": "rime",
+      "position": [
+        -50,
+        0,
+        -496.82486658380117
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "flying": false,
+      "board": false,
+      "pitch": 0.0009828311874014901
+    }
+  ],
+  "errors": []
+}

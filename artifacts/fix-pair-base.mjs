@@ -1,0 +1,1 @@
+import fs from 'node:fs';const p='src/tool/animation-page.js';let s=fs.readFileSync(p,'utf8');s=s.replace("receiver.obj.traverse(o=>base.push({o,p:","receiver.obj.traverse(o=>base.push({receiver:true,o,p:");s=s.replace("function choose(e){clearHoldPreview(fighter);","function choose(e){base=base.filter(b=>!b.receiver);clearHoldPreview(fighter);");fs.writeFileSync(p,s);

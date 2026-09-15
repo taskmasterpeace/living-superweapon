@@ -1,0 +1,57 @@
+{
+  "first": 143.73362047568003,
+  "moved": 169.52558617221604,
+  "result": {
+    "hp": 115.99752,
+    "maxHp": 120,
+    "records": [
+      {
+        "trial": "stationary",
+        "time": 0.7717000000000007,
+        "amount": 4.00248,
+        "blocked": false,
+        "hp": 115.99752,
+        "playerKi": 94.14321599999892,
+        "healthLost": 4.002480000000006,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "move": "light"
+      },
+      {
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.671600000000002,
+        "contacts": 1,
+        "approach": true,
+        "distance": 7,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "result": "contact"
+      }
+    ],
+    "machine": true,
+    "visible": [
+      "training-machine"
+    ],
+    "tv": [
+      85,
+      32,
+      -297
+    ],
+    "rings": 6,
+    "tvPlayback": {
+      "decoded": 7,
+      "playing": false,
+      "title": "TRAINING MACHINE · 4.0 DAMAGE"
+    },
+    "security": {
+      "frames": [
+        56
+      ],
+      "shot": "training-security"
+    }
+  },
+  "errors": []
+}

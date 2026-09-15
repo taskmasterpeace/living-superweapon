@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "action": "strike",
+      "holdMs": 80,
+      "requestedAt": "2026-09-13T05:03:20.638Z",
+      "status": "dispatched",
+      "simulationBefore": 0.29170000000000074,
+      "released": true,
+      "simulationAfter": 0.40410000000000035
+    }
+  ],
+  "capturedAt": "2026-09-13T05:03:24.819Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 1.359112000000002,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "player": {
+      "id": 1,
+      "hero": "jelani",
+      "class": null,
+      "pos": [
+        0,
+        0,
+        -11.6847361120762
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 135,
+      "energy": 108.9490828799998,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": null
+    },
+    "target": {
+      "id": 2,
+      "hero": "merc",
+      "class": "soldier",
+      "pos": [
+        0,
+        0,
+        -35.71272351287477
+      ],
+      "velocity": [
+        0,
+        0,
+        -34.452072187200244
+      ],
+      "hp": 95.8094336,
+      "energy": 75.4287014399998,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "launchTime": 0,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "merc",
+        "class": "soldier",
+        "pos": [
+          0,
+          0,
+          -35.71272351287477
+        ],
+        "velocity": [
+          0,
+          0,
+          -34.452072187200244
+        ],
+        "hp": 95.8094336,
+        "energy": 75.4287014399998,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "launchTime": 0,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71.48526850705542,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 74.84628731405911,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 78.00818085397295,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 95,
+        "x": -75,
+        "z": -76,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 90.62234242595198,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.01338753085543,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 94,
+        "x": -75,
+        "z": -100,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 107.19860826235961,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 109.30725109237329,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 113.50198849120662,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 113.50198849120662,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 117.92926671091851,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 12,
+    "drill": {
+      "kind": "retreat",
+      "records": [
+        {
+          "time": 0.5491000000000001,
+          "trial": "retreat",
+          "result": "CONTACT",
+          "amount": 24.1905664,
+          "blocked": false,
+          "healthLost": 24.190566399999994,
+          "guardEnergySpent": 0,
+          "move": "light"
+        },
+        {
+          "time": 0.3373999999999996,
+          "trial": "retreat",
+          "result": "contact",
+          "amount": null,
+          "blocked": null,
+          "healthLost": null,
+          "guardEnergySpent": null,
+          "move": null
+        }
+      ]
+    }
+  }
+}

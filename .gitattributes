@@ -2,3 +2,4 @@
 src/data/hero-body-bank.json text eol=lf
 # Asset provenance hashes must survive Windows/Unix checkout unchanged.
 assets-src/modular-character/animals/*.gltf -text
+artifacts/integration-checkpoint-20260914-targeted/committed-refs.bundle filter=lfs diff=lfs merge=lfs -text

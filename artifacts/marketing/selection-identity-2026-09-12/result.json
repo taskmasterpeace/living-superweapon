@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "hero": "volt",
+      "identity": "LSW · Momentum glide"
+    },
+    {
+      "hero": "rage",
+      "identity": "LSW · Charged leap"
+    },
+    {
+      "hero": "sarge",
+      "identity": "Soldier · Combat leap"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,55 @@
+(node:51964) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ one paid physical spear winds up in hand and releases once through production slot (86.2795ms)
+✔ outbound guidance turns toward live aim with bounded angular speed (30.8434ms)
+✔ first swept body contact embeds, follows victim, waits and does not redamage (59.4899ms)
+✔ recall costs no energy and catches the same object; a new throw reuses it (28.8011ms)
+✔ clearing or removing the slot disposes all spear resources and ownership (21.2467ms)
+✔ optional creator catalog exposes a guided spear with black body and crimson tip (0.0946ms)
+✔ thin cover catches the spear at 30Hz and does not auto-return (32.4586ms)
+✔ thin cover catches the spear at 60Hz and does not auto-return (37.187ms)
+✔ thin cover catches the spear at 120Hz and does not auto-return (49.8ms)
+✔ return cannot teleport through a newly intervening wall and can retry from a clear route (28.8778ms)
+✔ busy hands leave a safe waiting spear and freeing a hand catches the original mesh (24.7361ms)
+✔ freeze cancels an unreleased throw and zero-time preview cannot advance windup (23.2675ms)
+✔ slot retirement disposes the owned spear exactly once (17.328ms)
+✔ death retirement disposes the owned spear exactly once (17.778ms)
+✔ reset retirement disposes the owned spear exactly once (17.9385ms)
+✔ phase and allied bodies cannot acquire a hostile spear embed or damage (47.5946ms)
+✔ studio supports the optional type and validates real steering bounds (16.7572ms)
+✔ the released spear tip points at aim before it leaves the articulated hand (15.8206ms)
+✔ two-hand casting blocks spear payment, while the opposite free hand can throw (15.551ms)
+✔ a later cast claiming the reserved hand cancels spear windup (18.6392ms)
+✔ recall waits outside two-hand casting and catches only after those claims end (34.6378ms)
+✖ embedded spear follows a moving and turning hull mesh without another debit (25.1638ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 21
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 960.8597
+
+✖ failing tests:
+
+test at tools\guided-spear.test.mjs:83:1
+✖ embedded spear follows a moving and turning hull mesh without another debit (25.1638ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(s.pos.distanceTo(mesh.localToWorld(local))<1e-6)
+  
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/guided-spear.test.mjs:84:470)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

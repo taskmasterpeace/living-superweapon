@@ -1,0 +1,51 @@
+(node:65484) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (276.7536ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (518.9273ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (134.0555ms)
+✔ wake authoring survives presentation serialization with validated limits (0.6078ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (11.4747ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (14.9476ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (42.4854ms)
+(node:94412) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (329.7416ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (286.7607ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (31.7921ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (91.8089ms)
+✔ a late asset load cannot install a body on a disposed fighter (68.9035ms)
+✔ muscle adjustment is reversible and leaves skeleton and topology untouched (31.1732ms)
+✔ untrusted profiles reject unsupported keys before labels can reach the inspector DOM (2.873ms)
+✔ strafe targets roundtrip through saved profiles and production definitions (1.0861ms)
+✔ legacy five-pose profiles acquire new strafe defaults without altering authored joints or storage (0.579ms)
+✔ presentation authoring module exists (0.0766ms)
+✔ combat camera preset changes only camera and remains undoable (2.4987ms)
+✔ an edited profile affects geometry data without mutating powers or source definition (0.3376ms)
+✔ saved profiles roundtrip and remain isolated per fighter (0.4077ms)
+✔ malformed import cannot poison geometry or exceed safe camera ranges (0.5188ms)
+✔ purple is reserved for KIVULI, including hidden colour fields (0.396ms)
+✔ corrupt saved data is not overwritten by a later save (0.3138ms)
+✔ storage write failures are reported to the caller (0.3365ms)
+✔ undo redo save and new edits preserve expected draft history (0.3925ms)
+✔ unknown saved hero IDs do not add roster citizens (0.3374ms)
+✔ installer applies valid profile and reports corrupt entries without blocking game boot (0.4997ms)
+✔ portable authored body, motion families, and equipment references roundtrip exactly (0.6033ms)
+✔ authored asset maps reject malformed structure but retain unknown portable references (0.4591ms)
+✔ untouched SOL profiles preserve its shipped lead fist, including partial authored overrides (0.1478ms)
+✔ all shipped frame and color defaults can be saved without normalization (11.9157ms)
+✔ deliberate flight style reset replaces pose targets without mutating the draft or source defaults (0.6178ms)
+(node:24512) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ saving an untouched profile preserves production flight joints for every shipped hero (39034.9826ms)
+✔ environment response survives profile export and rejects invalid mass (0.8112ms)
+✔ emblem selection roundtrips into native figures without editing combat stats (488.9347ms)
+✔ shared ground approach assignment roundtrips without changing flight or source roster (1.0775ms)
+✔ older profiles keep native melee defaults and invalid families are rejected (0.6335ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39742.3652

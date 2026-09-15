@@ -1,0 +1,25 @@
+✔ model self-proof: throttle moves the state, idle does not (0.9381ms)
+✔ acceleration is responsive, monotonic and capped at top speed (1.0931ms)
+✔ acceleration/brake distances are frame-rate independent (dt-exact) (1.4101ms)
+✔ braking decelerates faster than coasting (0.3632ms)
+✔ reverse is capped and slower than forward; S from full forward brakes then reverses (0.7014ms)
+✔ steering is speed-sensitive: tighter at a moderate speed than at top (0.8523ms)
+✔ a standing scout cannot pivot in place (roll authority floor) (0.1238ms)
+✔ releasing steer self-centers the wheel and damps yaw (0.2893ms)
+✔ model never leaves a NaN in the state (bad dt / poisoned input) (0.6406ms)
+✔ haltDrive zeroes momentum but keeps heading (0.2378ms)
+✔ trial: responsive acceleration to a real top speed (19.7168ms)
+✔ trial: controlled braking distance from top (2.8352ms)
+✔ trial: reverse cap and brake-then-reverse feel (8.4508ms)
+✔ trial: high-speed turn is controlled (bounded radius, no spin-out) (2.6807ms)
+✔ trial: no large frame-time dependence (straight and curved) (7.3423ms)
+✔ trial: fast motion never tunnels through cover at coarse or fine dt (7.4307ms)
+✔ trial: a wall stops the scout on water and cliff edges too (1.6847ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 190.0433

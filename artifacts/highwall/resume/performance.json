@@ -1,0 +1,79 @@
+{
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) i9-14900KF",
+    "logicalCpus": 32,
+    "memoryGB": 128
+  },
+  "viewport": [
+    1280,
+    720
+  ],
+  "method": "Foreground requestAnimationFrame intervals, 8 seconds per preset after warmup. All actors remain native; no decoration substitution.",
+  "runs": [
+    {
+      "preset": "corridor",
+      "frames": 755,
+      "medianMs": 8.400000000001455,
+      "p95Ms": 12.600000000000364,
+      "maxMs": 54.20000000000073,
+      "actors": 8,
+      "alive": 4,
+      "vehicles": 0,
+      "heapMB": 225,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "drawCalls": 1,
+      "triangles": 1,
+      "activeFeed": false,
+      "mediaPlaying": 0
+    },
+    {
+      "preset": "horde",
+      "frames": 384,
+      "medianMs": 20.799999999999272,
+      "p95Ms": 29.299999999999272,
+      "maxMs": 66.79999999999927,
+      "actors": 17,
+      "alive": 15,
+      "vehicles": 0,
+      "heapMB": 379,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "drawCalls": 1,
+      "triangles": 1,
+      "activeFeed": false,
+      "mediaPlaying": 0
+    },
+    {
+      "preset": "stress32",
+      "frames": 151,
+      "medianMs": 41.700000000004366,
+      "p95Ms": 83.5,
+      "maxMs": 1297.1000000000022,
+      "actors": 28,
+      "alive": 28,
+      "vehicles": 0,
+      "heapMB": 313,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "drawCalls": 1,
+      "triangles": 1,
+      "activeFeed": false,
+      "mediaPlaying": 0
+    },
+    {
+      "preset": "stress64",
+      "frames": 77,
+      "medianMs": 87.5,
+      "p95Ms": 250.3000000000029,
+      "maxMs": 283.59999999999854,
+      "actors": 68,
+      "alive": 63,
+      "vehicles": 0,
+      "heapMB": 405,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "drawCalls": 1,
+      "triangles": 1,
+      "activeFeed": false,
+      "mediaPlaying": 0
+    }
+  ],
+  "errors": []
+}

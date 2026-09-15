@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "hero": "jelani",
+  "drill": "retreat",
+  "range": 60,
+  "errors": [],
+  "staging": "Native menus, starting position staged at console, E opens selector, browser controls choose/read/start drill."
+}

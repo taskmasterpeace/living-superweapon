@@ -1,0 +1,19 @@
+✔ recorded firearm reports lead without synthesizing a second shot (0.579ms)
+✔ cold recording and unmapped voice retain the existing fallback (0.1483ms)
+✔ every mapped gun is banked, preloaded and backed by a local MP3 (2.3675ms)
+✔ muted and uninitialized audio never trigger recordings (0.1302ms)
+✔ approved ground footstep variants exist and replace prior sample families (0.6782ms)
+✔ magnum and anti-materiel voices select their licensed recordings (0.1291ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.6034ms)
+✔ bundled mappings resolve catalog cues and existing files (2.1086ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (1.1279ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.2898ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.6852ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 88.9511

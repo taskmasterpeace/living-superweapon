@@ -1,0 +1,56 @@
+(node:102608) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ repeatable demo executes native capture, carry, damage and recovery at 30Hz (324.4012ms)
+✔ repeatable demo executes native capture, carry, damage and recovery at 60Hz (239.2122ms)
+✔ repeatable demo executes native capture, carry, damage and recovery at 120Hz (380.1002ms)
+✔ modular airborne stun demo uses gravity and restores control 30Hz (241.3062ms)
+✔ modular airborne stun demo uses gravity and restores control 60Hz (343.7948ms)
+✔ modular airborne stun demo uses gravity and restores control 120Hz (467.8661ms)
+✔ real rat adapter owns rendering only and plays accepted actions (22.3124ms)
+✔ real hound adapter owns rendering only and plays accepted actions (8.4685ms)
+(node:105288) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ flashbang preserves detonation and uses recording (88.8317ms)
+✔ flashbang preserves detonation and uses native fallback (39.929ms)
+✔ shield impact cue follows actual absorption including overflow, but not true damage or empty shields (31.0322ms)
+✔ impact recordings retain exact IMPACT provenance, preload, and author preferences (8.0295ms)
+(node:103668) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ recovery pauses for freeze, holds action gate through thaw, and retires on new launch (119.984ms)
+✔ defeated and near-death actors never get a nonlethal recovery (42.5214ms)
+✔ standing stun does not fabricate an airborne impact recovery (37.0899ms)
+✔ contact presentation settles while stun pauses recovery progress (25.7899ms)
+(node:107320) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ air control states distinguish launch, ordinary fall, powered flight, attachment and KO (110.1582ms)
+✔ sleep falls limp and frozen bodies reject the flailing overlay (47.1865ms)
+✔ lost-control presentation moves the shared rig without altering physics or resources, and restores exactly (28.3674ms)
+✔ recovery blends out, while landing and attacks return articulation immediately (30.8183ms)
+✔ native nonfatal launch animates lost control; lethal damage hands over to the existing ragdoll (51.5845ms)
+✔ stunned airborne body uses limp reaction rather than conscious flailing (24.231ms)
+✔ stunned fall stays limp immediately above terrain instead of straightening early (20.2354ms)
+(node:12456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ actual modular recovery plants source hand, raises hips, preserves root and blends to native end (191.5959ms)
+(node:107012) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ flying pickup requires actual vertical proximity to prop (92.6897ms)
+✔ lift capacity still rejects a nearby overweight prop (38.1387ms)
+✔ throw and its preview begin at the carried mesh without muzzle teleport (38.9454ms)
+✔ native low-flight pickup initializes the payload before immediate release (24.7973ms)
+(node:103608) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fast prop contacts thin cover before a fighter at 30Hz (1.1191ms)
+✔ fast prop contacts thin cover before a fighter at 60Hz (0.1077ms)
+✔ fast prop contacts thin cover before a fighter at 120Hz (0.066ms)
+✔ raised native terrain stops a throw above the old zero floor (0.1694ms)
+✔ earliest fighter contact is independent of entity order and interiors block it (0.2017ms)
+✔ native throw retires at raised ground and emits damage at contact (104.7036ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2362.6352

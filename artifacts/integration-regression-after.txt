@@ -1,0 +1,45 @@
+(node:65528) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ three-tier boxing releases at the actual .18 and .55 boundaries (0.8499ms)
+✔ two-tier and restricted styles do not advertise unavailable straight attacks (0.1028ms)
+✔ clinch shows body blow and finisher; full charge remains bounded (0.1108ms)
+✔ native release and advertised region agree across styles and thresholds (0.3013ms)
+✔ hitstop freezes preparation without changing selected region (0.1637ms)
+✔ three real resources, normalized guard and no invented form (1.2064ms)
+✔ a temporary buff is separate from appearance (0.1465ms)
+✔ critical resource bounds and infinite energy (0.1006ms)
+✔ flight speed stays inside the player panel with a proportional trail (0.1508ms)
+✔ expired status is removed and guard break is not ordinary stagger (0.14ms)
+✔ guard break persists through regeneration and small nonzero break threshold (0.1442ms)
+✔ real sprint multiplier appears with remaining duration (0.1127ms)
+✔ guard-break countdown uses actual recovery rate at tenth-second precision (0.1189ms)
+✔ stun timer is already wall-clock seconds and must not be recovered twice (0.1366ms)
+✔ occupied scout gets an external boom without mutating saved character framing (0.4497ms)
+✔ aircraft chase clears aircraft silhouette and restores character camera on exit (0.5793ms)
+✔ soldier E enters and exits a scout through the existing seat path (4.5254ms)
+✔ landed flight-capable heroes cannot enter a scout; active flight gadgets also deny entry (1.6846ms)
+✔ second scout leaves its bay forward instead of immediately hitting the hangar (3.6867ms)
+✔ J admits only a nearby alive ground actor and cleanly exits clear of its hull (0.7681ms)
+✔ native game-clock drive moves hull/cover/occupant together; brake and pause stop motion (4.1248ms)
+✔ swept driving refuses intervening cover and cliffs without tunnelling (4.8508ms)
+✔ destroy, death and dispose release ownership without leaving an invisible actor (1.7321ms)
+✔ entry cannot cross another wall and an open overlay halts driving (3.1848ms)
+✔ entering cancels an existing native held beam and rejects dead actors (0.9574ms)
+✔ reset: exit and re-enter start from a clean stop with no carried momentum (0.8116ms)
+✔ differing dt: a fixed throttle window travels a consistent distance at 30 vs 120 fps (1.8978ms)
+✔ shared advance samples uphill grade and animates accepted wheel travel for mission drivers (2.8728ms)
+✔ grade reverses with heading, invalid samples stay finite, and brake holds a slope (0.4394ms)
+✔ wheel steering returns on exit without resetting accumulated roll (0.4766ms)
+✔ occupied scout targets an enemy instead of its own driver (5.3614ms)
+✔ gunner earns acquisition time before one bounded burst and must reload (0.1562ms)
+✔ occlusion, elevation, close range, disabled and wrecked state forbid firing (0.8185ms)
+✔ lost sight resets acquisition; pauses cannot create catch-up burst (0.0972ms)
+✔ native mount turns before firing finite rounds from its muzzle, stops on cover and destruction (3.7435ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 218.8221

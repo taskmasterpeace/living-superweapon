@@ -1,0 +1,26 @@
+{
+  "held": {
+    "guarding": true,
+    "hits": [
+      {
+        "trial": "defend",
+        "time": 1.1589999999999971,
+        "amount": 0,
+        "blocked": true,
+        "hp": 130,
+        "playerKi": 87.50182200000019,
+        "healthLost": 0,
+        "guardEnergySpent": 7.1344,
+        "result": "BLOCK",
+        "incoming": true,
+        "actor": 0,
+        "move": "light"
+      }
+    ]
+  },
+  "released": {
+    "guarding": false,
+    "touchGuard": false
+  },
+  "errors": []
+}

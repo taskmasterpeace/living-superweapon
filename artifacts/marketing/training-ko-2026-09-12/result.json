@@ -1,0 +1,23 @@
+{
+  "before": {
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    },
+    "items": []
+  },
+  "after": {
+    "alive": true,
+    "same": true,
+    "newThreat": true,
+    "hp": 130,
+    "maxHp": 130,
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    },
+    "running": true,
+    "overlay": false
+  },
+  "errors": []
+}

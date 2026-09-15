@@ -1,0 +1,50 @@
+{
+  "result": {
+    "records": [
+      {
+        "trial": "retreat",
+        "time": 0.5378000000000003,
+        "amount": 9.550464,
+        "blocked": false,
+        "hp": 110.449536,
+        "playerKi": 59.878080000000026,
+        "healthLost": 9.550464000000005,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "move": "light"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 28,
+        "entryFamily": "pounce",
+        "trial": "retreat",
+        "kind": "jab",
+        "time": 0.3,
+        "contacts": 1,
+        "approach": true,
+        "distance": 26.7460801189697,
+        "startup": 0.23681488510429896,
+        "active": 0.06,
+        "recovery": 0.14,
+        "result": "contact"
+      }
+    ],
+    "player": [
+      0,
+      0,
+      -63.222838781336606
+    ],
+    "target": [
+      0.06463729280242476,
+      0,
+      -72.18206422473197
+    ],
+    "start": [
+      0,
+      0,
+      -30
+    ]
+  },
+  "errors": []
+}

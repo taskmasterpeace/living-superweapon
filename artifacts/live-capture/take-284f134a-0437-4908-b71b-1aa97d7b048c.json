@@ -1,0 +1,62 @@
+{
+  "kind": "live-gameplay",
+  "audio": false,
+  "seconds": 12,
+  "models": [
+    {
+      "id": "sol",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    },
+    {
+      "id": "kano",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    }
+  ],
+  "recordedAt": "2026-09-14T19:54:12.311Z",
+  "hero": "sol",
+  "scenario": "stationary",
+  "initial": {
+    "hp": 130,
+    "targetHp": 115
+  },
+  "time": 12.174300000000319,
+  "final": {
+    "hp": 130,
+    "targetHp": 67
+  },
+  "demonstration": {
+    "kind": "native-controller-demonstration",
+    "phase": "complete",
+    "damage": 48,
+    "events": [
+      {
+        "time": 0,
+        "label": "Native takeoff / rear approach"
+      },
+      {
+        "time": 0.23770000000000086,
+        "label": "Reaching for rear capture"
+      },
+      {
+        "time": 0.4212000000000004,
+        "label": "Rear hold / moving carry"
+      },
+      {
+        "time": 1.0761000000000023,
+        "label": "Aimed downward release"
+      },
+      {
+        "time": 1.2306420000000013,
+        "label": "Terrain impact: 48.0 health lost"
+      },
+      {
+        "time": 2.440241999999995,
+        "label": "Recovery finished / control returned"
+      }
+    ]
+  }
+}

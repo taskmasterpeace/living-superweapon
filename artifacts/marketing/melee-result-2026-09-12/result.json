@@ -1,0 +1,60 @@
+{
+  "result": {
+    "swings": [
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.22099999999999992,
+        "contacts": 1,
+        "approach": true,
+        "distance": 6,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.558899999999998,
+        "contacts": 1,
+        "approach": true,
+        "distance": 5.065333841409161,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 10,
+        "entryFamily": "step",
+        "trial": "stationary",
+        "kind": "cross",
+        "time": 0.9049999999999991,
+        "contacts": 1,
+        "approach": true,
+        "distance": 5.778016542826247,
+        "startup": 0.16,
+        "active": 0.07,
+        "recovery": 0.22,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ],
+    "hp": 81.04679999999999,
+    "max": 120
+  },
+  "errors": []
+}

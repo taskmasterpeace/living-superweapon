@@ -1,0 +1,427 @@
+{
+  "before": {
+    "ally": "kano",
+    "enemy": "merc",
+    "manifest": 1,
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    },
+    "actors": 3
+  },
+  "hits": [
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 2.5535040299997087,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 2.533238125000004,
+      "target": "merc"
+    },
+    {
+      "amount": 4.215308240000596,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8714339149998538,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8511680100001486,
+      "target": "merc"
+    },
+    {
+      "amount": 5.086742154999712,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6618042100001498,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6618042100001498,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6618042100001498,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8511680099994114,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0,
+      "target": "merc"
+    },
+    {
+      "amount": 0.6388180600002149,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8511680099994114,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8106362000000011,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8511680100001486,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8714339149998538,
+      "target": "merc"
+    },
+    {
+      "amount": 2.533238125000004,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8511680100001486,
+      "target": "merc"
+    },
+    {
+      "amount": 2.512972219999561,
+      "target": "merc"
+    },
+    {
+      "amount": 0.871433915000591,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 2.512972219999561,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8916998200002961,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6618042100001498,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8309021050004435,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8309021049997063,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 2.5129722200002984,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.70233601999956,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8309021050004435,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8106362000000011,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 0.8309021049997063,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701150005923,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7226019250000026,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6618042099994126,
+      "target": "merc"
+    },
+    {
+      "amount": 1.7023360200002973,
+      "target": "merc"
+    },
+    {
+      "amount": 1.6820701149998551,
+      "target": "merc"
+    }
+  ],
+  "after": {
+    "retired": true,
+    "manifest": 1,
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    }
+  },
+  "errors": []
+}

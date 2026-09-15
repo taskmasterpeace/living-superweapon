@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "moving-strike",
+  "startedAt": "2026-09-13T05:39:12.606Z",
+  "runnerRevision": "c0a5cd8bdd2dca97a310858e35e44494164a5348",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/actions.mjs\ntools/playtest/gamepad.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "browser-emulated gamepad combat; keyboard menus",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "pad"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "c0a5cd8bdd2dca97a310858e35e44494164a5348",
+    "trackedDiffHash": "097a423c5923672d69368da7433b3447e139354bc552419a1a348a1c21f6059b"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:39:35.285Z",
+  "staging": "Native keyboard menus; stationary Threat Room fixture and initial position/camera staged once. Raw emulated controller stick and strike go through native polling. Read-only frame observations prove movement during charge; this does not assert target contact or physical controller support."
+}

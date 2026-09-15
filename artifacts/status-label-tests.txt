@@ -1,0 +1,27 @@
+(node:39584) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sleepT cancels startup and discards buffered melee (94.7327ms)
+✔ sleepT cancels active and discards buffered melee (42.6282ms)
+✔ sleepT cancels recover and discards buffered melee (32.9893ms)
+✔ downedT cancels startup and discards buffered melee (27.8254ms)
+✔ downedT cancels active and discards buffered melee (26.6459ms)
+✔ downedT cancels recover and discards buffered melee (29.6228ms)
+(node:98392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ phase priority exposes interruption and distinguishes combo permission from cooldown (1.0039ms)
+✔ contact between pose samples supplies current phase and energy without changing history (0.1535ms)
+✔ trial captures both actors phase changes and native remaining timers (160.3462ms)
+✔ team contact updates teammate health rather than the opponent (0.1061ms)
+(node:80832) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ review interpolates real rig poses without altering native fighter or shared materials (77.1447ms)
+✔ history is bounded and transient effect nodes cannot erase the exchange (0.6583ms)
+✔ review skeleton binds to copied bones instead of the live skeleton (0.4278ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 543.5564

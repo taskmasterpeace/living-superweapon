@@ -1,0 +1,22 @@
+(node:100360) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (277.9844ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (258.1856ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (24.2666ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (75.7584ms)
+✔ a late asset load cannot install a body on a disposed fighter (61.0437ms)
+✔ native animation ticks advance the installed authored body (52.6722ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (35.1502ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (26.7624ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (0.7362ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (30.1335ms)
+✔ hinges reject backward knee and elbow bends while preserving both bone lengths (0.9403ms)
+✔ hinge flexion is bounded during core rotations and collapsed endpoints recover finitely (0.5051ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1152.8432

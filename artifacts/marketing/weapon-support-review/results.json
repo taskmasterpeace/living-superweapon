@@ -1,0 +1,16 @@
+[
+  {
+    "label": "bat",
+    "time": 3,
+    "phase": null,
+    "damage": 38.15838,
+    "contacts": 1
+  },
+  {
+    "label": "spear",
+    "time": 3,
+    "phase": null,
+    "damage": 40.93057,
+    "contacts": 1
+  }
+]

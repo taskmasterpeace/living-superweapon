@@ -1,0 +1,37 @@
+[
+  {
+    "id": "base",
+    "visibleMeshes": 13,
+    "visibleTriangles": 1026,
+    "drawCallsIncludingScene": 16,
+    "textures": 8
+  },
+  {
+    "id": "vegas",
+    "visibleMeshes": 18,
+    "visibleTriangles": 1308,
+    "drawCallsIncludingScene": 22,
+    "textures": 12
+  },
+  {
+    "id": "mage",
+    "visibleMeshes": 21,
+    "visibleTriangles": 1324,
+    "drawCallsIncludingScene": 25,
+    "textures": 13
+  },
+  {
+    "id": "scout",
+    "visibleMeshes": 22,
+    "visibleTriangles": 1852,
+    "drawCallsIncludingScene": 26,
+    "textures": 15
+  },
+  {
+    "id": "infected",
+    "visibleMeshes": 15,
+    "visibleTriangles": 1088,
+    "drawCallsIncludingScene": 18,
+    "textures": 18
+  }
+]

@@ -1,0 +1,624 @@
+{
+  "passed": true,
+  "facing": "rear",
+  "attack": "defend",
+  "observation": [
+    {
+      "time": 0.5743999999999979,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.5826999999999972,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.5867999999999958,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.5952999999999957,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6034999999999965,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6118999999999979,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.616099999999995,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6242999999999957,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.628599999999995,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6326999999999973,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6409999999999966,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6451999999999973,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6535999999999952,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6619999999999966,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6660999999999951,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6702999999999959,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6743999999999981,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6826999999999974,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6869999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6910999999999953,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.6994999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7035999999999952,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.707799999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7119999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.720299999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7243999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7286999999999976,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7327999999999961,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7369999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7410999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7494999999999968,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7535999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7578999999999982,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7620999999999953,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7661999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7702999999999961,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7745999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7828999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7868999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7911999999999976,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7953999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.7995999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8079999999999968,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8119999999999968,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8162999999999961,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8204999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8244999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8328999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8412999999999962,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8495999999999955,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8578999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8620999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8703999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8744999999999968,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8788999999999982,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8871999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8911999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8954999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.8996999999999976,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9038999999999984,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9079999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9163999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9205999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9245999999999954,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9287999999999962,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9329999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9371999999999977,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.945499999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9537999999999963,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9580999999999956,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9621999999999978,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9663999999999986,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9705999999999957,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9788999999999985,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9830999999999956,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9872999999999964,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9912999999999964,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 0.9997999999999964,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0038999999999985,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0080999999999956,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0121999999999978,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0163999999999984,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0246999999999977,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.028999999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.032999999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0371999999999977,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.041499999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0497999999999963,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.053999999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0622999999999962,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.066499999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0747999999999962,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0831999999999977,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0873999999999984,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0914999999999968,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.095799999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.0997999999999961,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1081999999999976,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1123999999999983,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1164999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.120799999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.124799999999996,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1331999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1414999999999969,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1456999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1498999999999981,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1581999999999975,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.162399999999998,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1665999999999952,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1706999999999974,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.174899999999998,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1831999999999974,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1874999999999967,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.191599999999995,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.1957999999999958,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.2041999999999973,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.2082999999999957,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.2124999999999964,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.216699999999997,
+      "guard": true,
+      "incoming": 0
+    },
+    {
+      "time": 1.2207999999999954,
+      "guard": true,
+      "incoming": 1
+    }
+  ],
+  "hit": {
+    "trial": "defend",
+    "time": 1.166699999999997,
+    "amount": 7.1344,
+    "blocked": false,
+    "hp": 122.8656,
+    "playerKi": 95.76123000000014,
+    "healthLost": 7.134399999999999,
+    "guardEnergySpent": 0,
+    "result": "CONTACT",
+    "incoming": true,
+    "actor": 0,
+    "move": "light"
+  },
+  "grab": null,
+  "errors": [],
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared action sends Q, E or held V through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

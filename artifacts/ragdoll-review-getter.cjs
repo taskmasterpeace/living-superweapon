@@ -1,0 +1,1 @@
+const fs=require('fs');let p='src/tool/character-foundation.js';let s=fs.readFileSync(p,'utf8').replace('window.FOUNDATION={actor,','window.FOUNDATION={get ragdoll(){return ragdoll;},actor,');fs.writeFileSync(p,s);

@@ -1,0 +1,20 @@
+{
+  "air": {
+    "mode": "airborne",
+    "y": 38.84186619999983,
+    "vel": [
+      14.77360959115408,
+      22.720000000000013,
+      0
+    ]
+  },
+  "equipped": "Field Medkit",
+  "result": {
+    "hp": 80,
+    "charges": 1,
+    "state": "cooldown",
+    "stations": 14,
+    "airY": 0
+  },
+  "errors": []
+}

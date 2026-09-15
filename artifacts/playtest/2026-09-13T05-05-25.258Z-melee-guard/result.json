@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "hit": {
+    "trial": "defend",
+    "time": 1.1570999999999954,
+    "amount": 0,
+    "blocked": true,
+    "hp": 130,
+    "playerKi": 84.62523799999992,
+    "healthLost": 0,
+    "guardEnergySpent": 7.1344,
+    "result": "BLOCK",
+    "incoming": true,
+    "actor": 0,
+    "move": "light"
+  },
+  "errors": [],
+  "staging": "Native character/squad menus; defend trial and initial positions/camera staged once. Shared guard action sends Q through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; funded frontal strike only, not guard crush, rear hits or grabs."
+}

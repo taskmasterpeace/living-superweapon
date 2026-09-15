@@ -1,0 +1,354 @@
+{
+  "version": 1,
+  "session": {
+    "phase": "acceptance",
+    "fixtures": [
+      {
+        "kind": "melee",
+        "placement": "arena",
+        "trial": "stationary",
+        "distance": 46.8,
+        "facing": "front",
+        "clearTargetInvulnerability": false,
+        "status": "staged",
+        "result": {
+          "time": 0.054099999999998545,
+          "player": 1,
+          "target": 2,
+          "hero": "rage",
+          "targetHp": 120
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "strike",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:35:01.382Z",
+      "status": "failed",
+      "simulationBefore": 0.3039999999999964,
+      "released": true,
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    }
+  ],
+  "capturedAt": "2026-09-13T06:35:06.502Z",
+  "error": {
+    "name": "TimeoutError",
+    "message": "page.waitForFunction: Timeout 5000ms exceeded."
+  },
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 0.41249999999999637,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "inputContext": {
+      "observedOnly": true,
+      "suspended": false,
+      "reason": null,
+      "interaction": {
+        "mode": "acquire",
+        "priority": [
+          "interact",
+          "pickup gear",
+          "lift prop",
+          "grab person"
+        ],
+        "eligibility": "unresolved; proximity, facing and combat state still apply"
+      },
+      "powers": [
+        {
+          "slotId": "lmb",
+          "name": "Smash",
+          "type": "melee",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 10,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "rmb",
+          "name": "Thunder Clap",
+          "type": "cone",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": null,
+          "energyPerSecond": 15
+        },
+        {
+          "slotId": "q",
+          "name": "Boulder",
+          "type": "projectile",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 9,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "e",
+          "name": "Rampage",
+          "type": "rush",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 14,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "shift",
+          "name": "Bull Charge",
+          "type": "dash",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 5,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "r",
+          "name": "WORLD BREAKER",
+          "type": "nova",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 8,
+          "energyPerSecond": null
+        }
+      ],
+      "gadgets": []
+    },
+    "player": {
+      "id": 1,
+      "hero": "rage",
+      "class": null,
+      "pos": [
+        0,
+        0.096566400000016,
+        45.67636363636344
+      ],
+      "velocity": [
+        0,
+        11.495999999999913,
+        -133.76623376623377
+      ],
+      "hp": 220,
+      "energy": 48.299999999999976,
+      "alive": true,
+      "flying": false,
+      "meleeState": "startup",
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": {
+        "family": "bound",
+        "point": [
+          0,
+          5.2,
+          -8.5
+        ]
+      }
+    },
+    "target": {
+      "id": 2,
+      "hero": "merc",
+      "class": "soldier",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 120,
+      "energy": 57.95321599999999,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "merc",
+        "class": "soldier",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "hp": 120,
+        "energy": 57.95321599999999,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "grabbing": null,
+        "grabbedBy": null,
+        "grabState": null,
+        "launchTime": 0,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 73.16730028779901,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 82.32811965513604,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 89.15809867127996,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 89.15809867127996,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 96.71806832487837,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 107.99774077832895,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 114.38028761566082,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 115.42239901787391,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 10,
+    "drill": {
+      "kind": "stationary",
+      "records": []
+    }
+  }
+}

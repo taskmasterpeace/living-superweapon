@@ -1,0 +1,28 @@
+{
+  "recordCount": 1,
+  "truncated": false,
+  "metadata": {
+    "revision": "xgudrv",
+    "target": {
+      "id": "wb/mfio99",
+      "beforeLines": 0,
+      "afterLines": 0
+    },
+    "kind": {
+      "requested": "table",
+      "tokens": [
+        "table"
+      ]
+    },
+    "include": {
+      "requested": "values",
+      "tokens": [
+        "values"
+      ]
+    },
+    "exclude": {
+      "tokens": []
+    },
+    "notices": []
+  }
+}

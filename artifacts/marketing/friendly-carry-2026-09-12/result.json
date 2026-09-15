@@ -1,0 +1,14 @@
+{
+  "setup": "Controlled ally team/ground placement; native Space takeoff, E pickup, V harmless attempt and E release",
+  "player": {
+    "flying": true,
+    "y": 32.16200195210704
+  },
+  "target": {
+    "flying": true,
+    "y": 26.336409931337176,
+    "hp": 130
+  },
+  "records": [],
+  "errors": []
+}

@@ -1,0 +1,57 @@
+{
+  "setup": "Controlled nearby stationary dummy; native double-Shift hold activates Overclock, W moves the field out of range. Live game and fighter clocks unmodified.",
+  "a": {
+    "time": 1.8766000000000016,
+    "playerTime": 3.324250203685836,
+    "targetTime": 7.739963352476597,
+    "playerScale": 1,
+    "targetScale": 0.4,
+    "fields": 1,
+    "position": [
+      -50,
+      0,
+      -600
+    ]
+  },
+  "inside": {
+    "time": 2.5856000000000026,
+    "playerTime": 4.033250203685836,
+    "targetTime": 8.023563352476595,
+    "playerScale": 1,
+    "targetScale": 0.4,
+    "fields": 1,
+    "position": [
+      -50,
+      0,
+      -600
+    ]
+  },
+  "outside": {
+    "time": 3.157100000000004,
+    "playerTime": 4.604750203685844,
+    "targetTime": 8.264643352476625,
+    "playerScale": 1,
+    "targetScale": 1,
+    "fields": 1,
+    "position": [
+      -50,
+      0,
+      -572.8807313631362
+    ]
+  },
+  "expired": {
+    "time": 6.093300000000022,
+    "playerTime": 7.5409502036858695,
+    "targetTime": 11.200843352476694,
+    "playerScale": 1,
+    "targetScale": 1,
+    "fields": 0,
+    "position": [
+      -50,
+      0,
+      -561.8063109428848
+    ]
+  },
+  "ratio": 0.39999999999999725,
+  "errors": []
+}

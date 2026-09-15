@@ -1,0 +1,41 @@
+{
+  "label": "Throw",
+  "result": {
+    "records": [
+      {
+        "trial": "stationary",
+        "time": 1.8042999999999942,
+        "amount": 10,
+        "blocked": false,
+        "hp": 110,
+        "playerKi": 71.08836274490977,
+        "healthLost": 10,
+        "guardEnergySpent": 0,
+        "result": "THROW",
+        "incoming": false,
+        "actor": 1,
+        "move": "throw"
+      },
+      {
+        "trial": "stationary",
+        "time": 2.0548419999999954,
+        "amount": 18.143952120279767,
+        "blocked": false,
+        "hp": 91.85604787972024,
+        "playerKi": 73.18743682490972,
+        "healthLost": 18.143952120279764,
+        "guardEnergySpent": 0,
+        "result": "TERRAIN IMPACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "hit"
+      }
+    ],
+    "grabbing": false,
+    "touchGrab": false,
+    "victimHp": 91.85604787972024,
+    "pitch": -0.3902399999999966,
+    "aimReleased": true
+  },
+  "errors": []
+}

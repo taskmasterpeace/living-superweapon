@@ -1,0 +1,25 @@
+✔ catalog reconciles every native bank entry and resolves original clips (3.1681ms)
+✔ new registered bank clips appear without individual catalog rows (0.9335ms)
+✔ invalid frames and contact windows are surfaced rather than silently repaired (1.1094ms)
+✔ rejects unusable directions and rotations even when all 45 values are finite (0.2982ms)
+✔ one shot stops on last frame and never wraps an attack into its start (0.8266ms)
+✔ air fall descends to floor and hover retains clearance without changing simulation (0.1491ms)
+(node:40736) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sampled library jab moves visible modular hand and direct seeking is repeatable (122.8667ms)
+✔ shared catalog exports every study as a playable candidate with an editor link (132.3608ms)
+✔ combat candidates reach anteriorly on the actual Idle_Loop rig, on both sides (55.8238ms)
+✔ fall candidates keep wrists anterior and elbows flexed on the real rig at quarter phases (101.216ms)
+✔ grapple study keeps catch hand overhead while free limbs articulate on the real idle rig (40.1843ms)
+✔ pickup studies articulate both arms and lower body on the production rig (56.5921ms)
+✔ actual rig: cough hand stays at face, burn hand stays in front at quarter samples (49.3452ms)
+✔ actual rig: flying pickup opens before capture; ground pickup lowers then raises both hands overhead (39.6296ms)
+✔ Idle_Loop baseline: flying pickup opens around payload then closes while reaching forward (31.758ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 368.2322

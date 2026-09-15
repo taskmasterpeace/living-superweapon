@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "result": {
+    "start": {
+      "hp": 120,
+      "pos": [
+        0,
+        0,
+        50
+      ],
+      "hero": "jelani"
+    },
+    "hero": "jelani",
+    "pos": [
+      0,
+      0,
+      -5.9488646205580284
+    ],
+    "flight": false,
+    "hp": 95.8094336,
+    "records": [
+      {
+        "trial": "retreat",
+        "time": 0.3866000000000021,
+        "amount": 24.1905664,
+        "blocked": false,
+        "hp": 95.8094336,
+        "playerKi": 61.12889600000002,
+        "healthLost": 24.190566399999994,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "light"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 60,
+        "entryFamily": "tackle",
+        "trial": "retreat",
+        "kind": "jab",
+        "time": 0.13330000000000292,
+        "contacts": 1,
+        "approach": true,
+        "distance": 51.54683,
+        "startup": 0.21998340314136125,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ]
+  },
+  "errors": [],
+  "staging": "Native menu; retreat drill and starting positions staged once. T lock and V attack through keyboard; native target retreat, simulation and contact. Silent video; not full AI/roster balance acceptance."
+}

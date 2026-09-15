@@ -1,0 +1,394 @@
+{
+  "version": 1,
+  "session": {
+    "phase": "acceptance",
+    "fixtures": [
+      {
+        "kind": "trainer-selection",
+        "hero": "kano",
+        "status": "staged"
+      },
+      {
+        "kind": "melee",
+        "placement": "arena",
+        "trial": "stationary",
+        "distance": 46.8,
+        "facing": "front",
+        "clearTargetInvulnerability": false,
+        "status": "staged",
+        "result": {
+          "time": 0.05419999999999891,
+          "player": 1,
+          "target": 2,
+          "hero": "rage",
+          "targetHp": 115
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "strike",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:36:34.426Z",
+      "status": "dispatched",
+      "simulationBefore": 0.6075000000000018,
+      "released": true,
+      "simulationAfter": 0.7451000000000039
+    }
+  ],
+  "capturedAt": "2026-09-13T06:36:35.785Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 1.8555840000000077,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "inputContext": {
+      "observedOnly": true,
+      "suspended": false,
+      "reason": null,
+      "interaction": {
+        "mode": "acquire",
+        "priority": [
+          "interact",
+          "pickup gear",
+          "lift prop",
+          "grab person"
+        ],
+        "eligibility": "unresolved; proximity, facing and combat state still apply"
+      },
+      "powers": [
+        {
+          "slotId": "lmb",
+          "name": "Smash",
+          "type": "melee",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 10,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "rmb",
+          "name": "Thunder Clap",
+          "type": "cone",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": null,
+          "energyPerSecond": 15
+        },
+        {
+          "slotId": "q",
+          "name": "Boulder",
+          "type": "projectile",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 9,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "e",
+          "name": "Rampage",
+          "type": "rush",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 14,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "shift",
+          "name": "Bull Charge",
+          "type": "dash",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 5,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "r",
+          "name": "WORLD BREAKER",
+          "type": "nova",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 8,
+          "energyPerSecond": null
+        }
+      ],
+      "gadgets": []
+    },
+    "player": {
+      "id": 1,
+      "hero": "rage",
+      "class": null,
+      "pos": [
+        0,
+        0,
+        -4.147280970815558
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 220,
+      "energy": 90,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": null
+    },
+    "target": {
+      "id": 2,
+      "hero": "kano",
+      "class": null,
+      "pos": [
+        0,
+        7.045739759999986,
+        -57.025608970938265
+      ],
+      "velocity": [
+        0,
+        -5.1058000000001735,
+        -83.2240257315363
+      ],
+      "hp": 76.525,
+      "energy": 95.66573631999964,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 1.802315999999998,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "kano",
+        "class": null,
+        "pos": [
+          0,
+          7.045739759999986,
+          -57.025608970938265
+        ],
+        "velocity": [
+          0,
+          -5.1058000000001735,
+          -83.2240257315363
+        ],
+        "hp": 76.525,
+        "energy": 95.66573631999964,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "grabbing": null,
+        "grabbedBy": null,
+        "grabState": null,
+        "launchTime": 1.802315999999998,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 72.74825565344001,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 72.81301176816174,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 81.42014010070922,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 95,
+        "x": -75,
+        "z": -76,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 95.48910789938282,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 107.71545092778176,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 108.89845570965988,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 108.89845570965988,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 94,
+        "x": -75,
+        "z": -100,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 112.95618726223378,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 114.82587869080793,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 12,
+    "drill": {
+      "kind": "stationary",
+      "records": [
+        {
+          "time": 1.003700000000008,
+          "trial": "stationary",
+          "result": "CONTACT",
+          "amount": 38.475,
+          "blocked": false,
+          "healthLost": 38.474999999999994,
+          "guardEnergySpent": 0,
+          "move": "heavy"
+        },
+        {
+          "time": 0.665900000000005,
+          "trial": "stationary",
+          "result": "contact",
+          "amount": null,
+          "blocked": null,
+          "healthLost": null,
+          "guardEnergySpent": null,
+          "move": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+(node:41272) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (204.4279ms)
+✔ cruise-fists survives profile and drives current modular cruising body (122.9129ms)
+✔ cruise-palms survives profile and drives current modular cruising body (110.5971ms)
+✔ cruise-one survives profile and drives current modular cruising body (107.1653ms)
+✔ cruise-bent survives profile and drives current modular cruising body (115.4969ms)
+✔ open cruise palms yield to carried contact, grab, attack and occupied hand (33.7515ms)
+✔ cruise bent and palms preserve identical torso and pelvis orientation (117.3868ms)
+✖ loading modular body after settled cruise has same spine as loading before cruise (179.0355ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1344.8134
+
+✖ failing tests:
+
+test at tools\cruise-flight-styles.test.mjs:30:1
+✖ loading modular body after settled cruise has same spine as loading before cruise (179.0355ms)
+  AssertionError [ERR_ASSERTION]: late-load calibration differs DEF-spine001
+      at TestContext.<anonymous> (file:///D:/lsw/.worktrees/combat-release-review/tools/cruise-flight-styles.test.mjs:35:233)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

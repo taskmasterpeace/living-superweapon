@@ -1,0 +1,29 @@
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.6287ms)
+✔ bundled mappings resolve catalog cues and existing files (2.3364ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.8332ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1397ms)
+✔ successful grab cue has a bundled capture recording with no synth duplicate (0.1157ms)
+✔ grenade preparation plays the bundled pin pull without an oscillator (0.1034ms)
+✔ vehicle destruction uses an existing explosion recording without a placeholder oscillator (0.0967ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.5172ms)
+(node:110520) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ grenade winds up in a hand, releases once at the pose, and recovers without changing selection (125.1744ms)
+✔ interrupted preparation cannot fire later; reload and another attack cannot overlap the throwing hand (49.815ms)
+✔ zero-dt inspection freezes throw; clearing the kit removes the attached prop (30.8903ms)
+✔ native freeze branch cancels preparation before its early animation return (31.5444ms)
+✔ release transfers resource lifetime to the projectile, not the recovering hand (31.9761ms)
+✔ Studio timing overrides control the actual hand action, not just inspector values (54.4504ms)
+✔ remote grenade retains detonation and split data after a hand release (38.3059ms)
+✔ Studio remote grenade rehearsal waits for the hand release before its detonation input (115.0305ms)
+✔ real throwing arm clears torso and returns to rifle support at 30 Hz (78.1028ms)
+✔ real throwing arm clears torso and returns to rifle support at 60 Hz (125.3776ms)
+✔ real throwing arm clears torso and returns to rifle support at 120 Hz (194.2973ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1156.2716

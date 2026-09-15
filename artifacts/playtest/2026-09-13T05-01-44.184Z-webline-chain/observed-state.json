@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "action": "primary",
+      "holdMs": 80,
+      "requestedAt": "2026-09-13T05:01:58.706Z",
+      "status": "dispatched",
+      "simulationBefore": 0.8908999999999989,
+      "simulationAfter": 0.9575999999999979,
+      "released": true
+    },
+    {
+      "action": "up",
+      "holdMs": 120,
+      "requestedAt": "2026-09-13T05:02:00.422Z",
+      "status": "dispatched",
+      "simulationBefore": 2.3243999999999967,
+      "simulationAfter": 2.4620999999999977,
+      "released": true
+    }
+  ],
+  "capturedAt": "2026-09-13T05:02:00.921Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 2.8250000000000006,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "player": {
+      "id": 1,
+      "hero": "webline",
+      "class": null,
+      "pos": [
+        88.00083324109282,
+        58.8689871872643,
+        -293.4024867472948
+      ],
+      "velocity": [
+        0,
+        0.46799999999999975,
+        4.926461817904593
+      ],
+      "hp": 100,
+      "energy": 72.27799999999984,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "launchTime": 0,
+      "selectedPower": "shift",
+      "approach": null
+    },
+    "target": null,
+    "actors": [],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 3,
+        "x": 0,
+        "z": -306,
+        "hx": 310,
+        "hz": 6,
+        "bottom": 0,
+        "top": 300,
+        "distanceXZ": 6.597513252705198,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 77,
+        "x": 0,
+        "z": -205,
+        "hx": 50,
+        "hz": 35,
+        "bottom": 74,
+        "top": 78,
+        "distanceXZ": 65.54303103925193,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 3,
+    "drill": {
+      "kind": null,
+      "records": []
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "passed": true,
+  "stop": "lab",
+  "position": [
+    -79.44082800452429,
+    2.2204460492503137e-14,
+    -221.69469515337119
+  ],
+  "origin": [
+    -72.55252622195266,
+    0,
+    -238.32452673857438
+  ],
+  "passengers": 0,
+  "members": [
+    {
+      "id": "kano",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -81.54439891787517,
+        0.16136109946795793,
+        -177.13168055607187
+      ]
+    },
+    {
+      "id": "vega",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -65.54439891787517,
+        0.0015255857449116507,
+        -177.13168055607187
+      ]
+    },
+    {
+      "id": "aurum",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -89.54439891787517,
+        0.4774797331658903,
+        -177.13168055607187
+      ]
+    },
+    {
+      "id": "rime",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -57.54439891787517,
+        0,
+        -177.13168055607187
+      ]
+    },
+    {
+      "id": "volt",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -73.54439891787517,
+        0.09729211628427763,
+        -167.13168055607187
+      ]
+    }
+  ],
+  "errors": [],
+  "staging": "Native menu and E deployment; staged portal and initial ramp approach. Native W ramp/E sit/Enter outbound/Enter return/J safe exit. No travel time acceleration. Five named teammates selected through menu and staged on ramp approach; native AI boarding, six-seat round trip and automatic squad exit. Sample carriage and full approach navigation are separate acceptance."
+}

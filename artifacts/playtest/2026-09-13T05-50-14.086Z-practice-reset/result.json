@@ -1,0 +1,181 @@
+{
+  "passed": true,
+  "cycles": [
+    {
+      "before": {
+        "player": 1,
+        "target": 2,
+        "kind": "stationary",
+        "entities": [
+          1,
+          2
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 58.331680000000006,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      },
+      "after": {
+        "player": 1,
+        "target": 3,
+        "kind": "stationary",
+        "entities": [
+          1,
+          3
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    },
+    {
+      "before": {
+        "player": 1,
+        "target": 3,
+        "kind": "stationary",
+        "entities": [
+          1,
+          3
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 106.66376799999942,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]"
+      },
+      "after": {
+        "player": 1,
+        "target": 4,
+        "kind": "stationary",
+        "entities": [
+          1,
+          4
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    },
+    {
+      "before": {
+        "player": 1,
+        "target": 4,
+        "kind": "stationary",
+        "entities": [
+          1,
+          4
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 109.02215199999974,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]"
+      },
+      "after": {
+        "player": 1,
+        "target": 5,
+        "kind": "stationary",
+        "entities": [
+          1,
+          5
+        ],
+        "hp": 130,
+        "maxHp": 130,
+        "ki": 120,
+        "maxKi": 120,
+        "stock": "{\"initial\":{\"soldier\":0,\"lsw\":3},\"remaining\":{\"soldier\":0,\"lsw\":3},\"committed\":{}}",
+        "manifest": "[1]",
+        "focus": "threat-melee-repeat"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "action": "primary",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 1500,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:30.955Z",
+      "status": "dispatched",
+      "simulationBefore": 0.2292000000000007,
+      "released": true,
+      "simulationAfter": 0.5210000000000018
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:35.485Z",
+      "status": "dispatched",
+      "simulationBefore": 0.5586000000000002,
+      "released": true,
+      "simulationAfter": 0.6425000000000017
+    },
+    {
+      "action": "primary",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 1500,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:35.770Z",
+      "status": "dispatched",
+      "simulationBefore": 0.746699999999999,
+      "released": true,
+      "simulationAfter": 2.323199999999993
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:39.492Z",
+      "status": "dispatched",
+      "simulationBefore": 4.519999999999997,
+      "released": true,
+      "simulationAfter": 4.628599999999995
+    },
+    {
+      "action": "primary",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 1500,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:39.672Z",
+      "status": "dispatched",
+      "simulationBefore": 4.661899999999995,
+      "released": true,
+      "simulationAfter": 5.686700000000002
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T05:50:41.898Z",
+      "status": "dispatched",
+      "simulationBefore": 6.383200000000008,
+      "released": true,
+      "simulationAfter": 6.474900000000006
+    }
+  ],
+  "errors": [],
+  "staging": "Native menus; one setup positions player facing the reset console and starts a stationary trial nearby. Three native beam bursts spend energy, E resets each time. Checks player identity, reserve/manifest stability and actor retirement. No outcome injection; damage, KO, carried props and live powers need separate reset cases."
+}

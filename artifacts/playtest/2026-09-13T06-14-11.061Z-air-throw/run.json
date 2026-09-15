@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scenario": "air-throw",
+  "startedAt": "2026-09-13T06:14:11.062Z",
+  "runnerRevision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "throwTarget": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "8b04f4fbf8b69fff6fccc6c6ee209ce59ba11700",
+    "trackedDiffHash": "df2cb81526e93a1676831e9975c2098b20ac5f461b12d377862a79f5f84470de"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:14:34.811Z",
+  "staging": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, Mouse aims; approach mode uses T lock and V strike, defense mode faces the attacker and holds Q without requiring lock. No altitude, flight flag, motion or damage injection after setup. This tests a hover-target approach or one airborne guard contact, not evasion or full air-combat balance."
+}

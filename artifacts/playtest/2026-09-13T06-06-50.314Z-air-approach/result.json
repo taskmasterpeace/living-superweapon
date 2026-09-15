@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "before": {
+    "playerAir": true,
+    "targetAir": true,
+    "hp": 130,
+    "distance": 31.3955227948981,
+    "locked": 2,
+    "target": 2
+  },
+  "after": {
+    "hp": 120.5568,
+    "playerAir": true,
+    "records": [
+      {
+        "trial": "airborne",
+        "time": 2.4499999999999944,
+        "amount": 9.443200000000001,
+        "blocked": false,
+        "hp": 120.5568,
+        "playerKi": 80.63295999999951,
+        "healthLost": 9.443200000000004,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "light"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "up",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "flight-height",
+      "requestedAt": "2026-09-13T06:07:09.702Z",
+      "status": "dispatched",
+      "simulationBefore": 0.10400000000000001,
+      "flightHeightReached": true,
+      "released": true,
+      "simulationAfter": 1.1901999999999968
+    },
+    {
+      "action": "strike",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:07:15.792Z",
+      "status": "dispatched",
+      "simulationBefore": 2.287099999999996,
+      "released": true,
+      "simulationAfter": 2.4330999999999965
+    }
+  ],
+  "errors": [],
+  "staging": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, T locks, V approaches and strikes. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance."
+}

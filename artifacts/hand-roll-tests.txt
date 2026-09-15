@@ -1,0 +1,80 @@
+(node:61664) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ STORMCALL's axe clears the rendered procedural trunk at grounded heavy startup (237.4772ms)
+✔ STORMCALL's axe clears the rendered superhero-male trunk at grounded heavy startup (167.3316ms)
+✔ STORMCALL's axe clears the rendered superhero-female trunk at grounded heavy startup (157.0004ms)
+✔ STORMCALL's axe clears the rendered procedural trunk at airborne heavy startup (104.7563ms)
+✔ STORMCALL's axe clears the rendered superhero-male trunk at airborne heavy startup (127.6112ms)
+✔ STORMCALL's axe clears the rendered superhero-female trunk at airborne heavy startup (144.0511ms)
+(node:92396) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a chest-braced traveling beam really emits from the chest throughout sustained motion (411.3714ms)
+✔ an actual charging chest attack holds its bracing pose before release (155.6731ms)
+✔ an infinite-energy Reactor Burst still owns the charging chest pose (134.3501ms)
+✔ moving elevated optic casts keep the rendered eyes aligned with the actual hose (1047.2784ms)
+(node:36356) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lateral optic fire keeps a complete articulated gait and separate travel, shoulder and eye headings (311.9302ms)
+✔ side-cast keeps hand and forearm volumes outside the trunk at three body scales (1576.7533ms)
+✔ turning and casting overlays release cleanly into a form change and a frontal guard (502.5527ms)
+✔ real rifle fire aims its driven weapon while the legs keep running (141.1069ms)
+✔ authored optic-focus brings one empty hand to the temple without moving the eye emitter (91.7224ms)
+✔ explicit chest brace squares the forearms outside the ribs (89.8969ms)
+✔ an abrupt aim reversal never twists the neck behind the shoulders (165.4154ms)
+✔ a high grounded optic shot is supported by the torso without losing aim (109.0729ms)
+✔ raising guard during a strafe keeps the torso facing the threat on entry (67.0411ms)
+(node:78444) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ superhero-male closed thumbs oppose across fingers without moving hand sockets (157.7938ms)
+✔ superhero-female closed thumbs oppose across fingers without moving hand sockets (93.0188ms)
+(node:1256) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ procedural -1: horizontal reach keeps thumb above a straight wrist (88.9449ms)
+✔ procedural 1: horizontal reach keeps thumb above a straight wrist (26.7133ms)
+✔ superhero-male -1: horizontal reach keeps thumb above a straight wrist (107.3015ms)
+✔ superhero-male 1: horizontal reach keeps thumb above a straight wrist (85.6682ms)
+✔ superhero-female -1: horizontal reach keeps thumb above a straight wrist (72.8037ms)
+✔ superhero-female 1: horizontal reach keeps thumb above a straight wrist (60.846ms)
+THREE.Material: parameter 'color' has value of undefined.
+THREE.Material: parameter 'color' has value of undefined.
+THREE.Material: parameter 'color' has value of undefined.
+(node:35512) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ skin follows ancestor/root changes and portrait arm poses without a second animation call (138.5091ms)
+✔ post-animation body separation transports the rendered source surface in the same frame (145.0909ms)
+✔ portrait cleanup releases a direct figure skeleton once (58.3363ms)
+✔ spaceflight cleanup releases a direct figure skeleton once (60.6378ms)
+✔ superhero-male uses closed boot modules and removes hidden source toes from all passes (63.0916ms)
+✔ superhero-female uses closed boot modules and removes hidden source toes from all passes (64.2946ms)
+✔ superhero-male keeps final strike drivers, geometry and optic sockets at 30Hz (205.6244ms)
+✔ superhero-female keeps final strike drivers, geometry and optic sockets at 30Hz (192.7754ms)
+✔ superhero-male keeps final strike drivers, geometry and optic sockets at 60Hz (188.8439ms)
+✔ superhero-female keeps final strike drivers, geometry and optic sockets at 60Hz (216.7706ms)
+✔ superhero-male keeps final strike drivers, geometry and optic sockets at 120Hz (170.4677ms)
+✔ superhero-female keeps final strike drivers, geometry and optic sockets at 120Hz (180.8521ms)
+✔ titan keeps signature gear and head-cover choice on source anatomy (72.1214ms)
+✔ kraken keeps signature gear and head-cover choice on source anatomy (64.9211ms)
+✔ rift keeps signature gear and head-cover choice on source anatomy (60.7688ms)
+✔ sarge keeps signature gear and head-cover choice on source anatomy (75.5913ms)
+✔ source suit keeps each live palette region and its own glow (49.0285ms)
+✔ live duplicates retain their own tracked skin material and shader (100.7354ms)
+✔ source skin follows invisibility through a form change and restores opacity (100.7383ms)
+✔ possession snapshot owns static skin geometry and releases it on return (78.1132ms)
+✔ source skin resources stay alive while a raw scene copy borrows them (88.3086ms)
+✔ real decoy freezes source surface rather than following live bones (123.2538ms)
+✔ decoy hover is bounded around its spawn height rather than integrating a sine wave (66.1067ms)
+✔ superhero-male replaces rendered anatomy without replacing physical drivers (60.1521ms)
+✔ superhero-female replaces rendered anatomy without replacing physical drivers (60.079ms)
+✔ final-pose skin follows hover and guard without moving root at 30Hz (99.1062ms)
+✔ final-pose skin follows hover and guard without moving root at 60Hz (141.0944ms)
+✔ final-pose skin follows hover and guard without moving root at 120Hz (196.6488ms)
+✔ body replacement preserves armed sockets and releases its skeleton on form replacement (111.7534ms)
+✔ ragdoll skin follows driven chest and limbs, then restores live pose (679.4271ms)
+ℹ tests 57
+ℹ suites 0
+ℹ pass 57
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4362.8015

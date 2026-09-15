@@ -1,0 +1,14 @@
+(node:74492) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ flying pickup requires actual vertical proximity to prop (65.1428ms)
+✔ lift capacity still rejects a nearby overweight prop (26.1739ms)
+✔ throw and its preview begin at the carried mesh without muzzle teleport (31.4338ms)
+✔ native low-flight pickup initializes the payload before immediate release (25.0144ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 443.0766

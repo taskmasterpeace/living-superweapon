@@ -1,0 +1,1 @@
+import fs from 'node:fs';const p='tools/webline-chain-browser.mjs';let s=fs.readFileSync(p,'utf8').replace("await p.keyboard.press('Space');await p.waitForTimeout(350);", "await p.keyboard.down('Space');await p.waitForTimeout(120);await p.keyboard.up('Space');await p.waitForTimeout(350);");fs.writeFileSync(p,s);

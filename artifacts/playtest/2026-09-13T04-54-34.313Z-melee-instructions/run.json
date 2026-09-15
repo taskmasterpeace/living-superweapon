@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scenario": "melee-instructions",
+  "startedAt": "2026-09-13T04:54:34.315Z",
+  "runnerRevision": "8a44f4ceebf9c40b2e36ee8e9353f02097ea70d2",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/run.mjs\nvite.config.js",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "screenshots",
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "8a44f4ceebf9c40b2e36ee8e9353f02097ea70d2",
+    "trackedDiffHash": "f8179fe5838b6014eb82bde6dffeea76a78161f1f36e887cd8aed81aa58fa203"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T04:54:51.614Z",
+  "staging": "Native menus, starting position staged at console, E opens selector, browser controls choose/read/start drill."
+}

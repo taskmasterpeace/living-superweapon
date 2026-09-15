@@ -1,0 +1,10 @@
+{
+  "before": {
+    "hero": "recon",
+    "slot": "q",
+    "name": "Scoped Marksman Rifle",
+    "zoom": 1
+  },
+  "errors": [],
+  "staging": "Native RECON selection, two primary-wheel steps and held RMB. No actor or camera mutation."
+}

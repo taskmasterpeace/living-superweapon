@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "touch-guard",
+  "startedAt": "2026-09-13T05:24:57.893Z",
+  "runnerRevision": "390b2d3dd5645289bb6232a47e1e9dafadcb4201",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/guard-drill-browser.mjs\ntools/playtest/actions.mjs\ntools/playtest/run.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "browser-emulated landscape touch",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "touch"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "390b2d3dd5645289bb6232a47e1e9dafadcb4201",
+    "trackedDiffHash": "cacd14abe7a44c94ba8a5ac31d5352c10d2efa63dbb78c19098efc2817ce4193"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:25:29.947Z",
+  "staging": "Native character/squad menus; guard/defend trial and initial positions/camera staged once. Shared combat actions use the configured KBM, browser-emulated gamepad or browser touch through the real input adapter; touch mode also taps menus. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; configured light defense, charged-heavy or grab/release counterplay only; grab escape/counterstrikes and depleted energy remain separate."
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "chain": {
+    "links": 128,
+    "ki": 57.41963200000007,
+    "zip": true
+  },
+  "released": true,
+  "errors": [],
+  "staging": "Initial position and camera staged in Threat Room; native mouse-wheel selection and LMB pull, wall hold and Space release. No damage or movement injection during traversal."
+}

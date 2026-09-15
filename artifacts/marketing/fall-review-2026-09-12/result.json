@@ -1,0 +1,346 @@
+{
+  "setup": "Controlled airborne setup; nonfatal native takeDamage launch; real physics and animation, not a player-earned hit",
+  "states": [
+    {
+      "time": 0.10420000000000074,
+      "state": "flight"
+    },
+    {
+      "time": 0.15420000000000073,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.19590000000000146,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.24590000000000145,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.29580000000000106,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.33330000000000104,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.38330000000000103,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.4167000000000007,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.45010000000000033,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.48350000000000176,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.5170000000000017,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.5543000000000009,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.5877000000000006,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.6253000000000009,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.6628000000000008,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.6962000000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.7379000000000011,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.7753000000000007,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.8129000000000011,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.850400000000001,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.8880000000000013,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.9255000000000014,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.9590000000000014,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 0.9965000000000015,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.0382000000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.079800000000001,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.113300000000001,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.1508000000000012,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.1883000000000012,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.2258000000000013,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.2634000000000019,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.3051000000000008,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.3468000000000018,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.3802000000000016,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.4177000000000017,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.4511000000000016,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.4887000000000021,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.5261000000000018,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.5637000000000023,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.6054000000000028,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.642900000000003,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.6763000000000028,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.7139000000000035,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.7514000000000036,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.7848000000000035,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.8182000000000034,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.8556000000000032,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.8890000000000047,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.9266000000000034,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 1.9600000000000048,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.0016000000000034,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.0392000000000037,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.0766000000000036,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.1101000000000036,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.1476000000000033,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.181000000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.218500000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.2519000000000045,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.2894000000000045,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.3312000000000035,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.3728000000000042,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.410400000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.4522000000000044,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.4938000000000047,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.535500000000005,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.5730000000000057,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.6106000000000043,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.644100000000004,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.6815000000000055,
+      "state": "uncontrolled"
+    },
+    {
+      "time": 2.7150000000000056,
+      "state": "flight"
+    },
+    {
+      "time": 2.7524000000000055,
+      "state": "flight"
+    },
+    {
+      "time": 2.7899000000000056,
+      "state": "flight"
+    },
+    {
+      "time": 2.8274000000000057,
+      "state": "flight"
+    },
+    {
+      "time": 2.865000000000006,
+      "state": "flight"
+    },
+    {
+      "time": 2.902600000000004,
+      "state": "flight"
+    },
+    {
+      "time": 2.9442000000000044,
+      "state": "flight"
+    },
+    {
+      "time": 2.9817000000000045,
+      "state": "flight"
+    },
+    {
+      "time": 3.0151000000000043,
+      "state": "flight"
+    },
+    {
+      "time": 3.048600000000005,
+      "state": "flight"
+    },
+    {
+      "time": 3.086000000000006,
+      "state": "flight"
+    }
+  ],
+  "records": [
+    {
+      "trial": "stationary",
+      "time": 0.05,
+      "amount": 12,
+      "blocked": false,
+      "hp": 118,
+      "playerKi": 65.658608,
+      "healthLost": 12,
+      "guardEnergySpent": 0,
+      "result": "CONTACT",
+      "incoming": true,
+      "move": "hit"
+    }
+  ],
+  "hp": 118,
+  "alive": true,
+  "ragdoll": false,
+  "weight": 0.007057954502366406,
+  "time": 3.115200000000005,
+  "errors": []
+}

@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "pulling": {
+    "pos": [
+      180,
+      12.008631468119335,
+      -208.58961891118008
+    ],
+    "ki": 51.026216000000005,
+    "start": 55,
+    "links": 128,
+    "anchor": {
+      "x": 180,
+      "y": 75.91428571428573,
+      "z": -300
+    }
+  },
+  "after": {
+    "pos": [
+      180.76049874850136,
+      73.77458611428571,
+      -294.2671750161584
+    ],
+    "alive": true,
+    "hanging": false,
+    "zip": false,
+    "flight": false
+  },
+  "errors": [],
+  "staging": "Native menu. Player and enemy starting positions staged in Threat Room; native enemy AI owns all subsequent movement/attacks. Player uses F to hover. Not general navigation or roof-climbing acceptance."
+}

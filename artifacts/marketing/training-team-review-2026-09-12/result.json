@@ -1,0 +1,31 @@
+{
+  "before": {
+    "ally": "kano",
+    "enemy": "merc",
+    "manifest": 1,
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    },
+    "actors": 3
+  },
+  "hits": [
+    {
+      "amount": 3.1049395299997267,
+      "target": "merc"
+    },
+    {
+      "amount": 3.1423484399998625,
+      "target": "merc"
+    }
+  ],
+  "after": {
+    "retired": true,
+    "manifest": 1,
+    "stock": {
+      "soldier": 0,
+      "lsw": 3
+    }
+  },
+  "errors": []
+}

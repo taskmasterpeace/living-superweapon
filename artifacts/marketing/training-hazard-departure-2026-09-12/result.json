@@ -1,0 +1,14 @@
+{
+  "setup": "Existing gas-kind fixture plus native X activation, E ready and W crossing; controlled position near portal.",
+  "before": {
+    "smoke": 1,
+    "timers": 1
+  },
+  "after": {
+    "state": "field",
+    "smoke": 0,
+    "timers": 0,
+    "room": false
+  },
+  "errors": []
+}

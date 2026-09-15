@@ -1,0 +1,50 @@
+{
+  "result": {
+    "records": [
+      {
+        "trial": "retreat",
+        "time": 0.45049999999999985,
+        "amount": 38.475,
+        "blocked": false,
+        "hp": 81.525,
+        "playerKi": 49.03919999999998,
+        "healthLost": 38.474999999999994,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "move": "heavy"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 36,
+        "entryFamily": "bound",
+        "trial": "retreat",
+        "kind": "power",
+        "time": 0.1,
+        "contacts": 1,
+        "approach": true,
+        "distance": 21.54683,
+        "startup": 0.34,
+        "active": 0.09,
+        "recovery": 0.4,
+        "result": "contact"
+      }
+    ],
+    "player": [
+      0,
+      0,
+      -59.34832128786905
+    ],
+    "target": [
+      2.6873138477293663,
+      9.742715049999994,
+      -135.84244217049257
+    ],
+    "start": [
+      0,
+      0,
+      -30
+    ]
+  },
+  "errors": []
+}

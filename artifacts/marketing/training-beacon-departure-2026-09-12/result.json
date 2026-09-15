@@ -1,0 +1,17 @@
+{
+  "result": {
+    "state": "cooldown",
+    "cd": 3.4792000000000005,
+    "pos": null,
+    "mesh": false,
+    "oldMeshRemoved": true,
+    "charges": 1,
+    "previousCharges": 1,
+    "room": false
+  },
+  "placed": {
+    "distance": 0,
+    "room": null
+  },
+  "errors": []
+}

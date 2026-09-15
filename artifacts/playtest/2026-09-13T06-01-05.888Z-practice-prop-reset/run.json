@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "practice-prop-reset",
+  "startedAt": "2026-09-13T06:01:05.890Z",
+  "runnerRevision": "29ee07b4209219b75f0725545641f25bce72cb8a",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/scenarios.mjs\ntools/practice-props-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "29ee07b4209219b75f0725545641f25bce72cb8a",
+    "trackedDiffHash": "0c4eb5487162e6ce4f6e17de86fc84ad88868e9328f7f275dbabc22968769ac4"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:01:31.001Z",
+  "staging": "One setup relocates a practice rock and player near the reset console. Native E pickup, held E throw, keyboard W walk until reset prompt, then E reset. No post-input relocation or direct reset invocation. This proves restoration after a completed throw, not reset denial while a prop is airborne."
+}

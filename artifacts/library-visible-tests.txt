@@ -1,0 +1,20 @@
+✔ catalog reconciles every native bank entry and resolves original clips (6.3905ms)
+✔ new registered bank clips appear without individual catalog rows (1.795ms)
+✔ invalid frames and contact windows are surfaced rather than silently repaired (1.3355ms)
+✔ rejects unusable directions and rotations even when all 45 values are finite (0.3436ms)
+(node:113336) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sampled library jab moves visible modular hand and direct seeking is repeatable (194.9288ms)
+✔ shared catalog exports every study as a playable candidate with an editor link (221.0896ms)
+(node:50612) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native paired hold preview remains finite, faces holder and never spends resources (false) (153.1614ms)
+✔ native paired hold preview remains finite, faces holder and never spends resources (true) (68.5227ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 791.412

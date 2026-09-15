@@ -1,0 +1,49 @@
+{
+  "setup": "Controlled elevated placement and initial momentum; native held/released Space. This does not prove the sprint-to-hill entry.",
+  "start": {
+    "position": [
+      -600,
+      332.05045279916726,
+      -389.6040132139973
+    ],
+    "velocity": [
+      0,
+      -8.51,
+      177.3866566538561
+    ],
+    "ki": 119.25104,
+    "flying": false,
+    "gliding": true
+  },
+  "glide": {
+    "position": [
+      -600,
+      321.8754527991666,
+      -230.3932988863191
+    ],
+    "velocity": [
+      0,
+      -10,
+      137.54578601667558
+    ],
+    "ki": 113.39024000000003,
+    "flying": false,
+    "gliding": true
+  },
+  "released": {
+    "position": [
+      -600,
+      317.2036505991665,
+      -201.5566692226992
+    ],
+    "velocity": [
+      0,
+      -25.51600000000005,
+      86.08922510640052
+    ],
+    "ki": 115.49691199999997,
+    "flying": false,
+    "gliding": false
+  },
+  "errors": []
+}

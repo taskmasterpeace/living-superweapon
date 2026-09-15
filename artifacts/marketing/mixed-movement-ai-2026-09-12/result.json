@@ -1,0 +1,7040 @@
+{
+  "summary": {
+    "setup": "Controlled four-character free-for-all placement. Player input delegates to native controlBot; all AI decisions, attacks, movement, physics and resources remain native. No forced ability activation.",
+    "samples": 100,
+    "fieldSeen": true,
+    "actors": [
+      {
+        "id": "volt",
+        "minHp": 94.39024,
+        "maxSpeed": 122.89812925186722,
+        "leapSeen": false,
+        "flightSeen": false
+      },
+      {
+        "id": "rage",
+        "minHp": 0,
+        "maxSpeed": 129.60708724178394,
+        "leapSeen": true,
+        "flightSeen": false
+      },
+      {
+        "id": "webline",
+        "minHp": 0,
+        "maxSpeed": 119.88369810267842,
+        "leapSeen": false,
+        "flightSeen": false
+      },
+      {
+        "id": "tempest",
+        "minHp": 0,
+        "maxSpeed": 74.6570228346138,
+        "leapSeen": false,
+        "flightSeen": false
+      }
+    ],
+    "errors": []
+  },
+  "trace": [
+    {
+      "time": 0.24579999999999932,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 61.975592,
+          "pos": [
+            -15.342516611511632,
+            0.000007650057659104055,
+            -648.7304457508084
+          ],
+          "speed": 28.222441166021515,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 45.800000000000004,
+          "pos": [
+            -49.13234697617142,
+            0,
+            -614.8676530238284
+          ],
+          "speed": 18.659376486000003,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 55.824000000000005,
+          "pos": [
+            -84.24073414792547,
+            0.0005836905775293141,
+            -649.9058451014103
+          ],
+          "speed": 26.694686885223014,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 68.34799999999998,
+          "pos": [
+            -50.29918937459631,
+            0.02543686546322378,
+            -685.704837889803
+          ],
+          "speed": 8.442804392353043,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 0.4541999999999989,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 63.692808000000014,
+          "pos": [
+            -21.32837587179032,
+            3.6786639647836045e-7,
+            -642.7871273568048
+          ],
+          "speed": 45.11285663909486,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 43.77489230769231,
+          "pos": [
+            -42.0998925589615,
+            5.967838984615377,
+            -621.9223189519945
+          ],
+          "speed": 52.57882347864351,
+          "scale": 1,
+          "leap": true,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 57.54121600000002,
+          "pos": [
+            -76.743777480364,
+            0.00027266493486273035,
+            -647.669853213555
+          ],
+          "speed": 43.020795608961784,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 70.11523199999996,
+          "pos": [
+            -52.897780759017756,
+            0.022443852312010067,
+            -683.3334420025296
+          ],
+          "speed": 21.750455336810326,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 0.7586,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 64.92906399999997,
+          "pos": [
+            -46.48012019364261,
+            0,
+            -638.3029385031514
+          ],
+          "speed": 108.38874759602918,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 46.21009230769235,
+          "pos": [
+            -32.68446422076482,
+            10.046016276923083,
+            -632.422020350051
+          ],
+          "speed": 45.81832941214393,
+          "scale": 1,
+          "leap": true,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 60.04947200000006,
+          "pos": [
+            -67.1251906534517,
+            0,
+            -640.3505259558092
+          ],
+          "speed": 39.62181147732253,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 72.6965439999999,
+          "pos": [
+            -58.789208916520785,
+            0.018095816798955815,
+            -679.0975223520294
+          ],
+          "speed": 26.091008311528743,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 1.0213999999999992,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 40.09353599999991,
+          "pos": [
+            -44.56561636661354,
+            0,
+            -623.0972894182853
+          ],
+          "speed": 89.50700794812438,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 48.01201230769236,
+          "pos": [
+            -26.4349145893991,
+            9.538546657846156,
+            -640.3810367408893
+          ],
+          "speed": 45.20779420816511,
+          "scale": 0.4,
+          "leap": true,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 61.905449600000075,
+          "pos": [
+            -57.48973365874363,
+            0.3755248240000005,
+            -629.0506101475673
+          ],
+          "speed": 93.17745863684571,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 74.60657919999983,
+          "pos": [
+            -64.3972013208824,
+            0.016253323367242722,
+            -676.9965673381944
+          ],
+          "speed": 27.09903940571855,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 1.2925000000000004,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 42.32739999999994,
+          "pos": [
+            -23.399844794475893,
+            0,
+            -626.2756346676997
+          ],
+          "speed": 70.64099486104944,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 48.879532307692344,
+          "pos": [
+            -23.355056954762624,
+            8.224810259076925,
+            -644.0326334831116
+          ],
+          "speed": 46.36077734295109,
+          "scale": 0.4,
+          "leap": true,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 62.798995200000135,
+          "pos": [
+            -56.541106292187806,
+            0.009503976000005541,
+            -628.134083018518
+          ],
+          "speed": 6.640856658700616,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 75.52615039999984,
+          "pos": [
+            -67.19146277109407,
+            0.01539339365190589,
+            -675.9986717858737
+          ],
+          "speed": 27.49955513054462,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 1.5510000000000013,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 44.45743999999996,
+          "pos": [
+            -7.401995293946513,
+            0,
+            -630.5623171312387
+          ],
+          "speed": 60.07740984441195,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 49.70673230769233,
+          "pos": [
+            -19.92510067277602,
+            5.555281765402423,
+            -644.620032040015
+          ],
+          "speed": 58.89758265040356,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 63.65101120000019,
+          "pos": [
+            -55.757564951663205,
+            0,
+            -627.611274054149
+          ],
+          "speed": 20.15957274587298,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 76.40298239999986,
+          "pos": [
+            -69.25094904518188,
+            0.013783572136551257,
+            -674.3012874349673
+          ],
+          "speed": 26.088723922493287,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 1.8180000000000025,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 46.65751999999999,
+          "pos": [
+            3.2151733810623,
+            0,
+            -640.390460056299
+          ],
+          "speed": 52.52292266558329,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 50.56113230769231,
+          "pos": [
+            -16.05477111502768,
+            1.2301097322590724,
+            -641.680989742978
+          ],
+          "speed": 63.03621054806458,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 64.53104320000018,
+          "pos": [
+            -52.702841221815525,
+            0,
+            -625.9122027779258
+          ],
+          "speed": 42.137747168047255,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 77.30864639999989,
+          "pos": [
+            -69.3602760807392,
+            0.01112931817844938,
+            -671.1711695851305
+          ],
+          "speed": 33.684498953187195,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 2.080800000000003,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 48.82299200000001,
+          "pos": [
+            1.229817334306071,
+            0.000421226828345105,
+            -652.8497110973029
+          ],
+          "speed": 50.67169495936213,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 51.40209230769229,
+          "pos": [
+            -12.315200885492235,
+            0,
+            -638.8412431753138
+          ],
+          "speed": 44.898964808532504,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 65.39723200000013,
+          "pos": [
+            -48.38950145922788,
+            0,
+            -624.2000316878078
+          ],
+          "speed": 44.42211188814954,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 44.20006399999986,
+          "pos": [
+            -67.99355105407922,
+            0.00829931628538963,
+            -667.9131581746474
+          ],
+          "speed": 33.827514343699534,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 2.3435000000000032,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 50.98764000000005,
+          "pos": [
+            -11.54749151862626,
+            0.0008624131465006604,
+            -655.3334269307093
+          ],
+          "speed": 56.328167638527034,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 52.24273230769228,
+          "pos": [
+            -8.57667172190683,
+            0,
+            -636.0022871700079
+          ],
+          "speed": 44.459325567239055,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 66.26309120000008,
+          "pos": [
+            -43.82643417071555,
+            0,
+            -623.4205148957376
+          ],
+          "speed": 43.99920000000001,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 45.09114239999989,
+          "pos": [
+            -66.66208951566375,
+            0.006158710860629904,
+            -664.9467649476695
+          ],
+          "speed": 29.269903443160434,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 2.6063000000000027,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 53.15311200000007,
+          "pos": [
+            -23.679957531909167,
+            0.000009294063426077581,
+            -646.7605940179558
+          ],
+          "speed": 54.73315878675683,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 53.08369230769226,
+          "pos": [
+            -7.873891258104047,
+            0,
+            -635.429584980421
+          ],
+          "speed": 2.6856947422838693,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 67.12928,
+          "pos": [
+            -39.18558397244652,
+            0,
+            -623.7070695436155
+          ],
+          "speed": 44.44554240000004,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 45.98255999999988,
+          "pos": [
+            -66.2336970876371,
+            0.004473768855969026,
+            -661.9915227376537
+          ],
+          "speed": 27.96884359661589,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 2.8690000000000024,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 55.317760000000106,
+          "pos": [
+            -27.375655281723564,
+            0,
+            -633.1212787557893
+          ],
+          "speed": 54.87539899607522,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 53.92433230769225,
+          "pos": [
+            -8.374412238859412,
+            0,
+            -635.3280337106441
+          ],
+          "speed": 6.93598842130848,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 67.99513919999995,
+          "pos": [
+            -34.77730400738559,
+            0,
+            -623.7517632881224
+          ],
+          "speed": 39.69350764223587,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 46.873638399999905,
+          "pos": [
+            -66.51253800086211,
+            0.0028772594615158057,
+            -659.1100862295185
+          ],
+          "speed": 27.34206031607454,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 3.131800000000002,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 57.48323200000012,
+          "pos": [
+            -21.788436386733473,
+            0,
+            -620.2503929938842
+          ],
+          "speed": 55.66942673866318,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 54.76529230769223,
+          "pos": [
+            -9.046258971858725,
+            0,
+            -634.6954281237172
+          ],
+          "speed": 10.571291897632582,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 68.86132799999996,
+          "pos": [
+            -32.56225754341248,
+            0,
+            -621.8455089269859
+          ],
+          "speed": 12.864676658964918,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 47.76505599999992,
+          "pos": [
+            -67.44139404195933,
+            0.0019563011329179936,
+            -656.4098217498573
+          ],
+          "speed": 27.15115802624087,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 3.390400000000003,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 59.614096000000146,
+          "pos": [
+            -9.423390256149368,
+            0,
+            -614.0798770983504
+          ],
+          "speed": 55.89061886204027,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 220,
+          "ki": 55.59281230769221,
+          "pos": [
+            -9.354859293175105,
+            0,
+            -633.5050002424938
+          ],
+          "speed": 13.217866278011574,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 69.71367359999995,
+          "pos": [
+            -32.50112042704644,
+            0,
+            -622.0291539501661
+          ],
+          "speed": 10.790786994843165,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 48.64222719999994,
+          "pos": [
+            -68.75473558159152,
+            0.001254980094420643,
+            -653.9080055351037
+          ],
+          "speed": 27.6445789317648,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 3.649000000000004,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 61.74496000000018,
+          "pos": [
+            3.6590391193748033,
+            0,
+            -617.5025618654392
+          ],
+          "speed": 52.14734171085787,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 213,
+          "ki": 59.220332307692196,
+          "pos": [
+            -9.09121118285298,
+            0,
+            -632.5372090158047
+          ],
+          "speed": 18.037211039410508,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 54.56601919999994,
+          "pos": [
+            -14.794592675998835,
+            0,
+            -626.0650194780491
+          ],
+          "speed": 9.181384703925255,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 49.51939839999996,
+          "pos": [
+            -68.96859570532663,
+            0.000397940563779495,
+            -650.8051228575418
+          ],
+          "speed": 33.523199999999996,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 3.920100000000005,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 63.97882400000021,
+          "pos": [
+            11.723146852567623,
+            0,
+            -630.0577939782814
+          ],
+          "speed": 56.245149623047894,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 206,
+          "ki": 62.88785230769218,
+          "pos": [
+            -7.54033836397144,
+            0.037197960000000176,
+            -631.4307729082011
+          ],
+          "speed": 30.17708402269778,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 55.45956479999995,
+          "pos": [
+            -15.888491108375625,
+            0,
+            -636.1591902733313
+          ],
+          "speed": 10.999532417329663,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 46.43896959999997,
+          "pos": [
+            -67.64049831407249,
+            0.0001620644696540171,
+            -647.5212163039937
+          ],
+          "speed": 30.56072235406887,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 4.1745000000000045,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 100,
+          "ki": 66.07508000000018,
+          "pos": [
+            8.795385288988937,
+            1.6991413407126295e-7,
+            -642.6279090099767
+          ],
+          "speed": 54.982335171960194,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 199,
+          "ki": 66.50193230769217,
+          "pos": [
+            -6.3761052426016205,
+            0,
+            -630.7014373800753
+          ],
+          "speed": 5.825683960552998,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 56.29806719999995,
+          "pos": [
+            -13.337708552540484,
+            0,
+            -624.4902322681331
+          ],
+          "speed": 19.841174775490465,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 46.475014399999964,
+          "pos": [
+            -64.95655946157817,
+            0.00011568089196747216,
+            -646.2174481105549
+          ],
+          "speed": 31.72258499204439,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 4.4497000000000035,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 95.55024,
+          "ki": 70.12263200000014,
+          "pos": [
+            -4.16212739191691,
+            0.000004731462924110846,
+            -648.8759018067603
+          ],
+          "speed": 59.08847336595514,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 185,
+          "ki": 72.98257230769218,
+          "pos": [
+            -5.714235717181711,
+            0.018859872000000694,
+            -629.8083837128822
+          ],
+          "speed": 22.26359203606192,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 57.205126399999955,
+          "pos": [
+            -11.40458507594441,
+            0,
+            -623.4442108526065
+          ],
+          "speed": 0,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 45.64721279999998,
+          "pos": [
+            -61.897270982528035,
+            0.00010479047785748393,
+            -646.7015810814723
+          ],
+          "speed": 23.204896447109995,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 4.704200000000003,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 95.55024,
+          "ki": 72.21971200000009,
+          "pos": [
+            -17.6137396017105,
+            5.643092129708867e-7,
+            -642.9404550518668
+          ],
+          "speed": 59.4704064727773,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 160,
+          "ki": 83.79697230769223,
+          "pos": [
+            -4.780571366109125,
+            0,
+            -629.1933484252914
+          ],
+          "speed": 102.41075737023006,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 58.04395839999999,
+          "pos": [
+            -12.349925764793095,
+            0,
+            -633.4598489255624
+          ],
+          "speed": 11.223004125241165,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 44.88167679999999,
+          "pos": [
+            -60.38497539679457,
+            0.0001376616994169679,
+            -648.2940559754551
+          ],
+          "speed": 22.021643082166314,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 4.979500000000001,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 95.55024,
+          "ki": 74.48818400000006,
+          "pos": [
+            -22.31842632856734,
+            0,
+            -629.2539604698117
+          ],
+          "speed": 63.23507140128293,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 160,
+          "ki": 84.67793230769223,
+          "pos": [
+            -0.4673128129598485,
+            0.9982823999999788,
+            -626.7921670105675
+          ],
+          "speed": 99.38354335237939,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 100,
+          "ki": 58.95134719999997,
+          "pos": [
+            -13.648384512599405,
+            0,
+            -636.046689967468
+          ],
+          "speed": 31.366593167009523,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 44.05357439999998,
+          "pos": [
+            -59.303544054717776,
+            0.0002198157967259745,
+            -650.6277953697636
+          ],
+          "speed": 24.46936210021798,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 5.254700000000001,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 95.55024,
+          "ki": 76.75583200000005,
+          "pos": [
+            -8.089648829225943,
+            0,
+            -615.0776698912919
+          ],
+          "speed": 66.40969658908882,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 160,
+          "ki": 85.55857230769226,
+          "pos": [
+            8.642873853423756,
+            2.664520319999989,
+            -621.7205464159676
+          ],
+          "speed": 93.16737309682978,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 95.64768000000002,
+          "ki": 61.59933439999997,
+          "pos": [
+            -12.587834634936439,
+            0.15034661135859542,
+            -635.4737602748364
+          ],
+          "speed": 119.88369810267842,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 43.22577280000001,
+          "pos": [
+            -58.0403962701548,
+            0.0008333388255971808,
+            -653.1037218490371
+          ],
+          "speed": 25.882312500575146,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 5.500700000000003,
+      "fields": 1,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 95.55024,
+          "ki": 68.782872,
+          "pos": [
+            9.34606709114548,
+            3.2651887439999983,
+            -611.7370198842925
+          ],
+          "speed": 3.497999999999956,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 149.2,
+          "ki": 90,
+          "pos": [
+            14.58187798740805,
+            3.394298543999995,
+            -618.4143160630297
+          ],
+          "speed": 91.57130913163245,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 91.00303999999998,
+          "ki": 64.26800639999996,
+          "pos": [
+            -2.733301271546795,
+            0.36560722053760136,
+            -629.1929265634409
+          ],
+          "speed": 118.93051120123513,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 42.48580480000005,
+          "pos": [
+            -56.41731988152864,
+            0.0013160465656304435,
+            -655.0791249244464
+          ],
+          "speed": 27.663472350701788,
+          "scale": 0.4,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 5.997000000000006,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 94.39024,
+          "ki": 115.33638400000004,
+          "pos": [
+            14.392104367308816,
+            3.5648243760000136,
+            -609.7797482105518
+          ],
+          "speed": 5.255999999999913,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 104.84389119999999,
+          "ki": 90,
+          "pos": [
+            21.898751860505154,
+            4.110978516000009,
+            -615.6090828776908
+          ],
+          "speed": 114.89200129012042,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 88.58443999999994,
+          "ki": 67.07741599999997,
+          "pos": [
+            4.9869837897251905,
+            0,
+            -623.6579039834453
+          ],
+          "speed": 23.513513760234133,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 40.80478400000006,
+          "pos": [
+            -49.71460820444193,
+            0.0014616080132689151,
+            -656.336428890562
+          ],
+          "speed": 31.065689685089776,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 6.263900000000008,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 94.39024,
+          "ki": 117.53564000000004,
+          "pos": [
+            30.36348411431667,
+            4.991712756000014,
+            -605.2758810689947
+          ],
+          "speed": 3.2520000000000437,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": true,
+          "hp": 61.6438912,
+          "ki": 90,
+          "pos": [
+            29.99671308662048,
+            5.124171156000019,
+            -613.7532320121398
+          ],
+          "speed": 129.60708724178394,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 74.88875200000001,
+          "pos": [
+            16.61606859804056,
+            0,
+            -616.0621845433541
+          ],
+          "speed": 57.100366929156195,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 38.79769600000006,
+          "pos": [
+            -41.97117721186957,
+            0.001160751310314048,
+            -655.6167171619737
+          ],
+          "speed": 29.053996498382748,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 6.449644000000007,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 107,
+          "ki": 119.06617056000002,
+          "pos": [
+            28.510617388163325,
+            5.852904668160045,
+            -609.2166933347975
+          ],
+          "speed": 3.6326399999999137,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            40.28551043220923,
+            0,
+            -616.6070493849813
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 76.41928255999998,
+          "pos": [
+            21.118505203551905,
+            0,
+            -612.6923907503373
+          ],
+          "speed": 16.99105632137725,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 37.40090112000008,
+          "pos": [
+            -38.32144050843679,
+            0.0002896262716543607,
+            -651.711978304463
+          ],
+          "speed": 33.10060031999995,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 6.537602000000006,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 105.02602800000003,
+          "ki": 120.58053328000001,
+          "pos": [
+            28.62457807432619,
+            5.290371505488971,
+            -609.146838794369
+          ],
+          "speed": 12.667753824309521,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            54.698923362152,
+            0,
+            -627.5099800186631
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 77.14405647999999,
+          "pos": [
+            21.979232916320825,
+            0,
+            -612.0481895859241
+          ],
+          "speed": 7.966565521377354,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 36.73945696000011,
+          "pos": [
+            -36.74859904767928,
+            0.00003839099373066493,
+            -649.217983795737
+          ],
+          "speed": 33.678720000000006,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 6.748096000000007,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 122.84113344000002,
+          "pos": [
+            30.91242718098509,
+            2.0634649205785176,
+            -607.8967177185444
+          ],
+          "speed": 23.588637226991,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            63.75362596622378,
+            0,
+            -633.9342783325027
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 78.87852703999998,
+          "pos": [
+            22.190292328733587,
+            0,
+            -611.8902247415028
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 38.16159808000012,
+          "pos": [
+            -33.515325473524996,
+            0.000004998633244148055,
+            -643.7064815689541
+          ],
+          "speed": 29.84721100889523,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 7.010896000000008,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 121.80250543999998,
+          "pos": [
+            21.809003590744254,
+            0,
+            -625.0764502012867
+          ],
+          "speed": 122.89812925186722,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            71.51155672331376,
+            0,
+            -639.1172212244836
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 81.04399903999993,
+          "pos": [
+            22.190292328733587,
+            0,
+            -611.8902247415028
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 40.39014208000011,
+          "pos": [
+            -30.526960346074045,
+            0,
+            -636.983508366715
+          ],
+          "speed": 25.178607804010802,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 7.273696000000013,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 123.84297744,
+          "pos": [
+            -1.7210348277388516,
+            0.0000032046102579238275,
+            -647.1317138027916
+          ],
+          "speed": 111.77863062034737,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            78.47405801428674,
+            0,
+            -643.2333333678112
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 83.20947103999995,
+          "pos": [
+            22.190292328733587,
+            0,
+            -611.8902247415028
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 42.61868608000013,
+          "pos": [
+            -30.251403575904007,
+            0,
+            -630.3148727660583
+          ],
+          "speed": 24.939650162201882,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 7.54899600000001,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -25.482119730157976,
+            0.00000977911971331903,
+            -646.792412269573
+          ],
+          "speed": 83.18598510423534,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            83.3108918285549,
+            0,
+            -646.4541175051323
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 85.47794303999991,
+          "pos": [
+            22.190292328733587,
+            0,
+            -611.8902247415028
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 44.9532300800001,
+          "pos": [
+            -31.053209825396895,
+            0,
+            -622.5886624149063
+          ],
+          "speed": 30.994786701958013,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 7.63219600000001,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -31.156085147213325,
+            9.065128476211965e-7,
+            -642.8979015477595
+          ],
+          "speed": 82.88626060095933,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.45982904154579,
+            0,
+            -647.1532770587864
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 86.16351103999993,
+          "pos": [
+            22.190292328733587,
+            0,
+            -611.8902247415028
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 115,
+          "ki": 45.6587660800001,
+          "pos": [
+            -30.702504469671346,
+            0,
+            -620.2393810580105
+          ],
+          "speed": 27.634175999999695,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 7.924096000000012,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 116.03082399999995,
+          "pos": [
+            -25.935812952179795,
+            0,
+            -624.3458425340511
+          ],
+          "speed": 20.65592415193292,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88792045960393,
+            0,
+            -648.1319813046769
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 88.5687670399999,
+          "pos": [
+            21.3835942365495,
+            0,
+            -612.6817070950692
+          ],
+          "speed": 23.081512795030868,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 93.4,
+          "ki": 56.77407808000013,
+          "pos": [
+            -27.259728989202827,
+            0.14005716000000218,
+            -614.8200176586315
+          ],
+          "speed": 34.20126605124323,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 8.195196000000003,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 118.26468799999986,
+          "pos": [
+            -33.448183339557495,
+            0.6289550399999683,
+            -610.8391209928863
+          ],
+          "speed": 2.7479999999999563,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.87734961564719,
+            0,
+            -648.2170029299997
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 90.80263103999981,
+          "pos": [
+            11.968332100710008,
+            0,
+            -612.585868998754
+          ],
+          "speed": 41.95799999999999,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": true,
+          "hp": 39.40000000000002,
+          "ki": 80.67300608000005,
+          "pos": [
+            -24.405128866507255,
+            0.8758334399999702,
+            -611.0690575403651
+          ],
+          "speed": 74.6570228346138,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 8.399980000000001,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 119.95210815999982,
+          "pos": [
+            -27.610522645419596,
+            2.1243128644799802,
+            -601.8628013889761
+          ],
+          "speed": 1.7750400000000013,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 78.19825263999972,
+          "pos": [
+            -15.042005167933107,
+            1.4789627764800177,
+            -613.3657394026702
+          ],
+          "speed": 5.29281980759173,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            -13.90751460602702,
+            0,
+            -599.7079208932759
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 8.490726000000011,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 120.69985519999977,
+          "pos": [
+            -27.610522645419596,
+            1.705818345599986,
+            -601.8628013889761
+          ],
+          "speed": 7.219799999999955,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 81.00230403999957,
+          "pos": [
+            -14.91294157854883,
+            0.7653622656000221,
+            -613.2340567418811
+          ],
+          "speed": 10.738345403453149,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            4.864223038183575,
+            0,
+            -580.3768786153591
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 8.67506000000001,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 116.21876735999975,
+          "pos": [
+            -27.481169301843842,
+            0,
+            -601.712005711632
+          ],
+          "speed": 8.6386300791918,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 86.69822463999947,
+          "pos": [
+            -14.545529859732842,
+            0,
+            -612.822051145677
+          ],
+          "speed": 6.500178122308081,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            17.775035266314422,
+            0,
+            -567.204608476366
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 8.929560000000007,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 118.31584735999968,
+          "pos": [
+            -21.94414424303678,
+            0,
+            -596.2361457494129
+          ],
+          "speed": 45.741223222663415,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 51.7126477473037,
+          "pos": [
+            -12.166356436773764,
+            0,
+            -611.7407081421968
+          ],
+          "speed": 23.3952958213315,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            26.958660373471346,
+            0,
+            -557.9018234075908
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 9.19226,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 120.48049535999958,
+          "pos": [
+            -10.349619853761764,
+            0,
+            -589.2740411961271
+          ],
+          "speed": 54.453988417181165,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 53.877295747303734,
+          "pos": [
+            -4.500792414370507,
+            0,
+            -607.7190636562718
+          ],
+          "speed": 38.1333392873932,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            35.80496297187183,
+            0,
+            -549.2147630715056
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 9.446759999999992,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 122.5775753599995,
+          "pos": [
+            -4.379930963928299,
+            0,
+            -587.4279537426688
+          ],
+          "speed": 21.509058390171774,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 55.97437574730376,
+          "pos": [
+            4.219863227541023,
+            0.078125,
+            -603.4575881439813
+          ],
+          "speed": 87.99367384280228,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            41.413447249214656,
+            0,
+            -543.2724977788404
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 9.709459999999984,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 124.74222335999941,
+          "pos": [
+            -7.441140903678825,
+            0,
+            -589.3385826758944
+          ],
+          "speed": 18.08966777043094,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 58.139023747303796,
+          "pos": [
+            -4.18309289330897,
+            0,
+            -594.5323761154616
+          ],
+          "speed": 7.580843206099227,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.27910750258897,
+            0,
+            -540.3857871975657
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 9.976459999999976,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -17.705318895222337,
+            0,
+            -590.1914145249252
+          ],
+          "speed": 43.926151657095055,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 60.33910374730382,
+          "pos": [
+            -2.5179432024757924,
+            0,
+            -600.9114262324376
+          ],
+          "speed": 32.99757270547394,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.161764306702544,
+            0,
+            -540.0808200813397
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 10.23495999999997,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -21.275090437684874,
+            0,
+            -598.6867996543195
+          ],
+          "speed": 36.171656965131675,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 62.469143747303846,
+          "pos": [
+            -6.72982041540411,
+            0,
+            -609.5649012066986
+          ],
+          "speed": 40.072065721153024,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.154371014244205,
+            0,
+            -540.0851442922389
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 10.49765999999997,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -25.05594186575699,
+            0,
+            -606.5324193726295
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 64.63379174730382,
+          "pos": [
+            -21.173398023087273,
+            0.3738548000000024,
+            -610.1175167350897
+          ],
+          "speed": 36.75641506546719,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 10.747959999999974,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -25.350595184841023,
+            0,
+            -604.050436557436
+          ],
+          "speed": 32.360319463394354,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 66.69626374730377,
+          "pos": [
+            -20.83432013824867,
+            0,
+            -612.4903700455977
+          ],
+          "speed": 32.100682409960726,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 11.010759999999973,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -21.147802111164218,
+            0,
+            -599.247727528904
+          ],
+          "speed": 23.980898384268812,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 68.8617357473037,
+          "pos": [
+            -24.72815127069559,
+            0,
+            -620.1793102886586
+          ],
+          "speed": 33.28479754681947,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 11.27355999999997,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -17.657885070891105,
+            0,
+            -607.4866713242071
+          ],
+          "speed": 46.0580370053329,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 71.02720774730362,
+          "pos": [
+            -33.78569488602828,
+            0,
+            -619.5650449582326
+          ],
+          "speed": 37.28627366655686,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 11.53625999999997,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -20.26530774499408,
+            0,
+            -618.1961202018526
+          ],
+          "speed": 39.77422238860193,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 73.19185574730353,
+          "pos": [
+            -39.690794903080665,
+            0,
+            -612.0957921398153
+          ],
+          "speed": 37.25757389732442,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 11.799059999999974,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 125,
+          "pos": [
+            -30.792840689580924,
+            0,
+            -621.2142804858328
+          ],
+          "speed": 40.72294559224662,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 74.55423999999987,
+          "ki": 75.35732774730343,
+          "pos": [
+            -37.83302552163748,
+            0,
+            -603.0926382175035
+          ],
+          "speed": 22.798799061194284,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 12.05775999999998,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 103.71070399999999,
+          "ki": 116.203864,
+          "pos": [
+            -42.29602336661433,
+            0.09220737999999985,
+            -608.7069079697726
+          ],
+          "speed": 1.5120000000000435,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 54.20223999999986,
+          "ki": 85.62981574730337,
+          "pos": [
+            -39.52447608389465,
+            0.1176089800000013,
+            -600.6870248247606
+          ],
+          "speed": 44.627292007521795,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 12.316259999999973,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 118.33390399999992,
+          "pos": [
+            -34.717551243082454,
+            0.8742901000000056,
+            -599.6655308131058
+          ],
+          "speed": 0.5040000000000873,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": true,
+          "hp": 19.22223999999985,
+          "ki": 101.7518557473033,
+          "pos": [
+            -42.282548495208594,
+            0.8785237000000071,
+            -595.8222488074075
+          ],
+          "speed": 82.18654570966814,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 12.514237999999976,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 119.96524271999986,
+          "pos": [
+            -47.19656754794431,
+            1.654800080319969,
+            -599.4707558637043
+          ],
+          "speed": 2.3746800000001023,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -51.97802817430983,
+            0,
+            -580.1480029754283
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 12.605017999999989,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 120.7132699199998,
+          "pos": [
+            -47.19656754794431,
+            1.18366700487996,
+            -599.4707558637043
+          ],
+          "speed": 7.8214800000001,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -65.54434490747228,
+            0,
+            -559.0764629572993
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 12.807229999999986,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 122.37949679999971,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -74.16192577140643,
+            0,
+            -546.0026976370204
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 13.061629999999987,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 124.47575279999964,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -81.6700941887412,
+            0,
+            -535.2008811511722
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 13.320229999999984,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 126.60661679999954,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -86.87742245679168,
+            0,
+            -527.1116487107407
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 13.578729999999984,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 128.73665679999948,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -89.53143954431994,
+            0,
+            -522.412548891403
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 13.837329999999987,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -95.6866359095624,
+            0,
+            -524.1097403038356
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 14.10012999999999,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -106.14197295333406,
+            0,
+            -514.5699381199947
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 14.362829999999985,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -99.94463368467049,
+            0,
+            -511.86556024618545
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 14.621429999999991,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.04113163203267,
+            0,
+            -513.4737693917097
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 14.884229999999995,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34142052555269,
+            0,
+            -514.1589157407125
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 15.146930000000005,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 15.505530000000029,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 15.768230000000043,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 16.02693000000006,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 16.285530000000055,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 16.539930000000048,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 16.80263000000004,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 17.061230000000034,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 17.315630000000034,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 17.56583000000003,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 17.828630000000018,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 18.083030000000008,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 18.341729999999995,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 18.596129999999988,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 18.85462999999998,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 19.11322999999998,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 19.36352999999998,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 19.626329999999964,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 19.88482999999996,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 20.13922999999995,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 20.397829999999942,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 20.648129999999938,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 20.90682999999994,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 21.169529999999938,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 21.42812999999993,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 21.690829999999917,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 21.94942999999991,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 22.2080299999999,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 22.462429999999898,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 22.71672999999988,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 22.97122999999987,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 23.227029999999875,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 23.484329999999872,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 23.74702999999987,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 24.001429999999864,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 24.25582999999985,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 24.510329999999843,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 24.77302999999984,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 25.03162999999983,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    },
+    {
+      "time": 25.286129999999822,
+      "fields": 0,
+      "actors": [
+        {
+          "id": "volt",
+          "alive": true,
+          "hp": 114,
+          "ki": 130,
+          "pos": [
+            -47.19656754794431,
+            0,
+            -599.4707558637043
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "rage",
+          "alive": false,
+          "hp": 0,
+          "ki": 90,
+          "pos": [
+            84.88466221050321,
+            0,
+            -648.2260824886691
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "webline",
+          "alive": false,
+          "hp": 0,
+          "ki": 110,
+          "pos": [
+            -100.34395240247298,
+            0,
+            -514.1919895992605
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        },
+        {
+          "id": "tempest",
+          "alive": false,
+          "hp": 0,
+          "ki": 102.23870208,
+          "pos": [
+            43.15165822991824,
+            0,
+            -540.0869129792828
+          ],
+          "speed": 0,
+          "scale": 1,
+          "leap": false,
+          "flying": false,
+          "state": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,427 @@
+{
+  "version": 1,
+  "session": {
+    "phase": "acceptance",
+    "fixtures": [
+      {
+        "kind": "melee",
+        "placement": "arena",
+        "trial": "airborne",
+        "distance": 6,
+        "facing": "front",
+        "clearTargetInvulnerability": false,
+        "status": "staged",
+        "result": {
+          "time": 0.05410000000000037,
+          "player": 1,
+          "target": 2,
+          "hero": "sol",
+          "targetHp": 130
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "up",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "flight-height",
+      "requestedAt": "2026-09-13T06:14:26.923Z",
+      "status": "dispatched",
+      "simulationBefore": 0.10410000000000037,
+      "flightHeightReached": true,
+      "released": true,
+      "simulationAfter": 1.1788000000000007
+    },
+    {
+      "action": "down",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:14:31.287Z",
+      "status": "dispatched",
+      "simulationBefore": 1.733499999999998,
+      "released": true,
+      "simulationAfter": 1.8460999999999956
+    },
+    {
+      "action": "down",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:14:31.838Z",
+      "status": "dispatched",
+      "simulationBefore": 2.284099999999995,
+      "released": true,
+      "simulationAfter": 2.3925999999999945
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 80,
+      "until": null,
+      "requestedAt": "2026-09-13T06:14:32.957Z",
+      "status": "dispatched",
+      "simulationBefore": 3.404899999999991,
+      "released": true,
+      "simulationAfter": 3.509199999999994
+    },
+    {
+      "action": "grab",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "grab-armed",
+      "requestedAt": "2026-09-13T06:14:33.439Z",
+      "status": "dispatched",
+      "simulationBefore": 3.8844999999999925,
+      "throwArmed": true,
+      "released": true,
+      "simulationAfter": 4.2125639999999915
+    }
+  ],
+  "capturedAt": "2026-09-13T06:14:34.228Z",
+  "error": null,
+  "errors": [],
+  "state": {
+    "version": 1,
+    "available": true,
+    "time": 4.6135419999999945,
+    "units": "position: world units; velocity: world units/second",
+    "running": true,
+    "overlay": false,
+    "inputContext": {
+      "observedOnly": true,
+      "suspended": false,
+      "reason": null,
+      "interaction": {
+        "mode": "acquire",
+        "priority": [
+          "interact",
+          "pickup gear",
+          "lift prop",
+          "grab person"
+        ],
+        "eligibility": "unresolved; proximity, facing and combat state still apply"
+      },
+      "powers": [
+        {
+          "slotId": "lmb",
+          "name": "Heat Ray",
+          "type": "beam",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 4,
+          "energyPerSecond": 16
+        },
+        {
+          "slotId": "rmb",
+          "name": "Arctic Breath",
+          "type": "cone",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": null,
+          "energyPerSecond": 20
+        },
+        {
+          "slotId": "q",
+          "name": "Sky Smash",
+          "type": "melee",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 14,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "e",
+          "name": "Solar Flare",
+          "type": "projectile",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 8,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "f",
+          "name": "Heat Flurry",
+          "type": "volley",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 3,
+          "energyPerSecond": null
+        },
+        {
+          "slotId": "shift",
+          "name": "Super Dash",
+          "type": "dash",
+          "cooldown": 0,
+          "charging": false,
+          "active": false,
+          "sustainTime": 0,
+          "entryCost": 6,
+          "energyPerSecond": null
+        }
+      ],
+      "gadgets": []
+    },
+    "player": {
+      "id": 1,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        0,
+        22.994982491454948,
+        6
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 130,
+      "energy": 95.92010324178818,
+      "alive": true,
+      "flying": true,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0,
+      "selectedPower": "lmb",
+      "approach": null
+    },
+    "target": {
+      "id": 2,
+      "hero": "sol",
+      "class": null,
+      "pos": [
+        4.4263922273321885,
+        0,
+        -19.27111604401992
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "hp": 88,
+      "energy": 114.3698020799989,
+      "alive": true,
+      "flying": false,
+      "meleeState": null,
+      "guarding": false,
+      "grabbing": null,
+      "grabbedBy": null,
+      "grabState": null,
+      "launchTime": 0.9326580000000031,
+      "selectedPower": null,
+      "approach": null
+    },
+    "actors": [
+      {
+        "id": 2,
+        "hero": "sol",
+        "class": null,
+        "pos": [
+          4.4263922273321885,
+          0,
+          -19.27111604401992
+        ],
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "hp": 88,
+        "energy": 114.3698020799989,
+        "alive": true,
+        "flying": false,
+        "meleeState": null,
+        "guarding": false,
+        "grabbing": null,
+        "grabbedBy": null,
+        "grabState": null,
+        "launchTime": 0.9326580000000031,
+        "selectedPower": null,
+        "approach": null
+      }
+    ],
+    "focus": null,
+    "colliders": [
+      {
+        "id": null,
+        "snapshotIndex": 0,
+        "x": 0,
+        "z": 0,
+        "hx": 310,
+        "hz": 310,
+        "bottom": 300,
+        "top": 304,
+        "distanceXZ": 0,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 98,
+        "x": -75,
+        "z": -4,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71.02816342831905,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 99,
+        "x": -75,
+        "z": 20,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 71.25307010929423,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 97,
+        "x": -75,
+        "z": -28,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 75.6108457828637,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 96,
+        "x": -75,
+        "z": -52,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 86.83893136145792,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 95,
+        "x": -75,
+        "z": -76,
+        "hx": 4,
+        "hz": 8,
+        "bottom": 0,
+        "top": 8,
+        "distanceXZ": 102.55242561733974,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 75,
+        "x": -100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 103.24727599312244,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 76,
+        "x": 100,
+        "z": 65,
+        "hx": 12,
+        "hz": 5,
+        "bottom": 0,
+        "top": 18,
+        "distanceXZ": 103.24727599312244,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 91,
+        "x": -113,
+        "z": -5,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.16967551989599,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 87,
+        "x": -113,
+        "z": 20,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 106.38138934982943,
+        "threatRoom": true
+      },
+      {
+        "id": null,
+        "snapshotIndex": 83,
+        "x": -113,
+        "z": 45,
+        "hx": 7,
+        "hz": 5,
+        "bottom": 0,
+        "top": 5,
+        "distanceXZ": 111.31936040060596,
+        "threatRoom": true
+      }
+    ],
+    "collidersNearby": 11,
+    "drill": {
+      "kind": "airborne",
+      "records": [
+        {
+          "time": 4.1461999999999914,
+          "trial": "airborne",
+          "result": "THROW",
+          "amount": 10,
+          "blocked": false,
+          "healthLost": 10,
+          "guardEnergySpent": 0,
+          "move": "throw"
+        },
+        {
+          "time": 4.384341999999994,
+          "trial": "airborne",
+          "result": "TERRAIN IMPACT",
+          "amount": 32,
+          "blocked": false,
+          "healthLost": 32,
+          "guardEnergySpent": 0,
+          "move": "hit"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "result": {
+    "id": "sol",
+    "ground": "tackle",
+    "air": "flight",
+    "flight": 3
+  },
+  "errors": []
+}

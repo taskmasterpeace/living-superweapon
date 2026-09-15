@@ -1,0 +1,20 @@
+✔ AI pack adds 37 recordings and repeating does not replace existing choices (658.671ms)
+✔ existing recordings, gain, and inactive settings survive the additive import (484.076ms)
+✔ failed media decode leaves the full previous library unchanged (319.6417ms)
+✔ edits during async decoding are never overwritten by an older import (1.7514ms)
+✔ every described family can resolve to an audible phase-specific recipe (0.5467ms)
+✔ speech rejects repeated speakers, global overlap and stale events before consuming cooldowns (0.196ms)
+✔ line, category, anti-repeat, profile and priority policies make independent decisions (0.1685ms)
+✔ a line cooldown is shared across speakers while distinct-line speaker cooldown stays independent (0.4369ms)
+✔ malformed import never replaces valid settings or chosen media (0.9675ms)
+✔ validated local recording survives transfer and a rejected decoder leaves the good binding (0.5637ms)
+✔ native melee contact is replaced as a whole, without original punch layers (2.0341ms)
+✔ custom loop survives reload and transfer, reuse works, invalid catalog is atomic (0.9305ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1539.8388

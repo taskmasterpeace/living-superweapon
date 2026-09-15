@@ -1,0 +1,1 @@
+const fs=require('fs');let p='src/engine/modular-signature-parts.js';let s=fs.readFileSync(p,'utf8').replace("Math.cos(a)*.125,1.455-Math.max(0,-Math.sin(a))*.115,Math.sin(a)*.115","Math.cos(a)*.15,1.48-Math.max(0,-Math.sin(a))*.12,Math.sin(a)*.18");fs.writeFileSync(p,s);

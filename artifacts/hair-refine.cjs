@@ -1,0 +1,1 @@
+const fs=require('fs');let p='src/engine/modular-signature-parts.js';let s=fs.readFileSync(p,'utf8').replace('[.235,.058,.205],[0,1.785,.008]','[.205,.035,.185],[0,1.775,.008]').replace("if(r.hair==='mohawk'){","if(r.hair==='mohawk'){cap.visible=false;").replace('[.049,.12+Math.sin(i*.7)*.04,.04],[0,1.86','[.042,.08+Math.sin(i*.7)*.04,.044],[0,1.81');fs.writeFileSync(p,s);

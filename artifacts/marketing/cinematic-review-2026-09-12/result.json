@@ -1,0 +1,52 @@
+{
+  "setup": "Controlled placement; native V strike; review opened through trial owner",
+  "records": [
+    {
+      "trial": "retreat",
+      "time": 0.4379999999999997,
+      "amount": 38.475,
+      "blocked": false,
+      "hp": 81.525,
+      "playerKi": 68.85680000000016,
+      "healthLost": 38.474999999999994,
+      "guardEnergySpent": 0,
+      "result": "CONTACT",
+      "incoming": false,
+      "move": "heavy"
+    },
+    {
+      "trial": "retreat",
+      "kind": "power",
+      "time": 0.09579999999999927,
+      "contacts": 1,
+      "approach": true,
+      "distance": 19.395047730824984,
+      "startup": 0.34,
+      "active": 0.09,
+      "recovery": 0.4,
+      "result": "contact"
+    }
+  ],
+  "frames": 48,
+  "nodes": [
+    65,
+    168
+  ],
+  "time": 4.367884000000004,
+  "hp": 220,
+  "targetHp": 81.525,
+  "firstShot": "0",
+  "lastShot": "1",
+  "paused": {
+    "time": 4.367884000000004,
+    "running": false,
+    "hp": 220,
+    "targetHp": 81.525
+  },
+  "resumed": {
+    "running": true,
+    "overlay": false,
+    "review": false
+  },
+  "errors": []
+}

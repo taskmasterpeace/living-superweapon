@@ -1,0 +1,50 @@
+✔ catalog reconciles every native bank entry and resolves original clips (3.9934ms)
+✔ new registered bank clips appear without individual catalog rows (0.8578ms)
+✔ invalid frames and contact windows are surfaced rather than silently repaired (1.1788ms)
+✔ rejects unusable directions and rotations even when all 45 values are finite (0.4506ms)
+✔ one shot stops on last frame and never wraps an attack into its start (0.7984ms)
+✔ air fall descends to floor and hover retains clearance without changing simulation (0.1518ms)
+(node:113496) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sampled library jab moves visible modular hand and direct seeking is repeatable (151.3684ms)
+✔ shared catalog exports every study as a playable candidate with an editor link (184.7624ms)
+✔ combat candidates reach anteriorly on the actual Idle_Loop rig, on both sides (73.0402ms)
+✔ fall candidates keep wrists anterior and elbows flexed on the real rig at quarter phases (150.8243ms)
+✔ grapple study keeps catch hand overhead while free limbs articulate on the real idle rig (50.8838ms)
+✔ ground pickup derives body lowering from the actual foot anchors (76.9899ms)
+✔ infected sprint preserves source cadence and loops its bounded asymmetric arm derivative (352.9658ms)
+(node:79516) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (281.1589ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (172.5327ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (27.1944ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (62.537ms)
+✔ a late asset load cannot install a body on a disposed fighter (50.3389ms)
+✔ native animation ticks advance the installed authored body (60.2928ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (25.7562ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (72.7164ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.0191ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (27.077ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (24.2828ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (74.7114ms)
+✔ non-disabling zombie limb hits do not permanently replace authored locomotion (108.0129ms)
+✔ recent ranged poses retain native aim only until their timer expires (68.3584ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (25.9192ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (124.4656ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (24.5161ms)
+✔ mapped source bank retains complete valid hand tracks and required actual takes (76.5428ms)
+✔ equipment options exclude intersecting replacement meshes and preserve the skeleton (49.7402ms)
+✔ infected flight arms hang down without translating the actor or bone joints (71.5004ms)
+✔ costume surfaces and COH-style choices roundtrip with validation (0.9604ms)
+✔ pickup studies articulate both arms and lower body on the production rig (65.53ms)
+✔ actual rig: cough hand stays at face, burn hand stays in front at quarter samples (72.3504ms)
+✔ actual rig: flying pickup opens before capture; ground pickup lowers then raises both hands overhead (42.2253ms)
+✔ Idle_Loop baseline: flying pickup opens around payload then closes while reaching forward (41.0379ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1635.9848

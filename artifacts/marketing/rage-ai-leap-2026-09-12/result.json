@@ -1,0 +1,34 @@
+{
+  "setup": "Controlled visible opponent placement on a forecast-admitted native map route; unmodified AI intent and bot control",
+  "placement": {
+    "bot": [
+      0,
+      0.000005189132566857296,
+      -650
+    ],
+    "player": [
+      0,
+      0,
+      -560
+    ],
+    "plan": {
+      "error": 14.446614719501895,
+      "chargeTime": 0.1625,
+      "move": {
+        "x": 0,
+        "z": 1
+      }
+    }
+  },
+  "launch": {
+    "velocity": [
+      0.24870256665122806,
+      40.75953846153832,
+      59.92798527460862
+    ],
+    "ki": 84.06270769230774,
+    "flying": false,
+    "charge": 0.2501538461538439
+  },
+  "errors": []
+}

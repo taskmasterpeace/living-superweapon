@@ -1,0 +1,95 @@
+{
+  "passed": true,
+  "upgradedCapacity": 130,
+  "capacity": 135,
+  "research": [
+    {
+      "kind": "sample-dropped",
+      "time": 28.108399999999673,
+      "name": "MERC"
+    },
+    {
+      "kind": "sample-collected",
+      "time": 28.355817999999665,
+      "name": "MERC"
+    },
+    {
+      "kind": "research-upgrade",
+      "time": 54.5293180000016,
+      "name": "MERC",
+      "rank": 1
+    },
+    {
+      "kind": "sample-dropped",
+      "time": 57.353518000001685,
+      "name": "MERC"
+    }
+  ],
+  "rank": 1,
+  "stop": "lab",
+  "position": [
+    -79.44082800452429,
+    2.2204460492503137e-14,
+    -221.69469515337119
+  ],
+  "origin": [
+    -72.55252622195266,
+    0,
+    -238.32452673857438
+  ],
+  "passengers": 0,
+  "members": [
+    {
+      "id": "kano",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -83.10154635297017,
+        0,
+        -294.8825072825581
+      ]
+    },
+    {
+      "id": "vega",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -107.74073750009451,
+        0,
+        -297.88025515186723
+      ]
+    },
+    {
+      "id": "aurum",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -87.27277908676813,
+        0,
+        -293.05188184382985
+      ]
+    },
+    {
+      "id": "rime",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -85.67417524380515,
+        0,
+        -298.1245267385744
+      ]
+    },
+    {
+      "id": "volt",
+      "alive": true,
+      "seated": false,
+      "position": [
+        -88.42330707042,
+        0,
+        -303.7245367385744
+      ]
+    }
+  ],
+  "errors": [],
+  "staging": "Native menu and E deployment; staged portal and initial ramp approach. Native W ramp/E sit/Enter outbound/Enter return/J safe exit. No travel time acceleration. Five named teammates selected through menu and staged on ramp approach; native AI boarding, six-seat round trip and automatic squad exit. Depot enemy staged at one HP. Native T/V and squad combat, E sample pickup, W reboarding and lab walk, E analysis. Camera headings controlled. Walked back outside and resumed native T/V and squad combat against a second staged one-HP enemy; second sample drop verified. No actor repositioning after initial ramp staging. Full original spawn approach and balanced encounter remain unverified."
+}

@@ -1,0 +1,27 @@
+{
+  "active": {
+    "hero": "tempest",
+    "age": 1.6671999999999945,
+    "center": [
+      -4.48574824543242,
+      0.04,
+      139.89933965086357
+    ],
+    "cloudY": 90.04,
+    "desertTime": 0,
+    "savedTime": 0,
+    "isolated": true,
+    "wind": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "after": {
+    "desertTime": 0,
+    "savedTime": 0,
+    "room": true,
+    "layers": 0
+  },
+  "errors": []
+}

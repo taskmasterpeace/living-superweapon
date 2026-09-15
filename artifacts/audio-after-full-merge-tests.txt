@@ -1,0 +1,39 @@
+✔ distance gain uses height with unchanged horizontal curve and legacy listen (0.7386ms)
+✔ invalid coordinates and reach cannot poison audio or turn malformed emitters loud (0.1141ms)
+✔ camera-relative pan copies normalized right, rotates in 3D and softens nearby events (0.1416ms)
+✔ recorded one-shots route stereo once, snapshot launch pan, center UI and disconnect on end (0.8346ms)
+✔ recordings safely fall back to mono when StereoPanner is absent or fails (0.8276ms)
+✔ muted and out-of-earshot events are handled without falling through to synth (0.1382ms)
+✔ recorded loops start attenuated and follow source motion, listener movement and mute (0.1862ms)
+✔ loop stop is idempotent, rejects post-stop setters and releases all nodes on end (0.1939ms)
+✔ numeric guardrails keep sample and loop AudioParams finite for malformed and extreme inputs (0.3393ms)
+✔ charge adapter retains its live position and watchdog reaps abandoned recordings (0.3417ms)
+✔ loop reach overrides are validated and natural source end retires watchdog ownership (0.2083ms)
+✔ centered mix preserves legacy level for 1-channel recording with panner=true (0.1454ms)
+✔ centered mix preserves legacy level for 2-channel recording with panner=true (0.1005ms)
+✔ centered mix preserves legacy level for 1-channel recording with panner=false (0.4537ms)
+✔ centered mix preserves legacy level for 2-channel recording with panner=false (0.0727ms)
+✔ native fast ballistic contact emits flesh recording before piercing continues (3.5484ms)
+✔ native fast ballistic contact emits metal recording before piercing continues (0.3189ms)
+✔ native fast ballistic contact emits stone recording before piercing continues (0.2488ms)
+✔ non-ballistic, blocked and unknown body events do not fake flesh impacts (0.1185ms)
+✔ CC0 body impacts retain selected sources and user assignments (5.329ms)
+✔ direct light and heavy impact paths resolve selected real punch files without oscillator (0.959ms)
+✔ authored melee recording remains first choice and is not doubled by fallback (0.1321ms)
+✔ fallback source hashes retain selected real CC0 punch provenance; blade swings do not draw weapons (4.2212ms)
+✔ bundled defaults do not override a chosen recording or explicit placeholder (0.6019ms)
+✔ bundled mappings resolve catalog cues and existing files (2.9063ms)
+✔ bundled loop keeps watchdog ownership and stops its actual buffer (0.8996ms)
+✔ native recording stays synchronous and yields to fallback until decoded (0.1643ms)
+✔ successful grab cue has a bundled capture recording with no synth duplicate (0.1044ms)
+✔ grenade preparation plays the bundled pin pull without an oscillator (0.0809ms)
+✔ vehicle destruction uses an existing explosion recording without a placeholder oscillator (0.0795ms)
+✔ audition prepares bundled audio without changing saved source preferences (0.4877ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 143.6458

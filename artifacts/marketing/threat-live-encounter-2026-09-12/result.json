@@ -1,0 +1,215 @@
+{
+  "setup": "Normal game entry and native E preview/start/reset; controlled player positioning at each station. Enemy uses native AI and powers without forced attacks.",
+  "fight": {
+    "id": "sol",
+    "ai": true,
+    "dummy": false,
+    "slots": 6,
+    "samples": [
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 61.957824000000016
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 62.783472000000025
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 63.64290400000003
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 64.39851200000003
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 65.257944
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 0,
+        "state": "idle",
+        "ki": 66.01437599999998
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 58.94219999999997
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 59.767023999999985
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 60.488023999999996
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 61.346632000000014
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 62.20606400000002
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 63.03006400000003
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 63.82110400000004
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 64.68053600000003
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 65.50536000000004
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 66.29557600000001
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 67.121224
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 59.94522399999999
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 60.804655999999994
+      },
+      {
+        "hp": 120,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 61.561088
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "hit",
+        "ki": 62.420519999999996
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "hit",
+        "ki": 63.382128
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "hit",
+        "ki": 64.03556
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 1,
+        "state": "idle",
+        "ki": 64.92959999999998
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 57.68520799999998
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 58.543816
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 59.36864
+      },
+      {
+        "hp": 92.6429864724598,
+        "targetHp": 130,
+        "shots": 2,
+        "state": "idle",
+        "ki": 60.19346400000003
+      }
+    ]
+  },
+  "reset": {
+    "replaced": true,
+    "oldActor": false,
+    "oldShots": 0,
+    "kind": "encounter",
+    "alive": true
+  },
+  "errors": []
+}

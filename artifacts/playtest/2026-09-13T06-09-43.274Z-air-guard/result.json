@@ -1,0 +1,90 @@
+{
+  "passed": true,
+  "defense": true,
+  "block": {
+    "trial": "air-defense",
+    "time": 3.1661999999999946,
+    "amount": 0,
+    "blocked": true,
+    "hp": 120.51222364904655,
+    "playerKi": 100.81585054038116,
+    "healthLost": 0,
+    "guardEnergySpent": 9.08,
+    "result": "BLOCK",
+    "incoming": true,
+    "actor": 0,
+    "move": "light"
+  },
+  "before": {
+    "time": 2.340399999999997,
+    "playerHp": 120.51222364904655,
+    "playerAir": true,
+    "targetAir": true,
+    "hp": 130,
+    "distance": 5.392326843423902,
+    "target": 2
+  },
+  "after": {
+    "hp": 130,
+    "playerAir": true,
+    "records": [
+      {
+        "trial": "air-defense",
+        "time": 1.1652999999999996,
+        "amount": 9.487776350953446,
+        "blocked": false,
+        "hp": 120.51222364904655,
+        "playerKi": 73.84379054038119,
+        "healthLost": 9.487776350953453,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": true,
+        "actor": 0,
+        "move": "light"
+      },
+      {
+        "trial": "air-defense",
+        "time": 3.1661999999999946,
+        "amount": 0,
+        "blocked": true,
+        "hp": 120.51222364904655,
+        "playerKi": 100.81585054038116,
+        "healthLost": 0,
+        "guardEnergySpent": 9.08,
+        "result": "BLOCK",
+        "incoming": true,
+        "actor": 0,
+        "move": "light"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action": "up",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": null,
+      "until": "flight-height",
+      "requestedAt": "2026-09-13T06:09:58.162Z",
+      "status": "dispatched",
+      "simulationBefore": 0.10420000000000074,
+      "flightHeightReached": true,
+      "released": true,
+      "simulationAfter": 1.157000000000001
+    },
+    {
+      "action": "guard",
+      "scheme": "kbm",
+      "move": null,
+      "holdMs": 1500,
+      "until": null,
+      "requestedAt": "2026-09-13T06:10:03.325Z",
+      "status": "dispatched",
+      "simulationBefore": 2.348799999999995,
+      "released": true,
+      "simulationAfter": 3.8752999999999918
+    }
+  ],
+  "errors": [],
+  "staging": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, Mouse aims and T locks; V approaches and strikes, or Q guards a native trainer attack. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance."
+}

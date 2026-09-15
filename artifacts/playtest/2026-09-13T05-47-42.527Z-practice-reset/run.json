@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "scenario": "practice-reset",
+  "startedAt": "2026-09-13T05:47:42.535Z",
+  "runnerRevision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/fixtures.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "c71ca121d7911e121667bc2233e101fd9c72b8a4",
+    "trackedDiffHash": "b127f2850c359eab7d987c7276dec13b3eb32bb005d67ae6423717d9e369e821"
+  },
+  "status": "failed",
+  "finishedAt": "2026-09-13T05:48:14.415Z",
+  "error": {
+    "message": "page.waitForFunction: Timeout 5000ms exceeded.",
+    "stack": "page.waitForFunction: Timeout 5000ms exceeded.\n    at D:\\lsw\\.worktrees\\combat-release-review\\tools\\reset-practice-browser.mjs:16:14"
+  }
+}

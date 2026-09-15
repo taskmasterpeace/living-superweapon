@@ -1,0 +1,1 @@
+Transparent PNG front/back placement and glove recipe roundtrip passed

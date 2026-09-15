@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "scenario": "research-checkpoint",
+  "startedAt": "2026-09-13T06:23:14.993Z",
+  "runnerRevision": "1f654df70cf802ed204f4d5886f9b934d83a40cb",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "1f654df70cf802ed204f4d5886f9b934d83a40cb",
+    "trackedDiffHash": "019cfc05c196b22455759173b3155f13db5bdae2fc3071940b6e197b10a409e5"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:23:42.132Z",
+  "staging": "Native menus; place player at portal console and portal, then lab approach with one stationary one-HP enemy. No position or HP changes after acceptance begins. Native T lock and bounded W walking are explicit browser inputs outside the shared action history. V and E use the shared adapter. Checks KO, collection, door, analysis, capacity and reserve conservation; not transport, fight-again or balance acceptance."
+}

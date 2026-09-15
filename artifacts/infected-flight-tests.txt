@@ -1,0 +1,25 @@
+(node:96672) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (213.7193ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (152.2981ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (22.5165ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (70.9925ms)
+✔ a late asset load cannot install a body on a disposed fighter (63.1748ms)
+✔ native animation ticks advance the installed authored body (65.4123ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (42.6438ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (99.6326ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.3119ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (36.1797ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (42.1497ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (86.1664ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (34.2253ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (63.1607ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (22.8331ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1260.0355

@@ -1,0 +1,27 @@
+{
+  "start": [
+    0,
+    0,
+    0
+  ],
+  "gap": 26,
+  "maxHeight": 0,
+  "first": {
+    "position": [
+      0,
+      0,
+      21.584932
+    ],
+    "damage": 9.443200000000001,
+    "contacts": 1
+  },
+  "replay": {
+    "position": [
+      0,
+      0,
+      21.584932
+    ],
+    "damage": 9.443200000000001,
+    "contacts": 1
+  }
+}

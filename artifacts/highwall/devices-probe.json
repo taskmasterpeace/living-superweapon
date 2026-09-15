@@ -1,0 +1,31 @@
+{
+  "media": [
+    {
+      "id": "speaker",
+      "state": "playing",
+      "time": 2.211701
+    },
+    {
+      "id": "screen",
+      "state": "playing",
+      "time": 2.207972,
+      "width": 1280
+    }
+  ],
+  "targetWidth": 320,
+  "feeds": 2,
+  "lensOffsets": [
+    3.9999999999999973,
+    4.0000000000000036
+  ],
+  "inspector": {
+    "noAutoplay": true,
+    "pause": true,
+    "stop": true,
+    "volume": true,
+    "escape": true
+  },
+  "disposed": true,
+  "errors": [],
+  "scope": "Isolated render/decoding/playback/cleanup; not native E or audible-output certification"
+}

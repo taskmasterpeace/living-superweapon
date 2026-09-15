@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scenario": "air-guard",
+  "startedAt": "2026-09-13T06:09:43.276Z",
+  "runnerRevision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/air-approach-browser.mjs\ntools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "config": {
+    "defense": true,
+    "scheme": "kbm"
+  },
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "2a5d47651a6d389a5fae432af7d320e1423c714c",
+    "trackedDiffHash": "91c75019e9ffb30e50ec5fb7b0eae75d90166d1387fad319e5e8f94856aef559"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T06:10:05.557Z",
+  "staging": "One ground setup at 30u from airborne trainer. Native held Space takes off, trainer natively rises and hovers, Mouse aims and T locks; V approaches and strikes, or Q guards a native trainer attack. No altitude, flight flag, motion or damage injection after setup. This tests one hover-target approach, not evasion or full air-combat balance."
+}

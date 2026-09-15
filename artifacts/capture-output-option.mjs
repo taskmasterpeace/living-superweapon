@@ -1,0 +1,1 @@
+import fs from 'node:fs';const p='tools/combat-audio-events-browser.mjs';let s=fs.readFileSync(p,'utf8');s=s.replace("const out='artifacts/marketing/combat-audio-events-2026-09-12'","const out=process.env.PW_CAPTURE_OUT||'artifacts/marketing/combat-audio-events-2026-09-12'");fs.writeFileSync(p,s);

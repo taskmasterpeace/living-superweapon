@@ -1,0 +1,65 @@
+(node:41660) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cruise-sides survives profile and drives current modular cruising body (251.1636ms)
+✔ cruise-fists survives profile and drives current modular cruising body (154.1717ms)
+✔ cruise-palms survives profile and drives current modular cruising body (141.5965ms)
+✔ cruise-one survives profile and drives current modular cruising body (128.5009ms)
+✔ cruise-bent survives profile and drives current modular cruising body (127.5653ms)
+✔ open cruise palms yield to carried contact, grab, attack and occupied hand (40.3629ms)
+✔ cruise bent and palms preserve identical torso and pelvis orientation (147.7653ms)
+✔ loading modular body after settled cruise has same spine as loading before cruise (206.6806ms)
+(node:33160) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ forward dives point down while backward descent stays attack-ready (193.4059ms)
+✔ six authored languages produce distinct production flight silhouettes and preserve weapon grips (437.0544ms)
+✔ ordinary fast flight leaves a readable world-space wake, not a boost-only stub (129.9623ms)
+✔ wake authoring survives presentation serialization with validated limits (0.7142ms)
+✔ face and chest attacks keep braced fists instead of inheriting open flight palms (11.6868ms)
+✔ winged flight silhouettes use tapered volume instead of rectangular cards (13.3406ms)
+✔ repulsor stabilizing palms sit outside the shoulders, not crossed behind the spine (34.12ms)
+(node:42392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (228.4246ms)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (222.7864ms)
+✔ palm keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (314.8746ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (123.5002ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (153.5132ms)
+✔ rifle keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (280.4468ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (30 Hz) (86.0184ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (60 Hz) (132.6748ms)
+✔ volley keeps the rendered pelvis head-first during forward fire, not merely the outer group (120 Hz) (229.7064ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (30 Hz) (84.0954ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (30 Hz) (80.8124ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (30 Hz) (108.3316ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (30 Hz) (76.6557ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (60 Hz) (178.7083ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (60 Hz) (156.1772ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (60 Hz) (135.3705ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (60 Hz) (113.0434ms)
+✔ palm retains forward travel pitch through attack entry/hold/release (120 Hz) (255.0308ms)
+✔ optic retains forward travel pitch through attack entry/hold/release (120 Hz) (269.2436ms)
+✔ chest retains forward travel pitch through attack entry/hold/release (120 Hz) (282.0277ms)
+✔ rifle retains forward travel pitch through attack entry/hold/release (120 Hz) (206.741ms)
+✔ full-body guard still suppresses ranged cruise and releases smoothly (91.2231ms)
+✔ palm forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (426.3794ms)
+✔ optic forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (446.1125ms)
+✔ chest forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (400.5558ms)
+✔ rifle forward flight keeps rendered hands/forearms/weapon out of torso across vertical aim phases (335.6488ms)
+✔ presentation covers every real armory entry once, retaining source identity (1.2125ms)
+✔ unproduced icons stay explicitly missing and footprints stay proposals (0.3417ms)
+✔ master safe area fits square source at every standard renderer size (0.7833ms)
+(node:38252) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ real modular arm reaches targets without changing bone lengths or root at production scales (249.7201ms)
+✔ rear hold preserves free hand and contacts actual receiver neck; friendly targets underarms (77.5686ms)
+✔ native pair merc closes modular contacts without intersecting core bodies (300.0651ms)
+✔ native pair vega closes modular contacts without intersecting core bodies (165.9459ms)
+✔ native pair rage closes modular contacts without intersecting core bodies (146.2007ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5820.6686

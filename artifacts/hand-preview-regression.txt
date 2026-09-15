@@ -1,0 +1,34 @@
+(node:70596) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sampled library jab moves visible modular hand and direct seeking is repeatable (198.9782ms)
+(node:77760) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (432.3178ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (253.2224ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (37.1379ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (93.3116ms)
+✔ a late asset load cannot install a body on a disposed fighter (73.7023ms)
+✔ native animation ticks advance the installed authored body (84.8541ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (41.712ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (112.5221ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.9199ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (36.2428ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (36.1329ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (96.7184ms)
+✔ non-disabling zombie limb hits do not permanently replace authored locomotion (133.107ms)
+✔ recent ranged poses retain native aim only until their timer expires (125.7115ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (29.7902ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (88.5617ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (32.9483ms)
+(node:21772) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native paired hold preview remains finite, faces holder and never spends resources (false) (168.2277ms)
+✔ native paired hold preview remains finite, faces holder and never spends resources (true) (73.9771ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2085.9347

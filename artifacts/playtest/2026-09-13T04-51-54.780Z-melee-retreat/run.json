@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "scenario": "melee-retreat",
+  "startedAt": "2026-09-13T04:51:54.784Z",
+  "runnerRevision": "ef4472ac9ae9d7fbe4725cae193571e2e0be38e2",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/approach-teaching-browser.mjs\ntools/jelani-entry-browser.mjs\ntools/webline-chain-browser.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": false,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "status": "passed",
+  "finishedAt": "2026-09-13T04:52:20.808Z",
+  "staging": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability."
+}

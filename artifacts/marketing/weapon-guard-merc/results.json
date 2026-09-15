@@ -1,0 +1,44 @@
+[
+  {
+    "weapon": "bat"
+  },
+  {
+    "weapon": "bat",
+    "elapsed": 0.15
+  },
+  {
+    "weapon": "bat",
+    "elapsed": 0.35
+  },
+  {
+    "weapon": "bat"
+  },
+  {
+    "weapon": "bat"
+  },
+  {
+    "weapon": "bat",
+    "elapsed": 0.016666666666666666
+  },
+  {
+    "weapon": "nodachi"
+  },
+  {
+    "weapon": "nodachi",
+    "elapsed": 0.15
+  },
+  {
+    "weapon": "nodachi",
+    "elapsed": 0.35
+  },
+  {
+    "weapon": "nodachi"
+  },
+  {
+    "weapon": "nodachi"
+  },
+  {
+    "weapon": "nodachi",
+    "elapsed": 0.016666666666666666
+  }
+]

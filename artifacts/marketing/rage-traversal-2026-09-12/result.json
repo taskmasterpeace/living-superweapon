@@ -1,0 +1,29 @@
+{
+  "setup": "Controlled open-ground placement; native W and held/released Space",
+  "start": [
+    -600,
+    32.522787799167254,
+    -400
+  ],
+  "launch": {
+    "velocity": [
+      0,
+      85.49800000000006,
+      149.25127487260886
+    ],
+    "ki": 37.515200000000085,
+    "flying": false,
+    "charge": 1
+  },
+  "end": {
+    "position": [
+      -575.1650132672952,
+      38.41166042868639,
+      -449.7155928417814
+    ],
+    "hp": 220,
+    "flying": false,
+    "active": false
+  },
+  "errors": []
+}

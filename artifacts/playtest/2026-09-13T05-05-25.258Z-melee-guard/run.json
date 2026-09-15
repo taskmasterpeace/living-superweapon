@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scenario": "melee-guard",
+  "startedAt": "2026-09-13T05:05:25.259Z",
+  "runnerRevision": "393a360d7a26ace77f82c10d5178b57bb3472103",
+  "runnerWorktree": "D:\\lsw\\.worktrees\\combat-release-review\\",
+  "trackedChanges": "tools/playtest/scenarios.mjs",
+  "server": "http://127.0.0.1:5184",
+  "serverRevisionVerified": true,
+  "scheme": "keyboard/mouse",
+  "staged": true,
+  "capture": "silent video and screenshots",
+  "serverIdentity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "revision": "393a360d7a26ace77f82c10d5178b57bb3472103",
+    "trackedDiffHash": "b469410fcebc2d8dc7d02f87ac7ef1950fe66bf632d4d3c3bebfc0304e3cb4f1"
+  },
+  "status": "passed",
+  "finishedAt": "2026-09-13T05:05:50.058Z",
+  "staging": "Native character/squad menus; defend trial and initial positions/camera staged once. Shared guard action sends Q through browser input. Trainer uses native attack/contact. No damage, energy, immunity or outcome injection. Silent clip; funded frontal strike only, not guard crush, rear hits or grabs."
+}

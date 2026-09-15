@@ -1,0 +1,28 @@
+(node:81140) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ real soldier reload manipulates its magazine, preserves rifle and recovers at 30Hz (168.263ms)
+✔ real soldier reload manipulates its magazine, preserves rifle and recovers at 60Hz (156.5826ms)
+✔ real soldier reload manipulates its magazine, preserves rifle and recovers at 120Hz (239.663ms)
+✔ interrupted reload restores magazine, leaves ammunition unchanged and can restart (21.2494ms)
+✔ Studio reload rehearsal runs the production action without firing at its target (175.0953ms)
+(node:92576) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ grenade winds up in a hand, releases once at the pose, and recovers without changing selection (135.9379ms)
+✔ interrupted preparation cannot fire later; reload and another attack cannot overlap the throwing hand (46.6591ms)
+✔ zero-dt inspection freezes throw; clearing the kit removes the attached prop (27.1785ms)
+✔ native freeze branch cancels preparation before its early animation return (28.9399ms)
+✔ release transfers resource lifetime to the projectile, not the recovering hand (34.5826ms)
+✔ Studio timing overrides control the actual hand action, not just inspector values (54.2745ms)
+✔ remote grenade retains detonation and split data after a hand release (37.1178ms)
+✔ Studio remote grenade rehearsal waits for the hand release before its detonation input (109.3668ms)
+✔ real throwing arm clears torso and returns to rifle support at 30 Hz (80.6018ms)
+✔ real throwing arm clears torso and returns to rifle support at 60 Hz (119.1869ms)
+✔ real throwing arm clears torso and returns to rifle support at 120 Hz (193.0014ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1163.2381

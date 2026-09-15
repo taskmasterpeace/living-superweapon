@@ -1,0 +1,257 @@
+diff --git a/src/engine/game.js b/src/engine/game.js
+index fbe31df..f67fd6a 100644
+--- a/src/engine/game.js
++++ b/src/engine/game.js
+@@ -11,7 +11,7 @@ import {FleetPilot} from './fleet-pilot.js';
+ import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
+ import {initVehicleState} from './vehicle-pilot.js';
+ import {bindVehicleParts} from './vehicle-rig.js';
+-import {sculptSimArena, restoreSimArena, bayPos, buildSimWalls, buildSimWater, buildSimSkyRings, buildSimRing, buildSimMaze, buildSimDefenses, buildSimGate, clearSimObstructions, teardownSimProps, SKY_RING_R, SIM as VEHICLE_SIM} from './vehicle-sim.js';
++import {sculptSimArena, restoreSimArena, bayPos, buildSimWalls, buildSimWater, buildSimSkyRings, buildSimRing, buildSimMaze, buildSimDefenses, buildSimGate, clearSimObstructions, teardownSimProps, SKY_RING_R, SIM as VEHICLE_SIM, AA as SIM_AA, aaLead, aaSteer, buildSimMissile} from './vehicle-sim.js';
+ import {snapshotHeroSkins} from './hero-skin.js';
+ import {clearForegroundVisibility} from './foreground-visibility.js';
+ import {combatView,combatLookActive} from './combat-view.js';
+@@ -1842,7 +1842,7 @@ export class Game {
+     if (this._fleetActors) { for (const a of this._fleetActors) if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } this._fleetActors = null; }
+     teardownSimProps(this);   // dispose the sim's walls + water, unregister the wall cover
+     if (this._simUndo) { restoreSimArena(this.world, this._simUndo); this._simUndo = null; }   // the sim arena's terrain is a transient — put the land back
+-    this._simActive = false; this._simVehicle = null; this._simFleet = null; this._simIndex = 0; this._simPrevActor = null; this._simFoe = null; this._simInRing = false; this._simRingScore = 0; this._simAir = 12; this._simDrownT = 0;
++    this._simActive = false; this._simVehicle = null; this._simFleet = null; this._simIndex = 0; this._simPrevActor = null; this._simFoe = null; this._simInRing = false; this._simRingScore = 0; this._simAir = 12; this._simDrownT = 0; this._simMissiles = null;
+     document.getElementById('simWarp')?.remove();
+     document.body.classList.remove('powerworld');   // and the class goes home with it (the reset law)
+     if (this._fov0 != null) { this.fov = this._fov0; this._fov0 = null; }   // and so is a suspended fog of war
+@@ -4290,20 +4290,55 @@ export class Game {
+           }
+         }
+       }
+-      // AA turrets TRACK the nearest airborne target — swivel to face the planes (Robert's "anti air
+-      // missiles there", given life). No missiles fired yet ("you ain't gotta do all the rules").
++      // AA turrets TRACK the nearest airborne target and FIRE guided missiles at it (Robert: "the
++      // anti air missiles there"). The turret swivels onto the plane; once roughly aimed it launches
++      // a lead-guided, out-turnable missile from its tubes. Missiles home, detonate on proximity, and
++      // are cleaned up on teardown (the reset law). A proving-ground threat, not a kill box.
+       const defs = this._simDefenses;
++      const airY = VEHICLE_SIM.baseY + SIM_AA.minY;
++      const aTgt = [];   // {pos, vel, ent} — the airborne things a missile may chase
++      if (a && (a.cls === 'fixedwing' || a.cls === 'rotor') && a.pos.y > airY) aTgt.push({ pos: a.pos, vel: a.vel || null, ent: this.player });
++      for (const e of this.entities) if (e && e.alive && e.flying && e.pos.y > airY) aTgt.push({ pos: e.pos, vel: e.vel, ent: e });
+       if (defs && defs.turrets) {
+-        const targets = [];
+-        if (a && (a.cls === 'fixedwing' || a.cls === 'rotor')) targets.push(a.pos);
+-        for (const e of this.entities) if (e && e.alive && e.flying) targets.push(e.pos);
++        this._simMissiles = this._simMissiles || [];
+         for (const turret of defs.turrets) {
+-          let best = null, bd = 900 * 900;
+-          for (const tp of targets) { const d = (tp.x - turret.position.x) ** 2 + (tp.z - turret.position.z) ** 2; if (d < bd) { bd = d; best = tp; } }
++          const tp = turret.position;
++          let best = null, bd = SIM_AA.range * SIM_AA.range;
++          for (const t of aTgt) { const d = (t.pos.x - tp.x) ** 2 + (t.pos.z - tp.z) ** 2; if (d < bd) { bd = d; best = t; } }
++          turret.userData._fireCd = (turret.userData._fireCd || 0) - dt;
+           if (best) {
+-            const yaw = Math.atan2(best.x - turret.position.x, best.z - turret.position.z);
++            const yaw = Math.atan2(best.pos.x - tp.x, best.pos.z - tp.z);
+             let dyaw = yaw - turret.rotation.y; while (dyaw > Math.PI) dyaw -= 2 * Math.PI; while (dyaw < -Math.PI) dyaw += 2 * Math.PI;
+             turret.rotation.y += dyaw * Math.min(1, dt * 3);   // ease onto the target
++            if (turret.userData._fireCd <= 0 && Math.abs(dyaw) < SIM_AA.aimTol) {   // aimed + off cooldown → launch
++              turret.userData._fireCd = SIM_AA.cooldown * (0.8 + Math.random() * 0.4);
++              const muzzle = new THREE.Vector3(tp.x, tp.y + 6, tp.z);
++              const dir = aaLead(muzzle, best.pos, best.vel, SIM_AA.speed);
++              const mk = buildSimMissile(THREE); mk.group.position.copy(muzzle);
++              mk.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(dir.x, dir.y, dir.z));
++              this.scene.add(mk.group);
++              this._simMissiles.push({ group: mk.group, mats: mk.mats, vel: new THREE.Vector3(dir.x * SIM_AA.speed, dir.y * SIM_AA.speed, dir.z * SIM_AA.speed), life: SIM_AA.life });
++              this.audio?.sample?.('launch', { pos: muzzle, gain: 0.7 });
++            }
++          }
++        }
++      }
++      // fly the live missiles: re-home on the nearest airborne target, detonate on proximity / timeout.
++      if (this._simMissiles && this._simMissiles.length) {
++        for (let i = this._simMissiles.length - 1; i >= 0; i--) {
++          const m = this._simMissiles[i], mp = m.group.position;
++          let tgt = null, td = 1e18;
++          for (const t of aTgt) { const d = (t.pos.x - mp.x) ** 2 + (t.pos.y - mp.y) ** 2 + (t.pos.z - mp.z) ** 2; if (d < td) { td = d; tgt = t; } }
++          if (tgt) { const nv = aaSteer(mp, m.vel, tgt.pos, SIM_AA.speed, SIM_AA.turnRate, dt); m.vel.set(nv.x, nv.y, nv.z); }
++          mp.addScaledVector(m.vel, dt);
++          m.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), m.vel.clone().normalize());
++          m.life -= dt;
++          const hit = (tgt && td < SIM_AA.hitR * SIM_AA.hitR) ? tgt : null;
++          if (hit || m.life <= 0 || mp.y < VEHICLE_SIM.baseY - 4) {
++            this.vfx?.explode?.(mp.clone(), { color: '#ffb020', color2: '#fff', radius: 10, power: 1.1, scorch: false });
++            if (hit && hit.ent && hit.ent.alive && hit.ent.takeDamage) { hit.ent.takeDamage(SIM_AA.damage, { dtype: 'physical', hitstop: 0 }); this.hud?.feed?.('MISSILE HIT — evade the AA', '#ffb020'); }
++            this.scene.remove(m.group); m.group.traverse(o => o.geometry && o.geometry.dispose()); for (const mt of m.mats) mt.dispose();
++            this._simMissiles.splice(i, 1);
+           }
+         }
+       }
+diff --git a/src/engine/vehicle-sim.js b/src/engine/vehicle-sim.js
+index 7813780..2117291 100644
+--- a/src/engine/vehicle-sim.js
++++ b/src/engine/vehicle-sim.js
+@@ -152,7 +152,8 @@ export function buildSimMaze(game, THREE) {
+ }
+ 
+ // ANTI-AIR EMPLACEMENTS — procedural SAM turrets on the base corners (Robert: "this place should
+-// have the anti-air missiles there"). Visual props; a firing behaviour is a later slice.
++// have the anti-air missiles there"). They swivel onto the nearest airborne target AND launch the
++// guided missiles below — game.js owns the meshes + the frame loop, the guidance math lives here.
+ export function buildSimDefenses(game, THREE) {
+   if (!THREE || !game || !game.scene) return null;
+   const baseMat = new THREE.MeshStandardMaterial({ color: 0x4a4a44, roughness: 0.7, metalness: 0.3 });
+@@ -174,6 +175,77 @@ export function buildSimDefenses(game, THREE) {
+   return { meshes, mats: [baseMat, tubeMat, tipMat], turrets };
+ }
+ 
++// THE MISSILES themselves. Tuned as a proving-ground threat, not a kill box — they can be out-flown.
++export const AA = {
++  range: 620,       // a turret only engages a target within this ground distance
++  aimTol: 0.5,      // must be swivelled to within this many radians of the target before it launches
++  cooldown: 2.6,    // seconds between launches per turret (jittered ±20% so volleys stagger)
++  speed: 168,       // missile cruise — a shade faster than a plane, so a straight run gets caught
++  turnRate: 2.2,    // rad/s steering cap: fast enough to chase, slow enough that a hard turn shakes it
++  hitR: 9,          // proximity-detonation radius
++  life: 6,          // self-destruct after this many seconds if it never connects
++  damage: 14,       // light — a warning shot with teeth, not an execution
++  minY: 22,         // a target must be at least this far above the base floor to count as airborne
++};
++
++// First-order intercept LEAD: the unit direction a `speed` missile launched from `from` should take
++// to meet a target now at `target` moving at `vel`. Solves |r + v·t| = speed·t for the earliest
++// positive t, then aims at the meet point. Falls back to straight-at-target when there's no solution
++// (target faster than the missile, or standing still). Plain {x,y,z} in and out — no THREE, testable.
++export function aaLead(from, target, vel, speed) {
++  const rx = target.x - from.x, ry = (target.y || 0) - (from.y || 0), rz = target.z - from.z;
++  const vx = (vel && vel.x) || 0, vy = (vel && vel.y) || 0, vz = (vel && vel.z) || 0;
++  const a = vx * vx + vy * vy + vz * vz - speed * speed;
++  const b = 2 * (rx * vx + ry * vy + rz * vz);
++  const c = rx * rx + ry * ry + rz * rz;
++  let t = 0;
++  if (Math.abs(a) < 1e-6) { t = (b < 0) ? -c / b : 0; }
++  else {
++    const disc = b * b - 4 * a * c;
++    if (disc >= 0) {
++      const sq = Math.sqrt(disc), t1 = (-b - sq) / (2 * a), t2 = (-b + sq) / (2 * a);
++      t = Math.min(t1 > 1e-4 ? t1 : Infinity, t2 > 1e-4 ? t2 : Infinity);
++      if (!Number.isFinite(t)) t = 0;
++    }
++  }
++  const mx = rx + vx * t, my = ry + vy * t, mz = rz + vz * t;
++  const L = Math.hypot(mx, my, mz) || 1;
++  return { x: mx / L, y: my / L, z: mz / L };
++}
++
++// HOMING steer: rotate a missile's velocity toward the (moving) target, capped at `turnRate` so a
++// hard-turning plane can out-run the lock. Returns the new velocity at fixed `speed`. A slerp of the
++// heading, not a snap — a snap would make the missile un-dodgeable. Plain vectors, no THREE.
++export function aaSteer(pos, vel, target, speed, turnRate, dt) {
++  const dx = target.x - pos.x, dy = (target.y || 0) - (pos.y || 0), dz = target.z - pos.z;
++  const dl = Math.hypot(dx, dy, dz) || 1;
++  const wx = dx / dl, wy = dy / dl, wz = dz / dl;
++  const vl = Math.hypot(vel.x, vel.y, vel.z) || 1;
++  const cx = vel.x / vl, cy = vel.y / vl, cz = vel.z / vl;
++  let dot = cx * wx + cy * wy + cz * wz; dot = Math.max(-1, Math.min(1, dot));
++  const ang = Math.acos(dot), step = turnRate * dt;
++  let nx, ny, nz;
++  if (ang <= step || ang < 1e-4) { nx = wx; ny = wy; nz = wz; }
++  else {
++    const s = Math.sin(ang), f = step / ang, a0 = Math.sin((1 - f) * ang) / s, a1 = Math.sin(f * ang) / s;
++    nx = cx * a0 + wx * a1; ny = cy * a0 + wy * a1; nz = cz * a0 + wz * a1;
++    const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
++  }
++  return { x: nx * speed, y: ny * speed, z: nz * speed };
++}
++
++// One missile mesh (a lit dart with a booster flame), built along +Z. game.js aligns +Z to velocity
++// each frame and tracks it in `_simMissiles`; returned mats are disposed on teardown.
++export function buildSimMissile(THREE) {
++  const g = new THREE.Group();
++  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd8d4c8, roughness: 0.5, metalness: 0.3, emissive: 0x1a0a04 });
++  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffb020 });
++  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 5, 8), bodyMat); body.rotation.x = Math.PI / 2; g.add(body);
++  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.6, 8), bodyMat); nose.rotation.x = Math.PI / 2; nose.position.z = 3.3; g.add(nose);
++  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2.6, 6), flameMat); flame.rotation.x = -Math.PI / 2; flame.position.z = -3.4; g.add(flame);
++  return { group: g, mats: [bodyMat, flameMat] };
++}
++
+ // THE GATE — a proper entrance at the base's front opening (Robert: "a little wall with an entrance,
+ // like a gate... how would a base look in our game"). Two flanking towers, a header arch and a lit
+ // sign over the road in. Towers register as cover; the opening between them stays clear to drive in.
+@@ -226,6 +298,10 @@ export function restoreSimObstructions(game, hidden) {
+ // Dispose the sim's walls + water + sky rings + ring + maze + defenses, and unregister any cover.
+ export function teardownSimProps(game) {
+   if (!game) return; const W = game.world;
++  if (game._simMissiles) {   // in-flight AA missiles must not outlive the sim (the reset law)
++    for (const m of game._simMissiles) { game.scene.remove(m.group); m.group.traverse(o => o.geometry && o.geometry.dispose()); for (const mt of (m.mats || [])) mt && mt.dispose(); }
++    game._simMissiles = null;
++  }
+   if (game._simCleared) { restoreSimObstructions(game, game._simCleared); game._simCleared = null; }   // restore the spires we hid
+   if (game._simWalls) {
+     for (const m of game._simWalls.meshes) { game.scene.remove(m); m.geometry && m.geometry.dispose(); }
+diff --git a/tools/vehicle-sim.test.mjs b/tools/vehicle-sim.test.mjs
+index 204c2e6..648b7d5 100644
+--- a/tools/vehicle-sim.test.mjs
++++ b/tools/vehicle-sim.test.mjs
+@@ -2,7 +2,7 @@
+ // restored on close. THREE-free: stub the world's levelArea/restoreTerrainPatch/heightAt.
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+-import { sculptSimArena, restoreSimArena, bayPos, SIM } from '../src/engine/vehicle-sim.js';
++import { sculptSimArena, restoreSimArena, bayPos, SIM, AA, aaLead, aaSteer } from '../src/engine/vehicle-sim.js';
+ 
+ test('sculpts the base / valley / basin and returns one undo token per area', () => {
+   const calls = []; const world = { levelArea: (...a) => { calls.push(a); return { tag: a.join(',') }; } };
+@@ -29,3 +29,54 @@ test('sculpt/restore are safe no-ops without a terrain sculptor (never throw)',
+   assert.doesNotThrow(() => restoreSimArena({}, null));
+   assert.equal(bayPos({}).y, SIM.baseY);   // falls back to the declared base height
+ });
++
++// closest approach of a straight-flying missile (dir·speed) to a target moving at vel
++function closest(from, dir, speed, target, vel, dt = 0.01, steps = 400) {
++  let min = Infinity;
++  for (let i = 0; i <= steps; i++) {
++    const t = i * dt;
++    const mx = from.x + dir.x * speed * t, my = from.y + dir.y * speed * t, mz = from.z + dir.z * speed * t;
++    const tx = target.x + vel.x * t, ty = target.y + vel.y * t, tz = target.z + vel.z * t;
++    min = Math.min(min, Math.hypot(mx - tx, my - ty, mz - tz));
++  }
++  return min;
++}
++
++test('the missile LEADS a crossing target — a straight-at shot would miss, the lead connects', () => {
++  const from = { x: 0, y: 0, z: 0 }, target = { x: 0, y: 0, z: 200 }, vel = { x: 45, y: 0, z: 0 };
++  const lead = aaLead(from, target, vel, AA.speed);
++  assert.ok(lead.x > 0.05, `lead points AHEAD into the target's motion (x=${lead.x.toFixed(3)})`);
++  // aiming straight at where the target IS now (down +z) sails behind a crossing target
++  const straightMiss = closest(from, { x: 0, y: 0, z: 1 }, AA.speed, target, vel);
++  const ledMiss = closest(from, lead, AA.speed, target, vel);
++  assert.ok(ledMiss < AA.hitR, `the led shot passes within the kill radius (${ledMiss.toFixed(2)}u < ${AA.hitR})`);
++  assert.ok(straightMiss > ledMiss * 3, `leading matters: straight ${straightMiss.toFixed(1)}u vs led ${ledMiss.toFixed(1)}u`);
++});
++
++test('aaLead never returns a NaN direction, even for a stationary or supersonic target', () => {
++  for (const vel of [{ x: 0, y: 0, z: 0 }, { x: 400, y: 0, z: 0 }, null]) {
++    const d = aaLead({ x: 0, y: 0, z: 0 }, { x: 10, y: 5, z: 30 }, vel, AA.speed);
++    assert.ok(Number.isFinite(d.x) && Number.isFinite(d.y) && Number.isFinite(d.z), `finite dir for vel ${JSON.stringify(vel)}`);
++    assert.ok(Math.abs(Math.hypot(d.x, d.y, d.z) - 1) < 1e-6, 'unit length');
++  }
++});
++
++test('homing steer curves a missile onto a target it was fired past — but the turn is CAPPED', () => {
++  // fired straight down +z, target off to the side: it must curve in AND respect the turn-rate cap
++  const target = { x: 120, y: 0, z: 120 };
++  let pos = { x: 0, y: 0, z: 0 }, vel = { x: 0, y: 0, z: AA.speed };
++  const start = Math.hypot(target.x - pos.x, target.z - pos.z);
++  let minDist = start, worstTurn = 0, dt = 0.02;
++  for (let i = 0; i < 250; i++) {
++    const prev = { x: vel.x, y: vel.y, z: vel.z };
++    vel = aaSteer(pos, vel, target, AA.speed, AA.turnRate, dt);
++    // heading change this step must not exceed the cap (+ float slack)
++    let dot = (prev.x * vel.x + prev.y * vel.y + prev.z * vel.z) / (AA.speed * AA.speed);
++    dot = Math.max(-1, Math.min(1, dot));
++    worstTurn = Math.max(worstTurn, Math.acos(dot));
++    pos = { x: pos.x + vel.x * dt, y: pos.y + vel.y * dt, z: pos.z + vel.z * dt };
++    minDist = Math.min(minDist, Math.hypot(target.x - pos.x, target.y - pos.y, target.z - pos.z));
++  }
++  assert.ok(minDist < AA.hitR, `homing brings it home (closest ${minDist.toFixed(2)}u < ${AA.hitR})`);
++  assert.ok(worstTurn <= AA.turnRate * dt + 1e-3, `turn capped (${worstTurn.toFixed(4)} <= ${(AA.turnRate * dt).toFixed(4)})`);
++});

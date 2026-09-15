@@ -1,0 +1,37 @@
+(node:93012) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (239.2859ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (143.2789ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (21.2581ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (59.0001ms)
+✔ a late asset load cannot install a body on a disposed fighter (46.594ms)
+✔ native animation ticks advance the installed authored body (46.7725ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (27.0506ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (92.923ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.3068ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (30.8155ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (30.9752ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (72.0937ms)
+✔ non-disabling zombie limb hits do not permanently replace authored locomotion (101.1016ms)
+✔ recent ranged poses retain native aim only until their timer expires (65.3966ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (30.7275ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (90.7859ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (62.0658ms)
+(node:97836) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ healthy left claw chambers outside its own ribs after right arm loss (58.1759ms)
+✔ common zombie rifle headshot is lethal, torso requires two hits (37.0763ms)
+✔ rifle limbs never remove HP; arm disables after four and leg cripples after two (14.6999ms)
+✔ sprinter has lower HP and dies to one rifle torso hit (14.6304ms)
+✔ bullet contacts follow actual head and leg proxies rather than a height guess (13.9831ms)
+✔ ordinary projectile sweep reports anatomical zone and respects intervening cover (12.9781ms)
+✔ disabled arms stop claw damage and disabled legs retain a permanent slowdown (12.9226ms)
+✔ one disabled arm prevents two-handed grabs but preserves healthy-arm combat (15.8499ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1418.9624

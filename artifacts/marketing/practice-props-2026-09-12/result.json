@@ -1,0 +1,8 @@
+{
+  "setup": "Controlled placement beside rock and reset station; native E pickup, held/released E aimed throw and E reset; reset denial checked through owner while carrying",
+  "sameRecord": true,
+  "countStable": true,
+  "visible": true,
+  "carried": false,
+  "errors": []
+}

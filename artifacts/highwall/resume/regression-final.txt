@@ -1,0 +1,48 @@
+(node:11988) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ grab eligibility shares hostile contact gates and rechecks after startup (109.0748ms)
+✔ grab cue cannot advertise busy or sleeping actors and distinguishes ally (53.2852ms)
+✔ sleepT interrupts grab startup and releases an existing hold (42.3861ms)
+✔ downedT interrupts grab startup and releases an existing hold (36.8423ms)
+(node:16568) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ recovery pauses for freeze, holds action gate through thaw, and retires on new launch (95.7682ms)
+✔ defeated and near-death actors never get a nonlethal recovery (37.6573ms)
+✔ standing stun does not fabricate an airborne impact recovery (41.512ms)
+✔ contact presentation settles while stun pauses recovery progress (32.2304ms)
+(node:18904) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Game swaps stored primary and sidearm repeatedly without duplication, ammo reset or alias loss (110.0992ms)
+✔ Game rejects full backpack acquisition without changing held weapon, ammo, or stored items (35.1554ms)
+✔ stowed weapon can be replaced and later restored; stow then drop clears claim and alias (24.0453ms)
+✔ active weapon cannot be swapped into storage (29.776ms)
+✔ swapping stored weapons in a completely full bag does not require extra capacity (25.5609ms)
+(node:24836) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ three-tier boxing releases at the actual .18 and .55 boundaries (1.5658ms)
+✔ two-tier and restricted styles do not advertise unavailable straight attacks (0.2518ms)
+✔ clinch shows body blow and finisher; full charge remains bounded (0.2556ms)
+✔ native release and advertised region agree across styles and thresholds (0.7256ms)
+✔ hitstop freezes preparation without changing selected region (0.2891ms)
+(node:43888) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ disabled L arm drops its previous attack elbow pose (86.1066ms)
+✔ disabled R arm drops its previous attack elbow pose (31.5638ms)
+(node:43988) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ healthy left claw chambers outside its own ribs after right arm loss (74.7613ms)
+✔ common zombie rifle headshot is lethal, torso requires two hits (56.6854ms)
+✔ rifle limbs never remove HP; arm disables after four and leg cripples after two (17.2351ms)
+✔ sprinter has lower HP and dies to one rifle torso hit (18.3694ms)
+✔ bullet contacts follow actual head and leg proxies rather than a height guess (18.2332ms)
+✔ ordinary projectile sweep reports anatomical zone and respects intervening cover (15.3779ms)
+✔ disabled arms stop claw damage and disabled legs retain a permanent slowdown (14.4111ms)
+✔ one disabled arm prevents two-handed grabs but preserves healthy-arm combat (19.4623ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 633.1286

@@ -1,0 +1,33 @@
+(node:102876) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ air control states distinguish launch, ordinary fall, powered flight, attachment and KO (97.674ms)
+✔ sleep falls limp and frozen bodies reject the flailing overlay (38.2351ms)
+✔ lost-control presentation moves the shared rig without altering physics or resources, and restores exactly (27.9814ms)
+✔ recovery blends out, while landing and attacks return articulation immediately (30.9339ms)
+✔ native nonfatal launch animates lost control; lethal damage hands over to the existing ragdoll (54.8144ms)
+(node:53484) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ original punch and sword skeleton motion survives export, including finger tips (309.6581ms)
+✔ flight adapter preserves source bone lengths and cannot mutate fighter controls or poses (177.0729ms)
+✔ runtime groups retain modular slots, valid weights and a bounded triangle budget (20.7274ms)
+✔ native sword contact geometry follows the authored palm and restores on teardown (53.7555ms)
+✔ a late asset load cannot install a body on a disposed fighter (48.7513ms)
+✔ native animation ticks advance the installed authored body (50.7819ms)
+✔ muscle morphs keep shoulder/elbow seams fixed at scene scale and never rewrite rest vertices (22.9798ms)
+✔ shared recipes swap hair and equipment without changing skeleton or clip identities (65.5695ms)
+✔ portable recipe validates colors, size, attachments and frame before applying (1.0258ms)
+✔ Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces (21.5891ms)
+✔ base anatomy has no compulsory gear; glove styles and body-wide muscle are independent (23.8234ms)
+✔ modular body preserves native interaction and jump owners instead of replacing them with idle (58.0739ms)
+✔ recent ranged poses retain native aim only until their timer expires (47.302ms)
+✔ hollow infection changes exposed skin, preserves complexion differences and reverses cleanly (21.454ms)
+✔ contact-driven strikes retain selected native arm through ground and air phases (60.9685ms)
+✔ infected flight overlay yields to combat, carried objects and incapacitation (28.044ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1263.9884

@@ -1,0 +1,21 @@
+(node:44736) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ flying pickup requires actual vertical proximity to prop (62.5484ms)
+✔ lift capacity still rejects a nearby overweight prop (23.9023ms)
+✔ throw and its preview begin at the carried mesh without muzzle teleport (26.3408ms)
+(node:110976) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fast prop contacts thin cover before a fighter at 30Hz (0.8376ms)
+✔ fast prop contacts thin cover before a fighter at 60Hz (0.0822ms)
+✔ fast prop contacts thin cover before a fighter at 120Hz (0.0545ms)
+✔ raised native terrain stops a throw above the old zero floor (0.1412ms)
+✔ earliest fighter contact is independent of entity order and interiors block it (0.131ms)
+✔ native throw retires at raised ground and emits damage at contact (70.3664ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 414.1724

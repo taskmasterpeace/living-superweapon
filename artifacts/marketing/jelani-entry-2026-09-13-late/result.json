@@ -1,0 +1,67 @@
+{
+  "passed": true,
+  "lateRetreat": true,
+  "result": {
+    "lateStart": {
+      "state": "startup",
+      "targetSpeed": 0,
+      "point": [
+        0,
+        5.2,
+        -8.22408376963351
+      ]
+    },
+    "start": {
+      "hp": 120,
+      "pos": [
+        0,
+        0,
+        50
+      ],
+      "hero": "jelani"
+    },
+    "hero": "jelani",
+    "pos": [
+      0,
+      0,
+      -3.144062645316072
+    ],
+    "flight": false,
+    "hp": 95.8094336,
+    "records": [
+      {
+        "trial": "retreat",
+        "time": 0.4909999999999964,
+        "amount": 24.1905664,
+        "blocked": false,
+        "hp": 95.8094336,
+        "playerKi": 61.992447999999996,
+        "healthLost": 24.190566399999994,
+        "guardEnergySpent": 0,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "light"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 60,
+        "entryFamily": "tackle",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.2501000000000004,
+        "contacts": 1,
+        "approach": true,
+        "distance": 50,
+        "startup": 0.21188481675392673,
+        "active": 0.06,
+        "recovery": 0.14,
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ]
+  },
+  "errors": [],
+  "staging": "Native menu; drill and positions staged once. T/V use keyboard. Late-retreat mode waits for native startup with target speed zero, then changes only the drill behavior to retreat. No actor movement or damage injection. Silent clip; one pass does not establish timing-independent reliability."
+}
