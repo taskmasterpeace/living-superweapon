@@ -1,7 +1,7 @@
 import {Box3,Vector3} from 'three';
 
 const axes=['x','y','z'],partBox=new Box3(),skin=.015;
-function solid(f){return f.alive&&!f.phase&&!(f.sprintT>0&&f._sprintThrough)&&!f._scoutVehicle&&!f._aircraftVehicle&&!f._banished;}
+function solid(f){return f.alive&&!f.phase&&!(f.sprintT>0&&f._sprintThrough)&&!f._scoutVehicle&&!f._aircraftVehicle&&!f._fleetVehicle&&!f._banished;}
 function joined(a,b){return a.grabbing===b||b.grabbing===a||a.grabbedBy===b||b.grabbedBy===a;}
 
 // A released payload begins inside the carrier's contact envelope. Let that

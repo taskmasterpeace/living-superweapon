@@ -21,8 +21,8 @@ faction/sensing rules). AI vehicles must use the same intent interfaces — no m
 
 | # | Story | State | Evidence |
 |---|-------|-------|----------|
-| 1 | Shared control/camera contract (VehicleSession) | todo | — |
-| 2 | Tank player movement (incl. contact/support conflict fix) | todo | — |
+| 1 | Shared control/camera contract (VehicleSession) | accepted (headless) | vehicle-session.js + 8-test gate; FleetPilot routed through it; solid() gap fixed |
+| 2 | Tank player movement (incl. contact/support conflict fix) | accepted (headless) | fleet-support-repair 8-test gate; full sweep 144/144 |
 | 3 | Tank camera / turret separate aim | todo | — |
 | 4 | Tank firing / ammo / reload | todo | — |
 | 5 | Tank target/damage integration (enemy awareness) | todo | — |
@@ -49,4 +49,11 @@ Never mark accepted on compilation alone — needs the story's playable/headless
 (none yet)
 
 ## Session log
-- 2026-09-15: branch created, baseline verified (59 tests, build green). Codebase survey in progress.
+- 2026-09-15: branch created, baseline verified (59 tests, build green). Survey complete.
+- 2026-09-15: story 2 shared repair — contact/support adapter fixed (one ground number, real
+  wheeled air branch, hover cushion, wall slide). Highwall fleet presets re-anchored (the layout
+  had grown under them; pre-existing red). Sweep 136/136.
+- 2026-09-15: story 1 — vehicle-session.js: shared seat/ownership/restore contract (driver+gunner
+  layouts, player|ai source, death-inside + destroyed-vehicle release, one restore path).
+  FleetPilot enter/exit/seat routed through it. fighter-body-contact solid() now excludes
+  _fleetVehicle occupants (was an oversight vs scout/aircraft). Sweep 144/144.

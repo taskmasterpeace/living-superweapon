@@ -5,15 +5,17 @@
 // (vehicle-pilot.js) — so a tank, mech, hovercraft, ship, the carrier or the mothership
 // all board and drive through this single path. Powerworld-gated; the city is untouched.
 import { driveActor } from './vehicle-pilot.js';
-import { cancelHeldAttacks } from './abilities.js';
 import { FleetAudio } from './fleet-audio.js';
 import {FleetControlsHud,fleetControls} from './fleet-controls.js';
 import {canUseFlight} from './mobility-policy.js';
+import {sessionOf,seatBusy,SEAT_DRIVER} from './vehicle-session.js';
 
-const busy=p=>!p?.alive||p.stunT>0||p.frozenT>0||p.staggerT>0||p.sleepT>0||p.launchT>0||p.grabbedBy||p.grabbing||p._carry||p._personCarry;
+const busy=seatBusy;
 function boardReason(game,a,p){
- if(busy(p)||p._fleetVehicle||p._scoutVehicle||p._aircraftVehicle||p._passengerTransport)return 'Cannot board during this action.';
- if(!a?.ready||a.occupant||a.destroyed)return 'Vehicle is unavailable.';
+ // seat/occupancy law lives in the shared session; the pilot layers the
+ // physical rules (proximity, obstruction) on top of it, never instead of it.
+ const seatReason=sessionOf(game,a)?.claimReason(SEAT_DRIVER,p);
+ if(seatReason)return seatReason;
  if(Math.abs(p.pos.y-a.pos.y)>8||Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z)>(a.bodyRadius||8)+8)return 'Move closer to the vehicle entrance.';
  if(game.world?._camNearestT?.(p.pos.x,p.pos.y+3,p.pos.z,a.pos.x,a.pos.y+3,a.pos.z,.2)<.999)return 'Vehicle entrance is obstructed.';
  return null;
@@ -100,9 +102,9 @@ export class FleetPilot {
   enter(a, p) {
     const reason=this._blocked()?'Close the current menu before boarding.':boardReason(this.game,a,p);
     if(reason){this.game.hud?.feed?.(reason,'#ffce75');return false;}
-    cancelHeldAttacks(p); this.actor = a; a.occupant = p; p._fleetVehicle = a; p._occVisible = p.obj?.visible;
-    p.flying = p.flyHeld = p.descendHeld = p.guarding = p.prone = p.crouching = p.sprintHeld = false;
-    if (p.moveDir) p.moveDir = { x: 0, z: 0 }; p.vel?.set?.(0, 0, 0); if (p.obj) p.obj.visible = false;
+    const claim=sessionOf(this.game,a).claim(SEAT_DRIVER,p,{source:'player'});
+    if(claim){this.game.hud?.feed?.(claim,'#ffce75');return false;}
+    this.actor = a;
     this._c = null; this.game.world && (this.game.world._chaseSnap = true);
     this._seat();
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
@@ -111,7 +113,7 @@ export class FleetPilot {
     return true;
   }
 
-  _seat() { const a = this.actor, p = a?.occupant; if (!p) return; p.pos?.set ? p.pos.set(a.pos.x, a.pos.y + (a.groundOffset || 2), a.pos.z) : (p.pos.x = a.pos.x, p.pos.y = a.pos.y, p.pos.z = a.pos.z); p.vel?.set?.(0, 0, 0); if (p.obj) { p.obj.position?.copy?.(p.pos); p.obj.visible = false; } }
+  _seat() { this.actor?.session?.tick(); }
 
   update(dt) {
     const a = this.actor; if (!a) { this._audio.stop(); return; }
@@ -131,11 +133,10 @@ export class FleetPilot {
     this._hud.dispose();
     this._audio.stop({off:!force&&!this._blocked()});
     if (!p) { this.actor = null; this._c=null;return false; }
-    // Forced lifecycle cleanup always releases ownership. If boxed in, retain
-    // the actor's existing world position rather than teleport through a wall.
-    if(destination){p.pos?.set?p.pos.set(destination.x,destination.y,destination.z):Object.assign(p.pos,destination);p.flying=!!destination.air&&p.alive&&canUseFlight(p);p.groundY=this.game.world?.heightAt?.(destination.x,destination.z)??0;}
-    p.obj && (p.obj.position?.copy?.(p.pos), p.obj.visible = p._occVisible !== false);
-    p.vel?.set?.(0, 0, 0); p._fleetVehicle = null; a.occupant = null;
+    // Forced lifecycle cleanup always releases ownership. If boxed in, the
+    // session keeps the seat position rather than teleport through a wall.
+    if(destination&&!(destination.air&&!canUseFlight(p)))a.session?.release(SEAT_DRIVER,{destination});
+    else a.session?.release(SEAT_DRIVER,{});
     this.actor = null; this._c = null; this.game.world && (this.game.world._chaseSnap = true);
     return true;
   }
