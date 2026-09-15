@@ -27,9 +27,9 @@ for(const reverse of [false,true])test(`two fast flyers stop on the approach sid
   assert.ok(t.a.vel.x<=0&&t.b.vel.x>=0,'Contact must remove inward velocity');
  }finally{t.close();}
 });
-test('fast flight into a hovering target stops the traveller without moving the target',()=>{
+test('fast flight into a hovering target transfers momentum without teleporting the target',()=>{
  const t=fixture();try{t.b.pos.x=0;t.begin();t.a.pos.x=20;t.a.vel.x=400;t.end();
-  assert.equal(t.b.pos.x,0);assert.ok(core(t.a).max.x<=core(t.b).min.x+.001);assert.equal(t.a.vel.x,0);
+  assert.equal(t.b.pos.x,0);assert.ok(core(t.a).max.x<=core(t.b).min.x+.001);assert.ok(t.a.vel.x<t.b.vel.x);assert.ok(t.b.vel.x>0);
  }finally{t.close();}
 });
 test('initial exact overlap separates instead of silently remaining interpenetrated',()=>{
@@ -46,9 +46,9 @@ test('parallel and vertically separated flight paths remain free',()=>{
   t.begin();t.a.pos.x=20;t.b.pos.x=-20;t.end();assert.equal(t.a.pos.x,20);assert.equal(t.b.pos.x,-20);
  }finally{t.close();}}
 });
-test('following a moving target stops only relative closing motion',()=>{
+test('following contact shares momentum and removes relative closing motion',()=>{
  const t=fixture();try{t.b.pos.x=0;t.begin();t.a.pos.x=30;t.b.pos.x=10;t.a.vel.x=500;t.b.vel.x=100;t.end();
-  assert.equal(t.b.pos.x,10);assert.ok(t.a.pos.x<10);assert.equal(t.b.vel.x,100);assert.equal(t.a.vel.x,100);
+  assert.equal(t.b.pos.x,10);assert.ok(t.a.pos.x<10);assert.ok(t.b.vel.x>100);assert.ok(t.a.vel.x<t.b.vel.x);assert.ok(Math.abs(t.a.vel.x+t.b.vel.x-600)<.001);
  }finally{t.close();}
 });
 for(const mode of ['phase','sprint','grab','scout','aircraft'])test(`intentional ${mode} ownership is not intercepted`,()=>{

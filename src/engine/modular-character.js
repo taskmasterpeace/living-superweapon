@@ -16,6 +16,7 @@ import {setModularExpression} from './modular-face.js';
 import {heroModelOf} from '../data/hero-models.js';
 import {rangedPoseChannels} from './cast-channels.js';
 import {zombieLegSpeed} from './zombie-locational-damage.js';
+import {loadPaidMotionBank,attachPaidMotionBank,applyPaidMotion} from './paid-motion-runtime.js';
 
 let asset;
 export const MODULAR_BODY='faceted-v1';
@@ -33,6 +34,18 @@ export function createModularActor(gltf){
  return {actor,meshes,mixer,clips,pose(name,phase){const clip=clips.get(name);if(!clip)throw Error('Missing authored clip: '+name);mixer.stopAllAction();const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();mixer.setTime(T.MathUtils.clamp(phase,0,1)*clip.duration);actor.updateMatrixWorld(true);},dispose(){mixer.stopAllAction();mixer.uncacheRoot(actor);actor.removeFromParent();for(const m of meshes){m.geometry.dispose();m.material.dispose();}const skeletons=new Set(meshes.map(m=>m.skeleton));for(const s of skeletons)s?.dispose();}};
 }
 
+export function syncModularSpearGrip(f,c){
+ const spear=f._guidedSpear;
+ if(!spear?.hand||spear.obj?.parent!==spear.hand)return false;
+ // Native armR is anatomical left. Release reads the same corrected tip.
+ const hand=c.actor.getObjectByName(spear.side===1?'DEF-handL':'DEF-handR');
+ if(!hand)return false;
+ c.actor.updateWorldMatrix(true,true);spear.obj.updateWorldMatrix(true,true);
+ const parent=spear.obj.parent,target=parent.worldToLocal(hand.getWorldPosition(new T.Vector3()));
+ const grip=parent.worldToLocal(spear.obj.localToWorld(new T.Vector3(0,0,-3.2)));
+ spear.obj.position.add(target.sub(grip));spear.obj.updateWorldMatrix(false,true);
+ return true;
+}
 // Opt-in body renderer. No input, collision, energy or attack rules live here.
 export async function loadModularCharacter(f,{load=modularAsset}={}){
  const old=f._modularCharacter;old?.dispose();f._modularCharacter=null;
@@ -51,7 +64,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  };
  // A second contact pass after all actors have posed removes entity-order lag
  // without resampling animation or applying receiver reactions twice.
- c.syncHeldContact=()=>animateModularHeldGrip(f,c.actor);
+ c.syncHeldContact=()=>{animateModularHeldGrip(f,c.actor);syncModularSpearGrip(f,c);};
  const keep=o=>o.userData.weaponKind||o.name.startsWith('flight-');
  const hide=o=>{if(keep(o))return;if(o.isMesh){hidden.push([o,o.layers.mask]);o.layers.disable(0);}for(const child of o.children)hide(child);};
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
@@ -74,7 +87,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   // Contact-authored strikes own both handedness and the committed target pose.
   const contactStrike=!!(f.mstate&&f._meleeMotion&&!sourcedSword);
   const rangedRecovery=!f.mstate&&!!rangedPoseChannels(f).dominant;
-  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._personThrowPose||zombieLegSpeed(f)<1||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
+  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._guidedSpearPose||f._guidedSpear?.hand||f._personThrowPose||zombieLegSpeed(f)<1||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
   const native=interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
   const airStrike=!interaction&&!incapacitated&&(f.flying||f.gliding)&&f.mstate&&!f.ragdoll&&!f.grabbing&&!f.grabbedBy&&(!held||sourcedSword);
   if((!native||airStrike)&&f.mstate&&STRIKES[f.mId]){
@@ -83,7 +96,14 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
    const t=T.MathUtils.clamp(1-f.mT/Math.max(.001,duration),0,1),bounds=phase==='startup'?[0,.3]:phase==='active'?[.3,.55]:[.55,1];
    c.pose(sourcedSword?'Sword_Attack':f.mId==='jab'?'Punch_Jab':'Punch_Cross',T.MathUtils.lerp(...bounds,t));
    if(airStrike)adapter.update({preserveArms:true});
-  }else if(native){c.pose('Punch_Cross',.4);adapter.update();}
+  }else if(native){
+   // The contact solver owns shoulders, elbows and wrists. The matching source
+   // contributes its finger curl; an unavailable/mirrored take keeps our fist.
+   const strike=f._authoredStrike,clip=strike&&!strike.mirrored&&c.clips.get(strike.take);
+   if(clip)c.pose(strike.take,strike.time/clip.duration);
+   else c.pose('Punch_Cross',.4);
+   adapter.update();
+  }
   else if(sourcedSword)c.pose('Sword_Idle',(f.animT/c.clips.get('Sword_Idle').duration)%1);
   else{const speed=Math.hypot(f.vel.x,f.vel.z);const name=f.def.vocalFamily==='zombie'?(speed>25?'Infected_Sprint_Loop':speed>2?'Zombie_Walk_Fwd_Loop':'Zombie_Idle_Loop'):speed>25?'Sprint_Loop':speed>2?'Walk_Loop':'Idle_Loop';const mechanical=signatureRecipe?.frame==='machine'&&speed<=2;c.pose(name,mechanical?0:(f.animT/c.clips.get(name).duration)%1);if(mechanical){const head=c.actor.getObjectByName('DEF-head');if(head)head.rotation.y+=Math.sin(f.animT*.8)*.12;}}
   if(!native){const disabledArms=['armL','armR'].filter(side=>f._zombieLimbs?.[side]?.disabled);if(disabledArms.length)adapter.update({regions:disabledArms});}
@@ -96,7 +116,9 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
    for(const [bone,position,q]of native){bone.position.lerp(position,blend);bone.quaternion.slerp(q,blend);}
    c.actor.updateWorldMatrix(true,true);
   }
-  animateModularHeldReceiver(f,c.actor);animateModularHeldGrip(f,c.actor);
+  animateModularHeldReceiver(f,c.actor);
+  applyPaidMotion(f,c);
+  animateModularHeldGrip(f,c.actor);syncModularSpearGrip(f,c);
   if(!held&&canPoseInfectedFlight(f,signatureRecipe?.infection))poseInfectedFlight(c.actor);
   if(sourcedSword&&(!native||airStrike)){
    // Drive the actual weapon, not a decorative duplicate. Native weapon
@@ -113,5 +135,12 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
    weapon.position.copy(anchor.sub(center.clone().multiply(weapon.scale).applyQuaternion(weapon.quaternion)));weapon.updateMatrixWorld(true);
   }
  };
- f._modularCharacter=c;c.update();return c;
+ f._modularCharacter=c;c.update();
+ // Optional sources load after the usable body. Late completion must never
+ // attach to a disposed/replaced fighter or delay the initial playable frame.
+ if(typeof window!=='undefined'&&f.def.model?.paidMotions!=='off')loadPaidMotionBank().then(bank=>{
+  if(f._modularCharacter!==c||f._modularEpoch!==epoch)return;
+  attachPaidMotionBank(f,c,bank);f._paidMotionError=null;
+ }).catch(error=>{if(f._modularCharacter===c)f._paidMotionError=error.message;});
+ return c;
 }

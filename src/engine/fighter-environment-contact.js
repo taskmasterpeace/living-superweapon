@@ -1,3 +1,4 @@
+import {vehicleContactSpeed} from './shared-impact.js';
 import {terrainEntry} from './projectile-contact.js';
 
 const EPS=1e-5;
@@ -96,7 +97,7 @@ export function sweepFighterEnvironment(f,game,dt){
     }
     const key=hit.axis;
     if(key!=='y'){
-      const speed=Math.hypot(f.vel.x,f.vel.z);
+      const speed=hit.cover?.frontlineVehicle||hit.cover?.frontlineAircraft ? vehicleContactSpeed(f,hit.cover,key,hit.normal) : Math.abs(f.vel[key]);
       f.pos[key]+=hit.normal*EPS;
       f.vel[key]*=-.3;
       f._wallContact(game,hit.cover,speed,key);

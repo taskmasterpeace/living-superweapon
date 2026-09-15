@@ -1,3 +1,4 @@
+import {resolveSharedImpact} from './shared-impact.js';
 import {beginPropPickup,updatePropPickup} from './prop-pickup.js';
 import {canReceiveShot} from './shot-contact-eligibility.js';
 import {animateCarriedObjectGrip} from './held-grip-pose.js';
@@ -690,7 +691,7 @@ export class Game {
     arc.visible = true;
     // launch state: muzzle + the same velocity the ability would use
     const spd = def._body ? (((p.grabMode === 'back' ? 60 : 48) + (p.def.strength ?? 5) * 4.6)
-        * (p.grabbing ? Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacityOf(p.def) / Math.max(0.05, bodyWeight(p.grabbing.def))))) : 1))
+        * (p.grabbing ? Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacityOf(p.def) / Math.max(0.05, bodyWeight(p.grabbing))))) : 1))
       : def._prop ? ((p._carry && p._carry.spd) || 74) : (def.speed || 58);   // the preview promises what the throw delivers (manual §21)
     const grav = (def._prop || def._body) ? 62 : (def.grav || 11) * 6;   // bodies and props fall at world gravity
     const m = def._body ? _v.set(p.pos.x + p.aim.x * 4.4, p.pos.y + 5.2, p.pos.z + p.aim.z * 4.4).clone()
@@ -1815,7 +1816,7 @@ export class Game {
 
   resolveBodies() {
     const E = this.entities;
-    resolveBodyContacts(E,this._bodyContactFrame,(a,b)=>{Game.prototype.thrownBodyImpact.call(this,a,b);Game.prototype.thrownBodyImpact.call(this,b,a);});this._bodyContactFrame=null;
+    resolveBodyContacts(E,this._bodyContactFrame,(a,b,c)=>{Game.prototype.thrownBodyImpact.call(this,a,b);Game.prototype.thrownBodyImpact.call(this,b,a);return resolveSharedImpact(this,a,b,c);});this._bodyContactFrame=null;
     for (let i = 0; i < E.length; i++) {
       const a = E[i]; if (!a.alive || a._scoutVehicle || a._aircraftVehicle || a._passengerTransport) continue;
       for (let j = i + 1; j < E.length; j++) {

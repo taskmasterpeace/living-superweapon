@@ -1,3 +1,4 @@
+import {physicalBodyMassKg} from '../data/body-mass.js';
 // Gameplay-unit aerodynamics: pressure grows with speed squared; footing is
 // static resistance, not a magic speed cap. Physics still owns every collision.
 const finite=(v,fallback)=>Number.isFinite(v)?v:fallback;
@@ -37,7 +38,7 @@ export function prepareWindBody(f,game){
  if(!w||w.wind<=.15&&!w.layers?.size||!f.alive||f._scoutVehicle||f._aircraftVehicle||f.phase)return out;
  const e=f.def.environment||{},size=Math.max(.35,f.sizeScale||1),strength=f.def.strength??5;
  // Authored kilograms describe the base body; Size Change always scales mass.
- const mass=Math.max(20,finite(e.massKg,90*(f.def.metal?1.8:1))*size**3)/90;
+ const mass=physicalBodyMassKg(f)/90;
  const resistance=Math.max(.1,finite(e.windResistance,1+Math.max(0,strength-4)**2*.55));
  if(w.sampleBodyWind)w.sampleBodyWind(f.pos,out);
  else{out.x=Math.cos(w.windDir||0)*w.windSpeed;out.z=Math.sin(w.windDir||0)*w.windSpeed;}

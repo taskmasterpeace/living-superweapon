@@ -89,6 +89,7 @@ export const GADGETS = [
 // ---- The power catalog. cat drives the AI doctrine; ult:true = R-slot only. ----
 // grants: def-level traits a power brings with it (tentacle rigs, etc.).
 export const POWERS = [
+  {id:'guided-spear',name:'Crimson Guided Spear',cat:'gear',cost:24,ab:{type:'guidedSpear',name:'Crimson Guided Spear',gear:true,cost:8,cd:.6,damage:22,speed:110,returnSpeed:150,steer:3,range:180,throwWindup:.38,throwRecovery:.3,color:'#17191d',color2:'#bd2337'}},
   // movement tech — gear-priced per BALANCE.md (gear cheap, martial priced up)
   { id: 'grapnel',    name: 'Grapnel Line',   cat: 'gear', cost: 10, ab: { gear: true, type: 'grapple', name: 'Grapnel Line', cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' } },
   // beams — hoses, never lasers

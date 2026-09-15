@@ -1,3 +1,4 @@
+import {beginGuidedSpear,cancelGuidedSpearInput} from './guided-spear.js';
 // WAR WORLD: ASCENDANTS — ability engine. Data-driven power types dispatched per input slot.
 import { moodMult } from './psyche.js';
 import { VOICES } from '../data/armory.js';
@@ -88,6 +89,7 @@ function killOrb(c, st) {
 export function cancelHeldSlot(c,key) {
   c._game?.projectiles?.retirePendingNaniteShots?.(c,key);
   const st=c.slots[key];if(!st)return;
+  if(st.def.type==='guidedSpear')cancelGuidedSpearInput(c,st);
   if(st.def.type==='weather')c._game?.weather?.cancelCommand?.(c);
   st._handsBusy=false;
   st._handsRetry=false;
@@ -137,6 +139,7 @@ export function clearSlotFx(c) {
   c._game?.projectiles?.retirePendingNaniteShots?.(c);
   for (const k in c.slots) {
     const s = c.slots[k];
+    s.spear?._dispose();
     if(s.def.type==='bow')cancelHeldSlot(c,k);
     if(s.def.type==='rush')clearRush(s);
     if(s.def.type==='melee'){s.t=0;s.hit?.clear();}
@@ -166,6 +169,10 @@ function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
 const clamp01 = (v) => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
 
 export const TYPES = {
+  guidedSpear(c,def,st,g,inp){
+    if(st.spear&&st.spear.state!=='held'){st.spear.command(inp);return;}
+    if(inp.pressed&&ready(c,def,st)&&beginGuidedSpear(c,st,g))pay(c,def,st);
+  },
   naniteShield(c,def,st,g,inp){
     const key=Object.keys(c.slots).find(k=>c.slots[k]===st),m=c._nanites?.modules.get(key),view=c.parts.nanites?.get(key);
     if(!inp.pressed||!ready(c,def,st)||!m||m.retired||!m.unlocked||m.sourceKey!==attackIdentity(def)||!view||forearmOccupied(view.arm)||c._carry)return;
@@ -1248,6 +1255,8 @@ export function runSlot(c, key, inp, g) {
     if(st.def.type==='cone'||st.def.type==='lifedrain'||st.def.type==='bow')cancelHeldSlot(c,key);
     return;
   }
+  if(st.def.type==='guidedSpear'&&st.spear&&!['held','windup'].includes(st.spear.state)){st.spear.command(inp);return;}
+  if(c._guidedSpearPose&&c._guidedSpearPose.spear.slot!==st&&(inp.pressed||inp.held))return;
   if(c._throwAction&&(inp.pressed||inp.held)&&!remoteAttack(c,st))return;
   if(c._firearmReload&&(inp.pressed||inp.held))return;
   st._handsBusy=false;

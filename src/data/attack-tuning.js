@@ -87,6 +87,13 @@ const splitFields = [
 // `fallback` mirrors the value selected by production's current `||` / nullish
 // reads. A zero lower bound is used only where zero reaches combat unchanged.
 export const ATTACK_TUNING_FIELDS = Object.freeze({
+  guidedSpear: freezeType([
+    number('cost','Throw energy',0,1000,1,8),number('cd','Throw recovery',0,120,.05,.6),
+    number('damage','Tip impact damage',1,300,1,22),number('speed','Outbound speed',20,600,1,110),
+    number('returnSpeed','Recall speed',20,600,1,150),number('steer','Steering radians/s',.1,12,.1,3),
+    number('range','Maximum outbound range',20,800,1,180),number('throwWindup','Throw preparation',.2,1.5,.02,.38),
+    number('throwRecovery','Throw follow-through',.1,1,.02,.3),
+  ]),
   rifle: freezeType([
     number('life','Projectile lifetime',.05,12,.05,1.4),
     number('scopeZoom','Sight magnification (1 = off)',1,6,.25,1),

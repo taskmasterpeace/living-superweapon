@@ -1,0 +1,13 @@
+{
+  "captured": "2026-09-15T02:27:24.817Z",
+  "checks": [
+    "five view modes",
+    "rifle claims both hands",
+    "carried person cannot be stored",
+    "release carried entity",
+    "equip and stow pistol",
+    "Escape closes overlay",
+    "844x390 no horizontal overflow"
+  ],
+  "errors": []
+}

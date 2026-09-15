@@ -34,3 +34,17 @@ for(const flags of [{launchT:1},{burstT:1},{sprintT:1},{_slideT:1},{flying:true}
 test('ordinary destructible cover keeps its existing collision-damage behavior',()=>{
  const t=fixture('wall');try{t.hit();assert.ok(t.cover.hp<120);}finally{t.close();}
 });
+
+test('fast grazing along a parked hull cannot turn tangential speed into damage',()=>{
+ const t=fixture();try{t.f.flying=true;t.f.pos.y=5;t.f.vel.set(180,0,.1);t.f._physics(1/6000,t.game);assert.equal(t.cover.hp,120);}finally{t.close();}
+});
+test('moving hull uses relative speed rather than world speed',()=>{
+ const t=fixture();try{t.f.pos.y=5;t.cover._impactBody={vx:0,vz:44};t.hit({flying:true});assert.equal(t.cover.hp,120);}finally{t.close();}
+});
+test('the same hull contact cannot debit HP twice in one simulation instant',()=>{
+ const t=fixture();try{t.game.time=1;t.f.flying=true;t.f._wallContact(t.game,t.cover,60,'z');const hp=t.cover.hp;t.f._wallContact(t.game,t.cover,60,'z');assert.equal(t.cover.hp,hp);}finally{t.close();}
+});
+
+test('launched grazing along a static wall cannot turn tangential speed into crash injury',()=>{
+ const t=fixture('wall');try{t.f.launchT=1;t.f.lastHitT=0;t.f.vel.set(180,0,.1);const hp=t.f.hp;t.f._physics(1/6000,t.game);assert.equal(t.f.hp,hp);assert.equal(t.cover.hp,120);}finally{t.close();}
+});

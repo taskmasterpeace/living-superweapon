@@ -62,21 +62,22 @@ function contact(a,ar,b,br){
  return {t:enter,axis,sign};
 }
 
-function resolve(a,ar,b,br,c){
+function resolve(a,ar,b,br,c,onContact){
  const k=c.axis,n=c.sign;
  const gap=n>0?b.pos[k]+br.local.min[k]-a.pos[k]-ar.local.max[k]:a.pos[k]+ar.local.min[k]-b.pos[k]-br.local.max[k];
  if(gap>=skin)return;
  const intoA=Math.max(0,(a.pos[k]-ar.start[k])*n),intoB=Math.max(0,-(b.pos[k]-br.start[k])*n),sum=intoA+intoB;
  const weight=sum>1e-9?intoA/sum:.5;
  a.pos[k]-=n*(skin-gap)*weight;b.pos[k]+=n*(skin-gap)*(1-weight);
- // Kinematic body blocking, not an attack: don't launch a hovering target or
- // award damage. A pursuing fighter may retain the target's outward speed.
- const av=a.vel[k]*n,bv=b.vel[k]*n;
+ // Preserve authored fist speed before either response removes inward travel.
+ let av=a.vel[k]*n,bv=b.vel[k]*n;
+ if(av>bv)for(const f of [a,b])if(f._abilityMeleePose?.physicalContact)f._abilityMeleePose.contactVelocity??=f.vel.clone();
+ // The game owns injury/impulse admission. Throws can also make contact while
+ // moving tangentially; do not gate their existing owner on closing velocity.
+ if(onContact?.(a,b,c))return;
+ av=a.vel[k]*n;bv=b.vel[k]*n;
+ // Allies, low-speed contact and attack-owned contacts retain body blocking.
  if(av>bv){
-  // The committed punch already has a presentation-only contact-velocity
-  // channel. Capture it before body blocking, not later when fist damage sees
-  // a stopped attacker. This never restores simulation velocity.
-  for(const f of [a,b])if(f._abilityMeleePose?.physicalContact)f._abilityMeleePose.contactVelocity??=f.vel.clone();
   const common=Math.max(Math.min(0,av),Math.min(Math.max(0,bv),av));
   a.vel[k]=Math.min(av,common)*n;b.vel[k]=Math.max(bv,common)*n;
  }
@@ -105,6 +106,6 @@ export function resolveBodyContacts(entities,frame,onContact){
   for(const pair of pairs){const c=contact(...pair);if(c)hits.push({pair,c});}
   if(!hits.length)break;
   hits.sort((a,b)=>a.c.t-b.c.t);
-  for(const {pair} of hits){const c=contact(...pair);if(c){onContact?.(pair[0],pair[2]);resolve(...pair,c);}}
+  for(const {pair} of hits){const c=contact(...pair);if(c)resolve(...pair,c,onContact);}
  }
 }

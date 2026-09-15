@@ -54,6 +54,7 @@ export class FrontlineConvoy {
   mesh.position.set(at.x,0,at.z);this.group.add(mesh);
   const cover={x:at.x,z:at.z,hx,hz,r:Math.hypot(hx,hz),hp:120,maxHp:120,mesh,projectileShape:'box',frontlineVehicle:true,blastBounds:new THREE.Box3(),bottom:0,top:0,h:bounds.max.y-bounds.min.y};
   const vehicle={mesh,cover,destroyed:false,ground:NaN,terrain:[],yaw,speed:0,occupant:null,driveRadius:Math.hypot(hx,hz),restBounds:new THREE.Box3(),mountBounds:new THREE.Box3()};
+  cover._impactBody=vehicle;
   cover.onShatter=(game,c,src)=>this.destroy(vehicle,src||c._breaker||game.player);
   this.vehicles.push(vehicle);world.cover.push(cover);world.coverAll.push(cover);this.stage._cover.push(cover);
   this._ground(vehicle);

@@ -69,7 +69,7 @@ test('native grab release remains armed when cover arrests the whirl',()=>{
 
 for(const hero of ['sol','sarge'])test(hero+' contextual E hold whirls and releases through native controls',()=>{
  const x=fixture({hero});try{
-  if(hero==='sarge')x.v.def={...x.v.def,strength:1,hp:100,metal:false};
+  if(hero==='sarge')x.v.def={...x.v.def,weightLb:131,strength:1,hp:100,metal:false};
   x.lift();x.g.input.keys.add('KeyE');x.g.input.justPressed.add('KeyE');x.control(.1);x.g.input.endFrame();
   x.control(.1);x.g.input.endFrame();x.control(.1);assert.equal(x.p._personCarry.whirling,true);x.g.input.endFrame();
   x.g.input.keys.delete('KeyE');x.g.input.justReleased.add('KeyE');x.control(0);finishThrow(x);assert.equal(x.p.grabbing,null);assert.ok(x.v.launchT>0);
@@ -165,7 +165,7 @@ test('ground-only soldier can carry an admitted person but never acquires flight
 });
 test('insufficient lift denies transport without destroying the combat clinch',()=>{
  const x=fixture({hero:'sarge'});try{
-  x.v.def={...x.v.def,strength:10,hp:10000,metal:true};const remaining=x.p.grabT;
+  x.v.def={...x.v.def,weightLb:20000,strength:10,hp:10000,metal:true};const remaining=x.p.grabT;
   assert.equal(x.lift(),false);assert.equal(x.p.grabbing,x.v);assert.equal(x.p.grabT,remaining);assert.equal(x.p._personCarry??null,null);
  }finally{x.close();}
 });

@@ -1,3 +1,6 @@
+import {advanceGuidedSpearPose,animateGuidedSpearPose,restoreGuidedSpearPose} from './guided-spear.js';
+import {physicalBodyWeightLb} from '../data/body-mass.js';
+import {vehicleContactSpeed,vehicleImpactDamage} from './shared-impact.js';
 import {restorePersonThrowOverlay} from './person-throw-pose.js';
 import {beginImpactRecovery,updateImpactRecovery,poseImpactRecovery} from './impact-recovery.js';
 import {resolvePhysicalStats} from '../data/physical-stats.js';
@@ -184,15 +187,7 @@ export const strengthRank = (str) => rankOf({ strength: str ?? 5 });
 // RANK you need to pick this person up, derived from their weight rather than asserted. That is
 // what makes "you have to be strong enough to grab them" a real rule instead of a number someone
 // chose — RAGE cannot be scooped up by a fighter who cannot lift his mass.
-export function bodyWeight(def) {
-  if(Number.isFinite(def?.weightLb)&&def.weightLb>0)return def.weightLb/LB_PER_TON;
-  const str = (def && def.strength) ?? 5;
-  const lb = 120                                   // a light adult, before anything else
-    + str * 11                                     // muscle scales with the rank
-    + (def && def.metal ? 620 : 0)                 // a machine is mostly machine
-    + Math.max(0, (((def && def.hp) || 100) - 100)) * 1.9;   // bulk reads off the hull
-  return +(lb / LB_PER_TON).toFixed(3);
-}
+export const bodyWeight = body => physicalBodyWeightLb(body)/LB_PER_TON;
 export const bodyWeightLb = (def) => Math.round(bodyWeight(def) * LB_PER_TON);
 export const bodyLiftRank = (def) => rankForTons(bodyWeight(def));
 // kept for anything still speaking 1–10 — same ladder, expressed in the old units
@@ -571,7 +566,7 @@ export class Fighter {
     // A held pressure brace also owns the elbow/wrist, even without an imported
     // body channel. Restore the complete reaction before transferring any rig.
     restoreFreeLookHead(this);
-    restoreLostControlPose(this);restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
+    restoreLostControlPose(this);restoreThrowPose(this);restoreGuidedSpearPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     if(this._jumpMotion?.applied||this._groundTransition?.applied||(this._groundMotion?.applied&&this._groundMotion.rig===this.parts.rig)||(this._authoredStrike?.applied&&this._authoredStrike.rig===this.parts.rig)||this._directionalPose?.applied||this._chestPose?.applied||this._spinePose?.applied||this._groundAimSupport?.applied){
       restoreAuthoredStrikeBase(this);restoreCombatBase(this);restoreSpineAim(this);restoreChestAim(this);restoreGroundAimSupport(this);restoreDirectionalAim(this);restoreGroundBase(this);
       this._combatPoseBase=null;this._hitReactionBase=null;
@@ -1079,7 +1074,7 @@ export class Fighter {
         this.guardMeter = clamp(this.guardMeter - drain * sh, 0, 1);
         // The reached beam segment owns its once-per-time pressure, including
         // authored zero push. Do not add a second frame-dependent guard impulse.
-        const pb = beam ? 0 : opts.dot ? 0.8 : 5;
+        const pb = beam || opts.bodyImpact ? 0 : opts.dot ? 0.8 : 5;
         this.vel.x -= (dx / d) * pb; this.vel.z -= (dz / d) * pb;     // braced BACKWARD, away from the attacker
         this.hitstop = Math.max(this.hitstop, opts.dot ? 0 : 0.03); this._blocked = 0.16;
         if(guardedAmount>0&&!(opts.naniteResult?.absorbed>0))registerShieldContact(this,opts);
@@ -1704,6 +1699,7 @@ export class Fighter {
   // clocks only: resource regeneration, movement and collision stay in update().
   advanceActionPose(dt,anyCharge=Object.values(this.slots).some(s=>s.charging||s.sustainT>0)) {
     advanceThrowAction(this,dt);
+    advanceGuidedSpearPose(this,dt);
     advanceAbilityMeleePose(this,dt);
     if (this.state === 'hit' && (this.stateT += dt) > 0.22) this.state = 'idle';
     this.castPose = damp(this.castPose, (this.state === 'cast' || anyCharge) ? 1 : 0, 12, dt);
@@ -2151,7 +2147,7 @@ export class Fighter {
         if(impact < -30)this._slam(game,-impact,'roof');
         this._friendlyLanding=false;
       } else if (this.pos.y < top - 0.5) {
-        const spd = Math.hypot(this.vel.x, this.vel.z);
+        const spd = c.frontlineVehicle||c.frontlineAircraft ? vehicleContactSpeed(this,c,ox<oz?'x':'z',Math.sign((ox<oz?dx:dz)||1)) : Math.abs(this.vel[ox<oz?'x':'z']);
         if (ox < oz) { this.pos.x += Math.sign(dx || 1) * ox; this.vel.x *= -0.3; }   // push out + bounce
         else { this.pos.z += Math.sign(dz || 1) * oz; this.vel.z *= -0.3; }
         // slammed into a wall hard enough → crack it AND hurt whoever got thrown into it
@@ -2190,7 +2186,7 @@ export class Fighter {
         const wdx = this.pos.x+bodyOX - wl.x, wdz = this.pos.z+bodyOZ - wl.z;
         const ox = whx - Math.abs(wdx), oz = whz - Math.abs(wdz);
         if (ox <= 0 || oz <= 0) continue;
-        const spd = Math.hypot(this.vel.x, this.vel.z);
+        const spd = Math.abs(this.vel[ox<oz?'x':'z']);
         if (ox < oz) { this.pos.x += Math.sign(wdx || 1) * ox; this.vel.x *= -0.3; }
         else { this.pos.z += Math.sign(wdz || 1) * oz; this.vel.z *= -0.3; }
         this._slam(game, spd, 'wall',ox<oz?'x':'z');
@@ -2215,7 +2211,10 @@ export class Fighter {
     const powered=this.launchT>0||this.flying||this.burstT>0||this.sprintT>0||this._slideT>0;
     const vehicle=cover&&(cover.frontlineVehicle||cover.frontlineAircraft);
     if(speed>34&&(!vehicle||powered)&&cover?.hp!=null&&this._game){
-      this._game.damageBlock(cover,speed*.55,{x:this.pos.x,y:this.pos.y+4,z:this.pos.z},
+      const contacts=this._vehicleImpactPairs ||= new WeakMap(),now=game.time||0,last=contacts.get(cover)??-Infinity;
+      if(vehicle&&now>=last&&now-last<.45){this._slam(game,speed,'wall',axis);return;}
+      if(vehicle)contacts.set(cover,now);
+      this._game.damageBlock(cover,vehicle?vehicleImpactDamage(this,speed):speed*.55,{x:this.pos.x,y:this.pos.y+4,z:this.pos.z},
         (this.launchT>0&&this.lastHitBy)||this);
       this.hitstop=Math.max(this.hitstop,.04);
     }
@@ -2492,7 +2491,7 @@ export class Fighter {
     } else if (p.eyeMark && p.eyeMark.visible) p.eyeMark.visible = false;
     // face
     restoreFreeLookHead(this);
-    restoreLostControlPose(this);restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
+    restoreLostControlPose(this);restoreThrowPose(this);restoreGuidedSpearPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     restoreAuthoredStrikeBase(this);
     restoreCombatBase(this);
     restoreSpineAim(this);
@@ -2875,6 +2874,7 @@ export class Fighter {
     animateRiflePose(this,dt);
     animateReloadPose(this);
     animateThrowAction(this);
+    animateGuidedSpearPose(this);
     presentWebZip(this);
     animateLostControlPose(this,dt);
     syncHeadCover(p);

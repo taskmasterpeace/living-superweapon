@@ -1,0 +1,229 @@
+{
+  "license": "LicenseRef-Purchased-Asset",
+  "scope": "Derived runtime motion for this project; source assets were purchased by the project owner.",
+  "notCC0": true,
+  "rawSourcePolicy": "Original FBX, archives and Unity source assets remain in the private asset directory. This bank is not a reusable public animation pack.",
+  "entitlement": "Preserve owner purchase receipts and applicable marketplace/publisher terms. No grant of standalone redistribution is asserted.",
+  "entries": [
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_Catch",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_Catch.fbx",
+        "take": "Take 001",
+        "sha256": "842aed9f77abc085d5defe60f6039b7feaf897e47e6f4d1b08b2f1e393c88c93",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_Catch_React",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_Catch_React.fbx",
+        "take": "Take 001",
+        "sha256": "1296d7d3da1339bbd2958a0f0a8148f189ffbd4b2275c5cb6a5abb844e1d377e",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_idle",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_idle.fbx",
+        "take": "Take 001",
+        "sha256": "1de3ecefae89a1192923599af61df10d46288bbbceafdc656dc0f3e5182c16b9",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_idle_React",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_idle_React.fbx",
+        "take": "Take 001",
+        "sha256": "3c50ab50c0a4779ef3bfbbc09aea3022537a59bc947c9ca275808aac3b19748e",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_Front",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_Front.fbx",
+        "take": "Take 001",
+        "sha256": "7fa1754308a442376cb4a3cf31bd41670951a31a3f198319b7b0352267a2f19c",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/aerial-interaction/AS_SV_Fly_Front_React",
+      "source": {
+        "pack": "aerial-interaction",
+        "file": "aerial-interaction/Interaction Villain/AS_SV_Fly_Front_React.fbx",
+        "take": "Take 001",
+        "sha256": "221a9af6dd30745df6621019970bb8654d02ae82036f8a3e10bcc4aefe4b5d8f",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Human_to_Shoulder",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Human_to_Shoulder.fbx",
+        "take": "Take 001",
+        "sha256": "d7feb4ba417957f5d06fd1b8c4d2fa3e6b00028108d248d318fa67011ec41155",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Human_to_Shoulder_React",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Human_to_Shoulder_React.fbx",
+        "take": "Take 001",
+        "sha256": "0f8c385d8db27981c6737047482b1f630fddcce395631cfdc5e0fe41ac357f04",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Human_Shoulder_idle",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Human_Shoulder_idle.fbx",
+        "take": "Take 001",
+        "sha256": "35fd9c9753fe67107def449ec68050ec7f81aebf55ab51eb01e66af7ab21f65b",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Human_Shoulder_idle_React",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Human_Shoulder_idle_React.fbx",
+        "take": "Take 001",
+        "sha256": "0254892e52637993343e1ea36747176dfae70cea3893560160ee2b8714c6a9b6",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Heavy_Item",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Heavy_Item.fbx",
+        "take": "Take 001",
+        "sha256": "61701e5ba42d1873f1c775907aa49f2c7fd24fb53b62cb0300ada36b850cbf2a",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Heavy_Item_idle",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Heavy_Item_idle.fbx",
+        "take": "Take 001",
+        "sha256": "a0c623355f757225604c37e37c7d8f967510d9574c9d2c7ad544b21f45d6103e",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Heavy_Item_to_Head",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Heavy_Item_to_Head.fbx",
+        "take": "Take 001",
+        "sha256": "bff77f4931f1738a076f6f68d17edde8b27e120b85462aaff3e21c699a85cc9e",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/pickup-carry/AS_P_Heavy_Item_Head_idle",
+      "source": {
+        "pack": "pickup-carry",
+        "file": "pickup-carry/FBX/Heavy/AS_P_Heavy_Item_Head_idle.fbx",
+        "take": "Take 001",
+        "sha256": "91a39c32ca8b12ffb5b767886fc6e2fcfe8f1c2a15ff7042e2b54cc0678a56c3",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/grab-throw/AS_GT_BackThrow_Takedown",
+      "source": {
+        "pack": "grab-throw",
+        "file": "grab-throw/FBX/AS_GT_BackThrow_Takedown.fbx",
+        "take": "Take 001",
+        "sha256": "14ce3834dc8624c1b31f005208ba70a8a482c54716ac7eac2e17a74950062108",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/grab-throw/AS_GT_BackThrow_Takedown_React",
+      "source": {
+        "pack": "grab-throw",
+        "file": "grab-throw/FBX/AS_GT_BackThrow_Takedown_React.fbx",
+        "take": "Take 001",
+        "sha256": "a148ccdbf261ffe2ea322368059be42bb9f0580cc1a67da2709bac151f79f6e5",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/knockdown-getup/AS_KG_Front_Getup",
+      "source": {
+        "pack": "knockdown-getup",
+        "file": "knockdown-getup/In_Place/AS_KG_Front_Getup.fbx",
+        "take": "Take 001",
+        "sha256": "2023f00eb9f1000a9e17f23da978adc5f31cf6a7938bdb4454cc4363d06c58bc",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/knockdown-getup/AS_KG_Back_Getup",
+      "source": {
+        "pack": "knockdown-getup",
+        "file": "knockdown-getup/In_Place/AS_KG_Back_Getup.fbx",
+        "take": "Take 001",
+        "sha256": "d3c109b3dd6a7b347a9765cd3560a60f673daa4ccd1c040574bd2a74ff5344d5",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/unleashed-boxer/attack01_inplace",
+      "source": {
+        "pack": "unleashed-boxer",
+        "file": "unleashed-boxer/Assets/Unleashed_boxer_AnimSet/Animation/Humanoid/Inplace/attack01_inplace.fbx",
+        "take": "attack01",
+        "sha256": "c1f08f6b74d67699cd0bddddf2f79cbd58b7f19e94fab58d6ad9c33e41bb147f",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/unleashed-boxer/guard01_inplace",
+      "source": {
+        "pack": "unleashed-boxer",
+        "file": "unleashed-boxer/Assets/Unleashed_boxer_AnimSet/Animation/Humanoid/Inplace/guard01_inplace.fbx",
+        "take": "guard01",
+        "sha256": "8b7de44423dbd975f5f07373e83ba325da618df02270501d0ef1881408379e43",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/unleashed-boxer/combo03_1_inplace",
+      "source": {
+        "pack": "unleashed-boxer",
+        "file": "unleashed-boxer/Assets/Unleashed_boxer_AnimSet/Animation/Humanoid/Inplace/combo03_1_inplace.fbx",
+        "take": "combo03_1",
+        "sha256": "627e02f83768db0703179c1d95038588ad7ac1d29a3db382cfc09ba26c295363",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    },
+    {
+      "id": "paid/unleashed-boxer/combo01_1_inplace",
+      "source": {
+        "pack": "unleashed-boxer",
+        "file": "unleashed-boxer/Assets/Unleashed_boxer_AnimSet/Animation/Humanoid/Inplace/combo01_1_inplace.fbx",
+        "take": "combo01_1",
+        "sha256": "287ffa8894794366bc70a4cfce493e49484bdf305cf4d7d99aab1c47ebedf35a",
+        "license": "LicenseRef-Purchased-Asset"
+      }
+    }
+  ]
+}

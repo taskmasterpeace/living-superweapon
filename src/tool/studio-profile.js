@@ -1,3 +1,4 @@
+import {physicalBodyMassKg} from '../data/body-mass.js';
 import {GROUND_APPROACH_FAMILIES} from '../data/melee-approaches.js';
 import {validateStrikeMarkers} from '../data/strike-markers.js';
 import { frameOf } from '../engine/figure.js';
@@ -68,7 +69,8 @@ export function validateProfile(p) {
   if(p.combat!==undefined){record(p.combat,'Combat');allowed(p.combat,['groundApproach'],'Combat');}
   if(!GROUND_APPROACH_FAMILIES.includes(combat.groundApproach))fail('Unknown melee approach family.');
   record(p.model,'Model');
-  allowed(p.model,['costume','flightStyle','hairColor','insignia','locomotion','strikes','heavyStrikes','strikeMarkers','definition','body','surface','assets'],'Model');
+  allowed(p.model,['costume','flightStyle','hairColor','insignia','locomotion','strikes','heavyStrikes','strikeMarkers','definition','body','surface','assets','paidMotions'],'Model');
+  if(p.model.paidMotions!==undefined&&!['contact-safe','off'].includes(p.model.paidMotions))fail('Unknown purchased motion mode.');
   if(p.model.insignia!==undefined&&!['hex','V','none'].includes(p.model.insignia))fail('Unknown emblem. Choose hex, V or none.');
   validateAssets(p.model.assets);
   validateStrikeMarkers(p.model.strikeMarkers);
@@ -148,10 +150,10 @@ function mergeModel(base={},patch={}){
 export function profileFromDef(def) {
   const model=heroModelOf(def);
   const poses=poseDefaultsForStyle(model.flightStyle);
-  return {version:1,heroId:def.id,combat:{groundApproach:def.combat?.groundApproach??'auto'},model:{insignia:model.insignia??(model.emblem===false?'none':'hex'),body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
+  return {version:1,heroId:def.id,combat:{groundApproach:def.combat?.groundApproach??'auto'},model:{paidMotions:model.paidMotions??'contact-safe',insignia:model.insignia??(model.emblem===false?'none':'hex'),body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
-    environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
+    environment:{massKg:physicalBodyMassKg(def),windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
     wake:{...WAKE_DEFAULTS,...model.wake},surfaceWake:{...SURFACE_WAKE_DEFAULTS,...model.surfaceWake},effects:validateEffects(def.effects),attacks:attackOverridesFromDef(def),kit:kitSelectionsFromDef(def),progression:copy(def.progression??{unlocks:{},forms:{}}),
     poses:Object.fromEntries(states.map(state=>[state,{...poses[state],...model.poses?.[state]}]))};
 }

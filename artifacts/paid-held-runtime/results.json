@@ -1,0 +1,266 @@
+{
+  "context": "Studio scripted production grab; phase/velocity inspection, not a full input-driven gameplay test",
+  "rows": [
+    {
+      "motion": "hover",
+      "phase": 0,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-hold-receiver",
+        "take": "Paid_AS_SV_Fly_idle_React",
+        "phase": 0,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "hover",
+      "phase": 0.25,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-hold-receiver",
+        "take": "Paid_AS_SV_Fly_idle_React",
+        "phase": 0.25,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "hover",
+      "phase": 0.5,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-hold-receiver",
+        "take": "Paid_AS_SV_Fly_idle_React",
+        "phase": 0.5,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "hover",
+      "phase": 0.75,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-hold-receiver",
+        "take": "Paid_AS_SV_Fly_idle_React",
+        "phase": 0.75,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "hover",
+      "phase": 1,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-hold-receiver",
+        "take": "Paid_AS_SV_Fly_idle_React",
+        "phase": 0,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "travel",
+      "phase": 0,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-travel-receiver",
+        "take": "Paid_AS_SV_Fly_Front_React",
+        "phase": 0,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "travel",
+      "phase": 0.25,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-travel-receiver",
+        "take": "Paid_AS_SV_Fly_Front_React",
+        "phase": 0.25,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "travel",
+      "phase": 0.5,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-travel-receiver",
+        "take": "Paid_AS_SV_Fly_Front_React",
+        "phase": 0.5,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "travel",
+      "phase": 0.75,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-travel-receiver",
+        "take": "Paid_AS_SV_Fly_Front_React",
+        "phase": 0.75,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    },
+    {
+      "motion": "travel",
+      "phase": 1,
+      "mode": "back",
+      "held": true,
+      "holder": "sol",
+      "receiver": "kano",
+      "paid": {
+        "role": "aerial-travel-receiver",
+        "take": "Paid_AS_SV_Fly_Front_React",
+        "phase": 0,
+        "status": "runtime-assigned-contact-overlay"
+      },
+      "positions": [
+        [
+          0,
+          80,
+          0.14999999999999916
+        ],
+        [
+          0,
+          80,
+          1.8689999999999993
+        ]
+      ]
+    }
+  ],
+  "errors": []
+}

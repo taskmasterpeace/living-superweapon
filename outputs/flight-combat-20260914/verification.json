@@ -1,0 +1,87 @@
+{
+  "asOf": "2026-09-14",
+  "input": "D:\\lsw\\.worktrees\\combat-release-review\\artifacts\\combat-workbook-data.json",
+  "records": [
+    {
+      "sheet": "Decisions",
+      "rows": 16,
+      "columns": 8,
+      "end": 22,
+      "reviewColumn": "C",
+      "sourceColumn": "H"
+    },
+    {
+      "sheet": "Characters",
+      "rows": 55,
+      "columns": 29,
+      "end": 61,
+      "reviewColumn": "C",
+      "sourceColumn": "AC"
+    },
+    {
+      "sheet": "Motion clips",
+      "rows": 22,
+      "columns": 14,
+      "end": 28,
+      "reviewColumn": "B",
+      "sourceColumn": "M"
+    },
+    {
+      "sheet": "Asset library",
+      "rows": 73,
+      "columns": 11,
+      "end": 79,
+      "reviewColumn": "C",
+      "sourceColumn": "K"
+    },
+    {
+      "sheet": "Audio",
+      "rows": 90,
+      "columns": 11,
+      "end": 96,
+      "reviewColumn": "C",
+      "sourceColumn": "K"
+    },
+    {
+      "sheet": "Equipment",
+      "rows": 38,
+      "columns": 24,
+      "end": 44,
+      "reviewColumn": "C",
+      "sourceColumn": "X"
+    }
+  ],
+  "checks": [
+    {
+      "sheet": "Decisions",
+      "count": 16,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Decisions\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"ID\",\"Topic\",\"User review\",\"Review notes\",\"Work status\",\"Decision\",\"Constraints\",\"Source\"],[\"D01\",\"Flight and grabs\",\"Pending\",\"\",\"Build\",\"Current modular actors; imported receiver limbs preserve root/grip authority\",\"Contact and interruption outrank decorative motion\",\"Creator decisions, 2026-09-14 session\"],[\"D02\",\"Boxing\",\"Pending\",\"\",\"Build\",\"Use isolated single punches, not a multi-hit clip mislabeled as jab\",\"Contact timing still must match simulation\",\"Creator decisions, 2026-09-14 session\"],[\"D03\",\"Heavy charge\",\"Pending\",\"\",\"Keep\",\"Three regions\",\"Airborne actions never choose grounded sweeps\",\"Creator decisions, 2026-09-14 session\"]]}"
+    },
+    {
+      "sheet": "Characters",
+      "count": 55,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Characters\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"Character ID\",\"Name\",\"User review\",\"Review notes\",\"Real name\",\"City\",\"Country\",\"Birth date\"],[\"sol\",\"SOL\",\"Pending\",\"\",\"Samuel Ellison\",\"Ellsworth, Kansas\",\"USA\",\"1992-06-07T00:00:00.000Z\"],[\"kano\",\"KANO\",\"Pending\",\"\",\"Ryuji Kano\",\"Okinawa\",\"Japan\",\"1989-08-08T00:00:00.000Z\"],[\"vega\",\"VEGAS\",\"Pending\",\"\",\"Adrián Vega y Castillo\",\"Seville\",\"Spain\",\"1995-09-11T00:00:00.000Z\"]]}"
+    },
+    {
+      "sheet": "Motion clips",
+      "count": 22,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Motion clips\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"Clip ID\",\"User review\",\"Review notes\",\"Take\",\"Role\",\"Duration (s)\",\"Frames\",\"Loops\"],[\"paid/aerial-interaction/AS_SV_Fly_Catch\",\"Pending\",\"\",\"Paid_AS_SV_Fly_Catch\",\"holder\",0.9333333373069763,29,false],[\"paid/aerial-interaction/AS_SV_Fly_Catch_React\",\"Pending\",\"\",\"Paid_AS_SV_Fly_Catch_React\",\"receiver\",2.1666667461395264,66,false],[\"paid/aerial-interaction/AS_SV_Fly_idle\",\"Pending\",\"\",\"Paid_AS_SV_Fly_idle\",\"holder\",2.799999952316284,85,true]]}"
+    },
+    {
+      "sheet": "Asset library",
+      "count": 73,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Asset library\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"Asset ID\",\"Asset\",\"User review\",\"Review notes\",\"Publisher\",\"Priority\",\"Type\",\"Local validation\"],[1,\"Low Poly - Soldiers\",\"Pending\",\"\",\"HBS\",\"B\",\"Model\",\"Not locally validated in this intake\"],[2,\"Unleashed boxer AnimSet\",\"Pending\",\"\",\"wemakethegame\",\"Ready\",\"Animation\",\"Extracted; source-data checked; not retargeted\"],[3,\"Realistic Knockdown Motion Pack\",\"Pending\",\"\",\"JKMotion\",\"A\",\"Animation\",\"Not locally validated in this intake\"]]}"
+    },
+    {
+      "sheet": "Audio",
+      "count": 90,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Audio\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"Audio ID\",\"Label\",\"User review\",\"Review notes\",\"Family\",\"Trigger event\",\"Runtime wiring\",\"Recording availability\"],[\"charge\",\"Charge / energy gathering\",\"Pending\",\"\",\"beam\",\"charge starts / held\",\"preview-only\",\"No bundled recording; chosen local binding may exist\"],[\"release\",\"Charged blast / launch\",\"Pending\",\"\",\"beam\",\"charged attack releases\",\"preview-only\",\"No bundled recording; chosen local binding may exist\"],[\"beam\",\"Beam / sustained fire\",\"Pending\",\"\",\"beam\",\"beam is emitting\",\"preview-only\",\"No bundled recording; chosen local binding may exist\"]]}"
+    },
+    {
+      "sheet": "Equipment",
+      "count": 38,
+      "inspection": "{\"kind\":\"table\",\"sheet\":\"Equipment\",\"address\":\"A6:H9\",\"rows\":4,\"cols\":8,\"values\":[[\"Equipment ID\",\"Name\",\"User review\",\"Review notes\",\"Category\",\"Subtype\",\"Base damage\",\"Damage type\"],[\"firearm.m24\",\"M24 MARKSMAN RIFLE\",\"Pending\",\"\",\"firearm\",\"sniper\",46,\"Action-specific\"],[\"firearm.m107\",\"M107 ANTI-MATERIEL\",\"Pending\",\"\",\"firearm\",\"sniper\",78,\"Action-specific\"],[\"firearm.ak\",\"AK PATTERN RIFLE\",\"Pending\",\"\",\"firearm\",\"rifle\",8.5,\"Action-specific\"]]}"
+    }
+  ],
+  "formulaScan": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}"
+}

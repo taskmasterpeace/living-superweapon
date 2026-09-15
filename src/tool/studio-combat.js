@@ -22,7 +22,7 @@ export const TARGET_DEFENSES={open:'Open target',guard:'Frontal guard'};
 export const SHOOTER_MOTIONS={hover:'Airborne · still','ground-hold':'Ground · still','air-left':'Airborne · left and return','air-right':'Airborne · right and return','air-forward':'Airborne · forward and return','ground-left':'Ground · left and return','ground-right':'Ground · right and return','ground-forward':'Ground · forward and return','ground-crouch-forward':'Crouch · forward and return','ground-prone-hold':'Prone · supported rifle','ground-prone-forward':'Prone · crawl and return'};
 export const CONTACT_TESTS={target:'Damage target',priority:'Opposing energy shot',bullets:'Ballistic crossfire',nanite:'Nanite assembly / impact / reform',reload:'Reload · magazine sequence'};
 export const NANITE_SAMPLES={shield:'Shield · incoming ballistic',cannon:'Cannon · incoming ballistic',punch:'Shield · incoming native punch'};
-const ATTACK_TYPES=new Set(['beam','projectile','volley','charge','rifle','construct','melee']);
+const ATTACK_TYPES=new Set(['beam','projectile','guidedSpear','volley','charge','rifle','construct','melee']);
 export function naniteSource(def){try{return naniteConfig(def);}catch{return null;}}
 export const supportsAttackRehearsal=def=>ATTACK_TYPES.has(def.type)||!!naniteSource(def);
 export function naniteSelection(f,slot,secondarySlot){
@@ -460,7 +460,7 @@ export class StudioCombat {
         }else this.burstPayload=armedPayload;
       }
       if(def.type==='beam'){this.nominalDamage=def.dps||60;this.nominalUnit='hp/s';}
-      else if(def.type==='projectile'){this.nominalDamage=def.damage||14;this.nominalUnit='hp/hit';}
+      else if(def.type==='projectile'||def.type==='guidedSpear'){this.nominalDamage=def.damage||14;this.nominalUnit='hp/hit';}
       else if(def.type==='volley'){this.nominalDamage=def.damage||6;this.nominalUnit='hp/hit';}
       else if(def.type==='rifle'){this.nominalDamage=def.damage||5;this.nominalUnit='hp/hit';}
       else if(def.type==='melee'){this.nominalDamage=def.damage||20;this.nominalUnit='hp/hit';}
@@ -478,6 +478,7 @@ export class StudioCombat {
         def.type==='charge'?(st.charging?'charging':time<6?'in flight':'recovered'):(def.type==='volley'||def.type==='rifle')?(time<2.2?'repeating':'recovered'):def.type==='beam'?(st.active?'firing':'recovered'):time<6?'in flight':'recovered';
       if(def.type==='construct'&&!this.denied&&!this.drained)this.phase=time<.6?'ready':!st.active||st.active.dead?'dissolved':time<.6+(f.def.effects?.construct?.assemblyTime??.65)?'assembling':st.active.state==='idle'?'construct-active':st.active.state;
       if(def.type==='beam'&&st.charging&&!this.denied&&!this.drained)this.phase='charging';
+      if(def.type==='guidedSpear'&&!this.denied&&!this.drained)this.phase=st.spear?.state||'ready';
       if(def.type==='melee'&&!this.denied&&!this.drained)this.phase=time<.6?'ready':st.t>0?'striking':f._abilityMeleePose?'recovering':'recovered';
       this.previous=time;
     }

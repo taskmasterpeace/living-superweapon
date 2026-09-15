@@ -77,7 +77,7 @@ test('profile-level effective validation rejects a valid sparse patch conflictin
 });
 
 test('metadata exposes production fields and truthy-fallback bounds', () => {
-  assert.deepEqual(Object.keys(ATTACK_TUNING_FIELDS).sort(), ['beam', 'charge', 'construct', 'projectile', 'rifle', 'volley']);
+  assert.deepEqual(Object.keys(ATTACK_TUNING_FIELDS).sort(), ['beam', 'charge', 'construct', 'guidedSpear', 'projectile', 'rifle', 'volley']);
   const beam = fighter(ability('beam', { charge: true, chargeWidth: true }));
   const byKey = Object.fromEntries(attackFields(beam, 'lmb', {}).map(field => [field.key, field]));
   assert.equal(byKey.cost.min, 0, 'beam entry cost is genuinely allowed to be free');

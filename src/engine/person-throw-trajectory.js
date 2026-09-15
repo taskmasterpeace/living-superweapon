@@ -8,7 +8,7 @@ import {sweepFighterEnvironment} from './fighter-environment-contact.js';
 export const THROW_WINDOW=1.35;
 export function personThrowLaunch(holder,victim){
  const back=holder.grabMode==='back',transport=isTransportingPerson(holder);
- const ratio=Math.max(.45,Math.min(1.2,.75+.15*Math.log2(liftCapacityOf(holder.def)/Math.max(.05,bodyWeight(victim.def)))));
+ const ratio=Math.max(.45,Math.min(1.2,.75+.15*Math.log2(liftCapacityOf(holder.def)/Math.max(.05,bodyWeight(victim)))));
  const speed=personThrowSpeed(holder,((back?60:48)+(holder.def.strength??5)*4.6)*ratio);
  const direction=holder.aim3.clone();if(direction.lengthSq()<.01)direction.set(holder.aim.x,0,holder.aim.z);direction.normalize();
  return {back,transport,direction,damage:(back?16:10)*holder.powerBuff,velocity:new THREE.Vector3(direction.x*speed,(direction.y+(transport?0:.22))*speed,direction.z*speed)};

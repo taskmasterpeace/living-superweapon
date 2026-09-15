@@ -1,0 +1,81 @@
+{
+  "scope": "Isolated creator-saved custom fighter through existing Studio UI and production seek. Rendered inspection fixture, not native combat movement evidence.",
+  "samples": [
+    {
+      "name": "windup",
+      "modular": true,
+      "hand": "DEF-handL",
+      "gripError": 4.965068306494546e-16,
+      "time": 0.85,
+      "state": "windup",
+      "phase": "windup",
+      "mesh": "guided-black-spear",
+      "parts": [
+        "spear-black-shaft",
+        "spear-crimson-tip",
+        "",
+        "spear-crimson-barb-left",
+        "spear-crimson-barb-right"
+      ],
+      "position": [
+        1.5605538682319244,
+        10.345938104752172,
+        3.47847109537026
+      ],
+      "measured": {
+        "damage": 0,
+        "contacts": 0
+      }
+    },
+    {
+      "name": "outbound",
+      "modular": true,
+      "hand": "DEF-handL",
+      "gripError": null,
+      "time": 1.05,
+      "state": "outbound",
+      "phase": "outbound",
+      "mesh": "guided-black-spear",
+      "parts": [
+        "spear-black-shaft",
+        "spear-crimson-tip",
+        "",
+        "spear-crimson-barb-left",
+        "spear-crimson-barb-right"
+      ],
+      "position": [
+        1.6954155807368854,
+        7.664684710444726,
+        17.003735295352133
+      ]
+    },
+    {
+      "name": "embedded",
+      "modular": true,
+      "hand": "DEF-handL",
+      "gripError": null,
+      "time": 2.5,
+      "state": "embedded",
+      "phase": "embedded",
+      "mesh": "guided-black-spear",
+      "parts": [
+        "spear-black-shaft",
+        "spear-crimson-tip",
+        "",
+        "spear-crimson-barb-left",
+        "spear-crimson-barb-right"
+      ],
+      "position": [
+        1.6954155807368854,
+        7.664684710444726,
+        28.57666519344866
+      ],
+      "measured": {
+        "damage": 22,
+        "contacts": 1
+      }
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

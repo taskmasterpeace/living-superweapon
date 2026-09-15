@@ -1,0 +1,118 @@
+{
+  "status": "paid-boxing-default-disabled",
+  "acceptance": "No rendered acceptance. Diagnostic records native fast-clock contact incompatibility; source clips remain available in the library.",
+  "rows": [
+    {
+      "mode": "accepted-default",
+      "key": "jab",
+      "side": -1,
+      "maxAngle": 0.3143798576713932,
+      "worst": {
+        "state": "startup",
+        "sample": 2,
+        "count": 12,
+        "joint": "legR"
+      },
+      "maxContactGap": 2.2541902238434278e-15,
+      "passes": true
+    },
+    {
+      "mode": "accepted-default",
+      "key": "jab",
+      "side": 1,
+      "maxAngle": 0.3143798576713932,
+      "worst": {
+        "state": "startup",
+        "sample": 2,
+        "count": 12,
+        "joint": "legL"
+      },
+      "maxContactGap": 2.2541902238434278e-15,
+      "passes": true
+    },
+    {
+      "mode": "accepted-default",
+      "key": "cross",
+      "side": -1,
+      "maxAngle": 0.28731799523172574,
+      "worst": {
+        "state": "startup",
+        "sample": 16,
+        "count": 20,
+        "joint": "armL"
+      },
+      "maxContactGap": 3.580791979123119e-15,
+      "passes": true
+    },
+    {
+      "mode": "accepted-default",
+      "key": "cross",
+      "side": 1,
+      "maxAngle": 0.28731799523172574,
+      "worst": {
+        "state": "startup",
+        "sample": 16,
+        "count": 20,
+        "joint": "armR"
+      },
+      "maxContactGap": 3.580791979123119e-15,
+      "passes": true
+    },
+    {
+      "mode": "quarantined-candidate",
+      "key": "jab",
+      "side": -1,
+      "maxAngle": 0.9838057540570802,
+      "worst": {
+        "state": "startup",
+        "sample": 9,
+        "count": 12,
+        "joint": "armL"
+      },
+      "maxContactGap": 0.3698042372697187,
+      "passes": false
+    },
+    {
+      "mode": "quarantined-candidate",
+      "key": "jab",
+      "side": 1,
+      "maxAngle": 0.9838057540570802,
+      "worst": {
+        "state": "startup",
+        "sample": 9,
+        "count": 12,
+        "joint": "armR"
+      },
+      "maxContactGap": 0.3698042372697187,
+      "passes": false
+    },
+    {
+      "mode": "quarantined-candidate",
+      "key": "cross",
+      "side": -1,
+      "maxAngle": 0.6610681694524453,
+      "worst": {
+        "state": "startup",
+        "sample": 16,
+        "count": 20,
+        "joint": "armL"
+      },
+      "maxContactGap": 0.3876895930365112,
+      "passes": false
+    },
+    {
+      "mode": "quarantined-candidate",
+      "key": "cross",
+      "side": 1,
+      "maxAngle": 0.6610681694524453,
+      "worst": {
+        "state": "startup",
+        "sample": 16,
+        "count": 20,
+        "joint": "armR"
+      },
+      "maxContactGap": 0.3876895930365112,
+      "passes": false
+    }
+  ]
+}

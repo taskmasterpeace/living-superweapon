@@ -402,7 +402,7 @@ export class MeleeSystem {
   canBeginGrab(f){return !zombieCannotGrab(f)&&this.canAct(f)&&!f._carry&&!f.grabbing&&!f.grabState&&!f.mstate&&!f.guarding&&f.strikeCd<=0&&!(f.sleepT>0)&&!(f.downedT>0);}
   grabTarget(f){
     const g=this.game,reach=STRIKES.grab.reach+(styleOf(f.def).grabBonus||0),hostile=g.coneFoe(f,reach,.95);
-    if(!hostile){const ally=friendlyPickupTarget(f,g,reach);return ally&&bodyWeight(ally.def)<=liftCapacityOf(f.def)?{fighter:ally,friendly:true}:null;}
+    if(!hostile){const ally=friendlyPickupTarget(f,g,reach);return ally&&bodyWeight(ally)<=liftCapacityOf(f.def)?{fighter:ally,friendly:true}:null;}
     return (hostile._regrabUntil||0)<=(g.time||0)&&!hostile.phase&&hostile.invuln<=0&&!hostile.grabbedBy&&hostile.alive&&fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),hostile.center(new THREE.Vector3()))===1?{fighter:hostile,friendly:false}:null;
   }
   grab(f) {
@@ -442,9 +442,9 @@ export class MeleeSystem {
   liftPerson(f){
     if(isTransportingPerson(f))return false;
     if(!this._canClinch(f)||f._clinchPunch||f._clinchFinisher||f._carry||f.phase)return false;
-    const ratio=bodyWeight(f.grabbing.def)/liftCapacityOf(f.def);
+    const ratio=bodyWeight(f.grabbing)/liftCapacityOf(f.def);
     if(ratio>1){
-      this.game.hud?.feed?.(`TOO HEAVY · person: ${Math.round(bodyWeight(f.grabbing.def)*LB_PER_TON).toLocaleString()} lb · your limit: ${Math.round(liftCapacityOf(f.def)*LB_PER_TON).toLocaleString()} lb`,'#ffd24a');
+      this.game.hud?.feed?.(`TOO HEAVY · person: ${Math.round(bodyWeight(f.grabbing)*LB_PER_TON).toLocaleString()} lb · your limit: ${Math.round(liftCapacityOf(f.def)*LB_PER_TON).toLocaleString()} lb`,'#ffd24a');
       return false;
     }
     beginPersonCarry(f,f.grabbing,ratio);
@@ -519,7 +519,7 @@ export class MeleeSystem {
     if(f._personCarry?.friendly)return;
     const v=f.grabbing,g=this.game;if(!v)return;
     const str=strengthOf(f),back=f.grabMode==='back';
-    const wr=Math.max(.45,Math.min(1.2,.75+.15*Math.log2(liftCapacityOf(f.def)/Math.max(.05,bodyWeight(v.def)))));
+    const wr=Math.max(.45,Math.min(1.2,.75+.15*Math.log2(liftCapacityOf(f.def)/Math.max(.05,bodyWeight(v)))));
     const damage=(14+str*1.4)*(back?1.2:1)*f.powerBuff;
     this.release(f);f.strikeCd=Math.max(f.strikeCd,.55);
     // No terrain effect here: the actual ground/roof collision owns the crater,
@@ -700,7 +700,7 @@ export class MeleeSystem {
           f.grabbing=ally;ally.grabbedBy=f;f.grabState='clinch';f.grabMode='friendly';f.grabT=8;f._clinchMax=8;
           f._victimEscape=false;f._clinchPunch=null;f._clinchFinisher=null;
           ally.launchT=0;ally._thrownT=0;ally._thrownBy=null;ally.vel.set(0,0,0);
-          beginPersonCarry(f,ally,bodyWeight(ally.def)/liftCapacityOf(f.def));f._personCarry.friendly=true;
+          beginPersonCarry(f,ally,bodyWeight(ally)/liftCapacityOf(f.def));f._personCarry.friendly=true;
           g.hud?.feed?.('TEAMMATE CARRIED · move/fly · E: release safely · attacks cannot hurt your passenger','#ffd24a');
           return;
         }

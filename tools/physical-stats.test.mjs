@@ -24,3 +24,14 @@ test('authored weight in pounds is the actual lifting weight',()=>{
  assert.equal(bodyWeight({weightLb:245})*LB_PER_TON,245);
  assert.ok(bodyWeight({weightLb:-1,strength:3,hp:100})>0);
 });
+
+test('strength and health edits never silently change the same body weight',()=>{
+ assert.equal(bodyWeight({strength:1,hp:80}),bodyWeight({strength:10,hp:500}));
+ assert.equal(bodyWeight({...ROSTER.find(d=>d.id==='rage'),strength:1,hp:80})*LB_PER_TON,458);
+});
+test('environment mass is shared by actual pickup and collision, including growth',async()=>{
+ const {impactMass}=await import('../src/engine/shared-impact.js');
+ const f={def:{weightLb:180,environment:{massKg:100}},sizeScale:2};
+ assert.ok(Math.abs(bodyWeight(f)*LB_PER_TON-impactMass(f))<1e-8);
+ assert.ok(Math.abs(bodyWeight(f)*LB_PER_TON-800/0.45359237)<1e-8);
+});
