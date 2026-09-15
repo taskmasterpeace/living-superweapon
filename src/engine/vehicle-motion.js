@@ -58,7 +58,12 @@ export function stepWheeled(s, i, dt, e, ctx) {
   fin(s, ['speed', 'yaw', 'vx', 'vz', 'steerSmooth', 'yawVel', 'lean', 'y', 'vy', 'rollSpin', 'rollDir']); dt = dtc(dt); if (!dt || !i) return s;
   const th = clamp(i.throttle || 0, -1, 1), st = clamp(i.steer || 0, -1, 1), grade = G(ctx);
   const groundY = Number.isFinite(ctx?.groundY) ? ctx.groundY : 0;
-  const airborne = s.air = s.y > groundY + .08;
+  // Departure test: a wheel following a downhill is NOT airborne — while
+  // grounded, s.vy is the terrain-follow rate, so the expected drop next frame
+  // is |vy|·dt. Only ground falling away FASTER than the follow rate (a crest,
+  // a cliff) is a launch. A fixed .08 epsilon made every ordinary downhill
+  // frame at speed read as airborne (drive force and grip skipped).
+  const airborne = s.air = s.y > groundY + .08 + Math.abs(s.vy || 0) * dt * 1.5;
   let f = s.speed;
   if (!airborne) {                                   // drive forces only reach the ground
     if (i.brake) f = approach(f, 0, e.brake * dt);

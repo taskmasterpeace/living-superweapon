@@ -33,7 +33,9 @@ test('jet remains separate and its flight start retains airspeed and throttle',a
 });
 
 test('invalid station placement is rejected and removes only the new actor',async()=>{
- const g=fixture();await assert.rejects(spawnHighwallFleet(g,'tank',{position:{x:-286,z:-220}}),/solid cover/);assert.equal(g._fleetActors.length,0);
+ // (-169,80) is the centre of a solid fortification run in the CURRENT layout —
+ // the old point (-286,-220) stopped overlapping anything when the walls moved.
+ const g=fixture();await assert.rejects(spawnHighwallFleet(g,'tank',{position:{x:-169,z:80}}),/solid cover/);assert.equal(g._fleetActors.length,0);
 });
 
 test('known-height vehicles pass below roof slabs but cannot pass through low ceilings',()=>{
