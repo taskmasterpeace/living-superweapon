@@ -741,3 +741,37 @@ lit render was the wrong (base) codebase. The capture mechanism is now solved; t
 city SCENE to render lit off-screen. Next: either diagnose the city's headless-unlit render (its sun/hemi
 /composer vs powerworld's — powerworld works, so it is a concrete, bounded diff to find), or have Robert
 eyeball the lit city he plays and report whether fire/ice beams read distinctly. No blind city changes.
+
+### Iteration 30 — the bounded diagnosis, then the PIVOT: the city is un-gradeable in Playwright
+
+Ran the promised bounded diagnosis (`tools/city-render-diag.mjs`) — dumped the render/light state of
+powerworld (renders lit) vs citygame (renders black) in the SAME headless harness. Result:
+- Same `dayT` (~0.3), ~same light count (20 vs 19). **The difference is `sceneBg`:** powerworld `dce5eb`
+  (light day) vs citygame `0e1119` (near-black). The city's visible SKY is a DOME that doesn't render
+  under headless SwiftShader; only the dark background shows. Forcing `dayFixed 0.2` (powerworld's value)
+  did NOT change it — city stays dark.
+- Rebuilt the capture on the fx-matrix's reliable **stub+manual-step** method + readPixels+PNG + a
+  grey scene background. Definitive per-frame stats: **`beams=1`** (the beam SPAWNS), **`bg=39434f`** (the
+  background IS set), yet **`maxRGB=9`** (the composed frame is BLACK). Headful (real-GPU attempt) — also
+  `maxRGB=9`. So the beam and scene have content; **the RENDER PIPELINE outputs black.** It is the city's
+  composer/HDR pipeline under this environment's Chromium (SwiftShader), not the beam, the lighting, or the
+  capture mechanism — `powerworld.html` composes fine in the identical harness.
+
+**⇒ THE PIVOT (as promised last iteration).** Five iterations (26–30) have gone to the city capture; it is
+un-gradeable in this autonomous Playwright environment — the city's composed frame renders black here,
+period. I have exhausted every mechanism (screenshot / toDataURL / drawImage / readPixels+PNG), render
+approach (live-rAF / stub+manual), GPU mode (headless SwiftShader / headful), lighting and background.
+I am **stopping city-capture work** and will not ship blind city changes.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 30 | 2026-09-16 | bounded diagnosis (city composed-frame renders BLACK in Playwright; beam spawns + bg set but pipeline outputs black; powerworld composes fine) · PIVOT: stop city capture | **CITY additive beam UN-GRADEABLE in this env** | **PW 9.4 · CITY needs a real-GPU eye** |
+
+**Honest closure of the capture arc.** The readable/**PowerWorld** beams are graded ~9.4 and genuinely
+strong — and this repo is the **PowerWorld fork** (JK-ground / BFP-air is the primary game), so the
+`_openSky`-gated readable path IS what's played most; the makeover largely lands there. The **city**
+(additive) mode's beams cannot be captured here; their state is unknown and needs **Robert's own game**
+(a real GPU renders the lit city fine) OR a GPU-headless machine. **The concrete ask for Robert:** in a
+city fight, fire SOL's beam and COLDSNAP's/an ice beam side by side — do they read as *distinct* (lava vs
+crystal) or wash to the same white? That one look unblocks the only open question. Next fire, absent that
+input, returns to verifiable **readable-path** polish rather than more capture infra.
