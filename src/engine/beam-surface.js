@@ -173,11 +173,18 @@ function shadeSigilCore(material,time){
   shader.uniforms.magicTime=time;
   shader.vertexShader='attribute float beamArc;varying float magicArc;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 magicArc=beamArc;`);
-  shader.fragmentShader='uniform float magicTime;varying float magicArc;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-float dash=smoothstep(.14,0.0,abs(fract(magicArc*.55+magicTime*.6)-.5)-.18);
-float bandPulse=pow(.5+.5*sin(magicArc*.9-magicTime*9.0),5.0);
-diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.6+vec3(.3),dash*.7+bandPulse*.4);
-diffuseColor.a*=(.35+.75*max(dash,bandPulse*.6))*smoothstep(0.0,1.2,magicArc);`);
+  shader.vertexShader=shader.vertexShader.replace('varying float magicArc;','varying float magicArc;varying vec3 magicField;').replace('magicArc=beamArc;','magicArc=beamArc;magicField=normal;');
+  shader.fragmentShader='uniform float magicTime;varying float magicArc;varying vec3 magicField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(magicField);
+float ring=atan(fld.y,fld.x)/6.28318+.5;
+// counter-rotating runic bands (depth, iter 13): two drift the OTHER way, so the shaft reads as
+// a woven inscription with parallax, not one flat dashed line.
+float dashA=smoothstep(.13,0.0,abs(fract(magicArc*.55+ring*2.0+magicTime*.6)-.5)-.17);
+float dashB=smoothstep(.09,0.0,abs(fract(magicArc*.31-ring*3.0-magicTime*.4)-.5)-.12);
+float spine=pow(.5+.5*sin(magicArc*.9-magicTime*9.0),5.0);         // bright inner pulse travelling
+float glyph=max(dashA,dashB*.7);
+diffuseColor.rgb=mix(diffuseColor.rgb*.75,diffuseColor.rgb*1.8+vec3(.35),glyph*.8+spine*.5);
+diffuseColor.a*=(.3+.85*max(glyph,spine*.7))*smoothstep(0.0,1.2,magicArc);`);
  };
  material.customProgramCacheKey=()=> 'beam-sigil-v1';
 }

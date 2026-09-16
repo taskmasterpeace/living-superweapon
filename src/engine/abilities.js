@@ -66,7 +66,7 @@ function chargeOrb(c, st, color) {
     let coreMat;
     if (spherical) {
       const fx = fxOf(visOf(st.def), st.def, c.def);
-      const kind = fx.f.charge.style === 'crystal' ? 'crystal' : fx.f.charge.style === 'sigil' ? 'rune' : 'plasma';
+      const kind = fx.f.charge.style === 'crystal' ? 'crystal' : fx.f.charge.style === 'sigil' ? 'rune' : fx.f.charge.style === 'droplet' ? 'fluid' : 'plasma';
       st._orbTime = { value: 0 };
       coreMat = chargeOrbCore(fx.f.palette.glow, fx.f.palette.core, st._orbTime, kind);
     }

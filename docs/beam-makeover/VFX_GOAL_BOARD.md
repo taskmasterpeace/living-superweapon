@@ -262,3 +262,18 @@ clean-eyed re-grade of all 216 cells hunting anything that would break an AAA fr
 depth like fire's lava crust or ice's plates) → iteration 13's #1. Water/toxic charge+flight
 still ride the generic plasma look (their beam is the fluid surface, but charge/flight aren't
 fluid-specific) → #2.**
+
+### Iteration 13 — magic beam depth, fluid charge parity
+
+| what shipped | the critic |
+|---|---|
+| MAGIC BEAM DEPTH — shadeSigilCore now weaves TWO counter-rotating runic bands (one drifts the other way) plus a travelling inner spine pulse: the shaft reads as a woven inscription with parallax, not one flat dashed line. | MAGIC BEAM 7 → **8.5** |
+| FLUID CHARGE ORB — a 'fluid' churn kind (swirl + settling drip on Y) so water/toxic gather as a rolling ball of liquid, distinct from the fire ember ball and ice crystal. | water/toxic charge to parity |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 13 | 2026-09-16 | magic beam woven bands · fluid charge-orb churn | beam contact glow (receiving end) · per-level ribbon tint · level-III camera authority | **≈8.6** |
+
+**Every cell ≥8, beams 8–8.5. Iteration 14 orders (pure polish to 10): beam CONTACT GLOW at
+the receiving end (a beam just stops in air right now) · per-level ribbon width/tint · nova
+fire-tongue skin · level-III screen authority · then the final clean-eyed 216-cell re-grade.**
