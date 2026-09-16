@@ -256,3 +256,9 @@ beam family grades ≥8. The goal is 10, so the remaining iterations are the pol
 per-level ribbon tint · beam contact glow at the receiving end · magic beam depth · nova
 fire-tongue skin · level-III camera authority · water/toxic charge+flight parity · then a
 clean-eyed re-grade of all 216 cells hunting anything that would break an AAA freeze-frame.**
+
+**Confirmation sweep (post-iter-12, all 12 families × 6 phases): floor holds ≥8 everywhere,
+0 errors. Flattest cell confirmed = the MAGIC BEAM (gradient + sigil dashes, but no structural
+depth like fire's lava crust or ice's plates) → iteration 13's #1. Water/toxic charge+flight
+still ride the generic plasma look (their beam is the fluid surface, but charge/flight aren't
+fluid-specific) → #2.**
