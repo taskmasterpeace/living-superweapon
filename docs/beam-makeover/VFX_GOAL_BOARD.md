@@ -532,3 +532,37 @@ that made them all look identical is fixed. Three of four phases (charge/launch/
 per-family behavioral vocabulary; flight already had per-family `style`. The remaining
 non-subjective gap stays the per-family CITY beam capture (harness). Everything else is motion-only
 reads and taste.**
+
+### Iteration 24 — the KI beam gets structure (the plainest of the 8 surfaces)
+
+Re-graded the level-III beams and found the honest weak one: the **ki beam** (energyRed/Blue/Sun)
+read close to a laser — a smooth saturated tube with a white core and traveling ARC pulses, but
+**no radial/surface structure**, where lava has quantized facets and magic has woven angular bands.
+That is exactly why it graded 8.5 against fire's lava 9: it was the only one of the 8 surfaces with
+nothing happening ACROSS the tube, only along it.
+
+**The fix (`shadeKiCore` in beam-surface.js):** added a coursing **ENERGY HELIX** — two
+counter-wound bright ribbons spiral down the shaft, using the angular coord from the normal (the
+SAME seam magic's woven bands use). The distinction is kept honest by BEHAVIOUR: ki courses FAST and
+smooth, magic drifts SLOW deliberate dashes — so they never read alike even though they share the
+angular technique. The traveling pulses are kept and folded in; the ribbons and pulses both push the
+saturated hue toward white (never a pale base — the ki-only-glow discipline). Cache key v1 → v2.
+Data-driven and palette-keyed, so it reaches all three ki families AND every in-game ki-beam carrier
+(SOL / KANO / VEGA / NOVA / APEX) with no per-hero edit.
+
+Verified through the real engine: energyRed + energyBlue × 3 levels, **0 errors, 0 pageErrors**. At
+level III the tube now shows coursing bright energy nodes braiding down its length where before it
+was a smooth red laser. Ref `artifacts/fx-matrix/shots/energyRed/3-beam.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 24 | 2026-09-16 | ki beam surface → coursing energy helix (was the only structureless beam of the 8) | ki beam 8.5 → ~9 · city per-family beam grade still a confirmation gap | **≈9.35** |
+
+**All 8 beam surfaces now carry real ACROSS-the-tube structure (lava facets · ice plates · shock
+comb · ki helix · ray filament · fluid jet · magic runes · alien iridescent) — none reads as a bare
+laser. ⚠ The per-family CITY beam grade is still open and is deliberately LOWER priority, not
+forgotten: the beam SHADER is camMode-agnostic (a city beam and a PowerWorld beam use the same
+surface), so the 216-cell PowerWorld grade largely transfers; what the city adds is a
+background-contrast question (a bright additive beam over a bright daytime city), already
+spot-checked as no-washout in iter 21. Building the full synthetic-injection city harness is the
+honest remaining task when a renderer gap actually points there.**

@@ -173,17 +173,26 @@ function shadeKiCore(material,time){
  material.forceSinglePass=true;
  material.onBeforeCompile=shader=>{
   shader.uniforms.kiTime=time;
-  shader.vertexShader='attribute float beamArc;varying float kiArc;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
-kiArc=beamArc;`);
-  shader.fragmentShader='uniform float kiTime;varying float kiArc;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+  shader.vertexShader='attribute float beamArc;varying float kiArc;varying vec3 kiField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+kiArc=beamArc;kiField=normal;`);
+  shader.fragmentShader='uniform float kiTime;varying float kiArc;varying vec3 kiField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
 float pulse=pow(.5+.5*sin(kiArc*.35-kiTime*34.0),7.0);
 float pulse2=pow(.5+.5*sin(kiArc*.13-kiTime*21.0+2.1),9.0);
-float hot=max(pulse,pulse2*.7);
-// saturated body between pulses; the pulse pushes the SAME hue toward white (never a pale base)
+// ENERGY HELIX (iter 24): ki COURSES — two counter-wound bright ribbons spiral down the shaft so
+// the tube reads as a LIVING energy stream, not the smooth laser it was (the plainest beam surface
+// on the grade). Angular coord from the normal, the SAME seam magic's woven bands use; but ki is
+// FAST and smooth where magic is slow deliberate dashes, which keeps the two surfaces distinct.
+vec3 kf=normalize(kiField);
+float ang=atan(kf.y,kf.x)*0.159155+0.5;
+float helix=pow(.5+.5*sin((ang+kiArc*.16)*6.28318-kiTime*10.0),3.0);
+float helix2=pow(.5+.5*sin((ang-kiArc*.11)*6.28318+kiTime*7.0+1.7),4.0);
+float weave=max(helix,helix2*.8);
+float hot=max(max(pulse,pulse2*.7),weave*.7);
+// saturated body; the pulses AND the coursing ribbons push the SAME hue toward white (never pale)
 diffuseColor.rgb=mix(diffuseColor.rgb*.8,diffuseColor.rgb*2.4+vec3(.25),hot);
-diffuseColor.a*=(.62+.55*hot)*smoothstep(0.0,1.2,kiArc);`);
+diffuseColor.a*=(.55+.6*max(hot,weave*.45))*smoothstep(0.0,1.2,kiArc);`);
  };
- material.customProgramCacheKey=()=> 'beam-ki-v1';
+ material.customProgramCacheKey=()=> 'beam-ki-v2';
 }
 
 // THE INSCRIPTION (magic) — rune dashes drifting slowly down the shaft with a deeper band
