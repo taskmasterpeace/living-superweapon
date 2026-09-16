@@ -597,6 +597,12 @@ class Projectile {
           case 'spray':   // water/toxic slings droplets that FALL — real weight, real wet
             P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-4, 4), vy: rand(2, 6), vz: rand(-4, 4), life: lf, size: sz * 0.6, color: [pal.glow, pal.core], grav: 16, drag: 0.8 });
             break;
+          case 'iridescent': {  // ALIEN: a wobbling twin trail shifting orange<->green (unearthly)
+            const ph = game.time * 9 + p.x * 0.3, ox = Math.sin(ph) * 1.6, oz = Math.cos(ph) * 1.6, alt = this._fx.f.flight.trail[1];
+            P.spawn({ x: p.x + ox, y: p.y, z: p.z + oz, vx: 0, vy: rand(-0.5, 0.5), vz: 0, life: lf, size: sz * 0.85, color: (Math.sin(ph) > 0 ? pal.glow : alt), drag: 2.5, shrink: true });
+            P.spawn({ x: p.x - ox, y: p.y, z: p.z - oz, vx: 0, vy: 0, vz: 0, life: lf * 0.8, size: sz * 0.6, color: [pal.core, alt], drag: 2.5, shrink: true });
+            break;
+          }
           default:        // 'streak' — pure ki: the hot line, bigger and hotter than the old speck
             P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: lf, size: sz * 1.15, color: [pal.glow, pal.core, '#ffffff'], drag: 3, shrink: true });
             P.spawn({ x: p.x, y: p.y, z: p.z, vx: 0, vy: 0, vz: 0, life: 0.18, size: sz * 0.5, color: pal.core, drag: 0 });

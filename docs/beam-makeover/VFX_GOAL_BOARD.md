@@ -336,3 +336,20 @@ difference between 'excellent and distinct' and 'AAA sizzle-reel flawless' — i
 subjective micro-polish. Iteration 17 orders (the named sub-8.5 cells): water/toxic aftermath
 body (a lingering wet/caustic ground sheen with steam) · an ALIEN-specific tell (iridescent
 shimmer / segmented pods, so it stops reading as orange ki) · electric charge bite.**
+
+### Iteration 17 — the three named sub-8.5 cells closed
+
+| what shipped | the critic |
+|---|---|
+| WET/CAUSTIC GROUND BODY — water/toxic impacts now leave a lingering ground SHEEN (puddle/corrosion) with STEAM wisps curling off it over ~2.4s. The aftermath has a body instead of reading empty. | water/toxic aftermath 7.5 → **8.5** |
+| ALIEN TELL — charge energy now ORBITS the gather (a circling ring of motes, not rising embers) and flight sheds a wobbling twin trail that shifts orange↔green. Alien stops reading as plain orange ki. | alien to **8.5** |
+| ELECTRIC CHARGE BITE — the arc charge fires more often and BIGGER as it fills (extra fork past 60%). | electric charge 8.5 → 9 |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 17 | 2026-09-16 | water/toxic ground sheen + steam · alien orbit-charge + iridescent flight · electric charge bite | steel plainness (by design) · the last 8.5s are subjective polish | **≈8.9** |
+
+**Floor now 8.5 (steel excepted, matte by design). Every family has a distinct tell in every
+phase. Iteration 18 orders: the diminishing-returns polish — level-III impact camera authority ·
+alien beam surface (still rides ki) · a clean-eyed hunt for any single cell a critic would call
+below 9, closed one at a time.**

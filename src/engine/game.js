@@ -3783,9 +3783,18 @@ export class Game {
         }
         break;
       }
-      case 'arc':         // electricity cannot hold still — it BITES at the air around the gather
-        if (Math.random() < 0.12 + k * 0.18) this.vfx.lightning(pos, { color: pal.glow, count: 1, radius: 2.6 + k * 2.2, height: 3.5 });
+      case 'arc':         // electricity cannot hold still — it BITES at the air around the gather,
+                          // and bites HARDER as it fills (goal board iter 17: the charge lacked bite)
+        if (Math.random() < 0.2 + k * 0.4) this.vfx.lightning(pos, { color: pal.glow, count: 1 + (k > 0.6 ? 1 : 0), radius: 3.2 + k * 3.5, height: 4 + k * 3 });
         break;
+      case 'orbit': {     // ALIEN energy ORBITS the gather instead of rising — a ring of motes circling
+        const a = this.time * 5;
+        for (const off of [0, 2.09, 4.19]) {
+          const r = 3.2 + k * 2;
+          P.spawn({ x: pos.x + Math.cos(a + off) * r, y: pos.y + Math.sin((a + off) * 2.3) * 1.2, z: pos.z + Math.sin(a + off) * r, vx: 0, vy: 0, vz: 0, life: 0.14, size: 1.4 + k, color: [pal.glow, pal.core], drag: 0 });
+        }
+        break;
+      }
       case 'sigil':       // magic draws a converging circle on the ground and sheds slow motes
         if (caster._csRing == null) caster._csRing = caster._csAcc - 1;   // the FIRST ring fires immediately
         if (caster._csAcc - (caster._csRing || 0) > 0.55) {

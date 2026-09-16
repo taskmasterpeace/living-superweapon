@@ -253,9 +253,22 @@ export class VFX {
           });
           break;
         }
-        case 'droplets':
+        case 'droplets': {
           this.P.burst(pos.x, pos.y + 3, pos.z, { count: Math.round(18 * AN), speed: 14, life: 0.9, size: 1.6, color: [pal.glow, pal.core], up: 12, grav: 70, drag: 0.6 });
+          // WET/CAUSTIC GROUND BODY (goal board iter 17): water/toxic left almost nothing — now a
+          // lingering ground SHEEN (the puddle/corrosion) with STEAM wisps rising off it, so the
+          // aftermath has a body instead of reading empty. Steam curls slowly and fades pale.
+          if (pos.y < 5) {
+            const gy = Math.max(0.35, pos.y * 0.12 + 0.35);
+            this.smokePuffs({ x: pos.x, y: gy + 0.5, z: pos.z }, { count: Math.round(5 * AN), colors: [pal.mist, pal.glow], rise: 4, dur: 2.4, size: 3.4, spread: radius * 0.4, opacity: 0.3 });
+            let wt = 0, wn = 0; const wfires = Math.round(3 * AN);
+            this._add({
+              update: (dt) => { wt += dt; if (wt > 0.5 * (wn + 1) && wn < wfires) { wn++; this.smokePuffs({ x: pos.x + rand(-radius, radius) * 0.4, y: gy + 0.5, z: pos.z + rand(-radius, radius) * 0.4 }, { count: 2, colors: [pal.mist, pal.core], rise: 5, dur: 1.8, size: 2.8, spread: 1, opacity: 0.28 }); } return wn >= wfires; },
+              dispose: () => {},
+            });
+          }
           break;
+        }
         case 'glyphs':
           this.P.burst(pos.x, pos.y + 1.5, pos.z, { count: Math.round(10 * AN), speed: 2, life: 1.8, size: 2.4, color: [pal.glow, pal.core], up: 4, grav: -1.5, drag: 2.4 });
           this.ring(pos, { color: pal.glow, r0: radius * 0.2, r1: radius * 1.1, life: 0.8, flat: true, opacity: 0.4 });

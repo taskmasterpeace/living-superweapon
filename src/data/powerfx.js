@@ -91,9 +91,9 @@ const F = {
   alien: {
     label: 'ALIEN',
     palette: { core: '#fff8e8', glow: '#ff9a2a', deep: '#33180a', smoke: ['#241a10', '#1a140c'], debris: ['#4a3018', '#684424'], mist: '#ffc07a' },
-    charge: { style: 'plasma', motes: '#ffc07a' },
+    charge: { style: 'orbit', motes: '#ffc07a' },   // alien energy ORBITS, doesn't rise — a tell of its own
     launch: { flash: '#ffe8c8', ring: '#ff9a2a' },
-    flight: { style: 'ember', trail: ['#ff9a2a', '#fff8e8'], wake: '#e0801a' },
+    flight: { style: 'iridescent', trail: ['#ff9a2a', '#8affc0'], wake: '#e0801a' },   // shifting orange↔green
     impact: { kernel: '#fff8e8', afterFx: 'sparks', cloudRise: 8, cloudDur: 2.2 },
   },
   toxic: {
