@@ -355,7 +355,7 @@ export const ROSTER = [
       rmb: { type: 'charge', name: 'Charged Pistol', gear: true, cost: 4, cd: 0.4, kiPerSec: 8, maxCharge: 1.4, minR: 0.6, maxR: 2.2, dmgMin: 12, dmgMax: 34, maxBlast: 9, speedMin: 110, speedMax: 150, chargePower: 1.8, color: '#ffb24a', color2: '#fff2c0' },
       q: { type: 'rifle', weapon: 'shotgun', name: 'Scatter Blaster', gear: true, cost: 7, interval: 0.65, damage: 8, pellets: 9, speed: 150, radius: 0.7, blast: 2.2, color: '#ffb24a', color2: '#fff' },
       e: { type: 'projectile', name: 'Thermal Detonator', gear: true, cost: 9, cd: 0.9, damage: 26, speed: 55, radius: 1.2, blast: 14, grav: 11, shock: true, canister: true, color: '#8a8f6a', color2: '#ffd24a' },
-      f: { type: 'rifle', weapon: 'pistol', name: 'Heavy Pistol', gear: true, cost: 4, interval: 0.42, damage: 17, speed: 210, radius: 0.55, blast: 2, color: '#ffd0a0', color2: '#fff' },
+      f: { type: 'rifle', weapon: 'pistol', name: 'AP Sidearm', gear: true, cost: 4, interval: 0.42, damage: 17, speed: 210, radius: 0.55, blast: 2, pierce: 1, color: '#ffd0a0', color2: '#fff' },   // armour-piercing rounds run RED (see MAT_TRACER_AP)
       shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.55, power: 92, iframes: 0.3, color: '#ffb24a' },
       r: { type: 'projectile', name: 'Rail Detonator', gear: true, cost: 26, cd: 8, damage: 38, speed: 95, radius: 1.4, blast: 16, homing: 2.6, shock: true, canister: true, color: '#ff8a3d', color2: '#ffd24a' },
     },
@@ -452,7 +452,7 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'rifle', name: 'Repulsor Bolts', cost: 2, interval: 0.11, damage: 7, speed: 170, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1, color: '#ffd97a', color2: '#fff' },
       rmb: { type: 'beam', material: 'energy', mode: 'taper', name: 'Unibeam', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 583, maxLen: 150, dps: 78, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#ffd97a', color2: '#fff' },
-      q: { type: 'projectile', name: 'Micro-Missiles', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 7, homing: 3, color: '#ff7a2a', color2: '#ffd97a' },
+      q: { type: 'projectile', name: 'Micro-Missiles', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 7, homing: 3, missile: true, color: '#ff7a2a', color2: '#ffd97a' },   // spiral rocket, smoke trail
       e: { type: 'cone', name: 'Flare Vent', kiPerSec: 16, range: 28, arc: 1.2, dps: 18, push: 44, color: '#ffd97a' },
       f: { type: 'buff', name: 'Overpower', cost: 24, cd: 18, mult: 1.55, dur: 10, color: '#ffd97a', color2: '#fff' },
       shift: { type: 'dash', name: 'Vector Thrust', cost: 5, cd: 0.55, power: 100, iframes: 0.24, color: '#ffd97a' },

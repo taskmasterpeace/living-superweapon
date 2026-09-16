@@ -53,6 +53,10 @@ const GEO_TRACER = new THREE.CylinderGeometry(0.42, 0.02, 9.0, 6); GEO_TRACER.ro
 // alpha streak on NORMAL blending, kept below the 0.8 bloom threshold so it never glows.
 const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#e9dcbb', roughness: 0.5, metalness: 0.4 });
 const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#f4d79a', transparent: true, opacity: 0.6, depthWrite: false });
+// ARMOUR-PIERCING reads RED (Robert: "armor piercing bullets to be like red bullets"). Shared, so
+// AP rounds never allocate; the slug is a dark tungsten penetrator, the tracer a hot red streak.
+const MAT_BULLET_AP = new THREE.MeshStandardMaterial({ color: '#8a4038', roughness: 0.45, metalness: 0.5 });
+const MAT_TRACER_AP = new THREE.MeshBasicMaterial({ color: '#ff2a1a', transparent: true, opacity: 0.72, depthWrite: false });
 // THROWN STEEL (batarangs, hurled axes): matte metal cross that SPINS — never a ball of light
 const GEO_BLADE = new THREE.BoxGeometry(2.6, 0.14, 0.5);
 // ⚠ high metalness with no envmap renders near-BLACK — follow MAT_BULLET's recipe (low metal, bright base)
@@ -170,6 +174,7 @@ class Projectile {
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon; this.shockDuration=o.shockDuration||0;
     this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc; this.pumpkin = !!o.pumpkin;
+    this.missile = !!o.missile;   // a rocket: corkscrews in flight and leaves a SMOKE TRAIL behind it
     this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
     // THE TRAVEL VOICE (Refs #42 L2 — the empty stage): a projectile with real flight time hums
     // element-true while it flies (bed pitched by its own mass, grain accents) and Dopplers as it
@@ -200,8 +205,9 @@ class Projectile {
     } else if (this.bullet) {
       // A BULLET, not a ball of light: a tiny brass slug with a hot tracer streak drawn BEHIND it.
       // Stretched along travel, no bloom halo — it must not read like a ki blast.
-      const slug = new THREE.Mesh(GEO_BULLET, MAT_BULLET);
-      const tracer = new THREE.Mesh(GEO_TRACER, MAT_TRACER);
+      const ap = this.pierce > 0;                    // armour-piercing rounds run RED
+      const slug = new THREE.Mesh(GEO_BULLET, ap ? MAT_BULLET_AP : MAT_BULLET);
+      const tracer = new THREE.Mesh(GEO_TRACER, ap ? MAT_TRACER_AP : MAT_TRACER);
       // THE STREAK SCALES WITH SPEED. A shotgun fires 8 short-lived pellets that spawn inside the
       // muzzle-flash bloom — a fixed 9u streak got swallowed by it. Scaling the tracer to the
       // round's speed makes every pellet leave a long motion-streak that reads as a fan clearing
@@ -255,6 +261,16 @@ class Projectile {
       this.obj = new THREE.Group(); this.obj.add(spin); this._spin = spin;
       this._ownMats = [rim.material, ring.material, boss.material];
       this.obj.scale.setScalar(Math.max(0.6, this.radius * 0.9));
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
+    } else if (this.missile) {
+      // A ROCKET: a drab slender body with a hot tip, nosing into its path. Body uses the shared
+      // canister metal; only the payload-coloured tip is per-shot. The smoke helix is in the trail.
+      const body = new THREE.Mesh(GEO_BULLET, MAT_CAN); body.scale.set(1.1, 1.1, 2.4);
+      const tip = new THREE.Mesh(GEO_ORB, glowMat(this.color || '#ffca6a', 0.95)); tip.scale.setScalar(0.55); tip.position.z = 2.6;
+      this.obj = new THREE.Group(); this.obj.add(body, tip);
+      this._ownMats = [tip.material];
+      this.obj.scale.setScalar(Math.max(0.7, this.radius * 0.8));
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
     } else if (this.canister && o.throwMesh) {
@@ -562,6 +578,7 @@ class Projectile {
     else if (this.bullet) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); }   // slug + tracer align to travel
     else if (this.blade) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 24; }   // steel tumbles end-over-end along its path
     else if (this.card) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 20; this._spin.rotation.z += dt * 8; }   // cards TUMBLE, corners catching the light
+    else if (this.missile) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); }   // rocket noses into its path; the corkscrew lives in the smoke trail
     else if (this.disc) { this._spin.rotation.y += dt * 15; }   // the shield spins FLAT — painted face flashing front/back
     else if (this.canister) { this.obj.rotation.x += dt * 7.5; this.obj.rotation.z += dt * 2.1; if (this._fuse) this._fuse.material.opacity = (Math.sin(this.life * 22) > 0) ? 0.9 : 0.25; if (this._pface) this._pface.material.opacity = (Math.sin(this.life * 22) > 0) ? 1 : 0.55; }   // shell tumbles, fuse blinks — pumpkin eyes blink WITH it
     else this.obj.rotation.y += dt * 6;
@@ -573,6 +590,15 @@ class Projectile {
       else if (this.blade) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.5, 1.5), vy: rand(-1, 1), vz: rand(-1.5, 1.5), life: 0.16, size: 0.9, color: ['#dfe6ee', '#9aa4b0'], drag: 4, shrink: true });
       else if (this.card) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(-1, 1), vz: rand(-1, 1), life: 0.2, size: 0.8, color: [this.color, '#ffdcdc'], drag: 4, shrink: true });   // narrow rose ribbon
       else if (this.disc) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.2, 1.2), vy: rand(-0.6, 0.6), vz: rand(-1.2, 1.2), life: 0.18, size: 0.9, color: ['#c9cfd9', '#eaf2ff'], drag: 4, shrink: true });   // metallic crescent
+      else if (this.missile) {
+        // THE SPIRAL MISSILE (Robert: "little spiral missiles that lead to smoke behind them"). The
+        // rocket flies its normal (homing) path; the SMOKE is emitted on a helix around that path, so
+        // the trail corkscrews — the spiral is in the exhaust, which reads and costs almost nothing.
+        const ph = this.life * 20, r = 1.8;
+        const px = -this.vel.z, pz = this.vel.x, pl = Math.hypot(px, pz) || 1;
+        const ox = (px / pl) * Math.cos(ph) * r, oz = (pz / pl) * Math.cos(ph) * r, oy = Math.sin(ph) * r;
+        game.particles.spawn({ x: this.pos.x + ox, y: this.pos.y + oy, z: this.pos.z + oz, vx: rand(-1, 1), vy: rand(0, 1.5), vz: rand(-1, 1), life: 0.6, size: 2.4, color: ['#d8d2c6', '#9a9488', '#6f6a60'], drag: 2.2, shrink: true });
+      }
       else if (this.arrow || !this._fx || this._fx.f.flight.style === 'none') game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
       else {
         // FAMILY FLIGHT STYLES (powerfx.js flight.style — the goal board's worst cell, 2/10):

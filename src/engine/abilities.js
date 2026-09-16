@@ -280,7 +280,8 @@ export const TYPES = {
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, webControl:def.webControl, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
-        blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
+        blade: def.blade, canister: def.canister, missile: def.missile,   // thrown steel / shells / rockets read as objects, not orbs
+        pierce: def.pierce,
         dtype: def.dtype, siphon: def.siphon, shockDuration:def.shockDuration,
         splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
       });
@@ -968,7 +969,7 @@ export const TYPES = {
           launchFlash:i===0?{color:'#ffcf6a',scale:cls==='shotgun'?.9:.55}:false,
           radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast ?? 2.2, power: 0.35,
           color: def.color, color2: def.color2, life: firearmLife({...def,weapon:cls}) * (aimed ? (def.stance.rangeMult ?? 1.8) : 1),
-          bullet: true, ballistic: true, dtype:def.dtype, weapon: cls, bounces: def.bounces,
+          bullet: true, ballistic: true, dtype:def.dtype, weapon: cls, bounces: def.bounces, pierce: def.pierce,   // AP rounds run RED
         });
       }
       if (aimed) st.cd = (def.interval || 0.5) * (def.stance.rateMult ?? 2.4);   // a settled shot is a SLOW shot
