@@ -19,7 +19,7 @@ export const HERO_MODELS = {
 
 export function heroModelOf(def) {
   const model={ costume:def.metal?'plated':'fitted',flightStyle:def.metal?'thruster':'martial',
-    hairColor:'#17242b',...HERO_MODELS[def.id],body:'faceted-v1',...def.model };
+    hairColor:'#17242b',body:'superhero-male',...HERO_MODELS[def.id],...def.model };
   model.definition ??= ({fitted:.85,martial:.5,tactical:.35,plated:.2})[model.costume]??.7;
   return model;
 }
