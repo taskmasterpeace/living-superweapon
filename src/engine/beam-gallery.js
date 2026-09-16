@@ -35,11 +35,16 @@ export class BeamGallery {
     // one passive target, straight down-range along +x, that the beam can play across
     this.target = game.spawnDummy ? game.spawnDummy(p.pos.x + 46, p.pos.z + 6) : null;
     if (this.target) { this.target.hp = this.target.maxHp = 1e9; this.target.invuln = 1e9; this.target._patrol = null; }
+    this._home = p ? p.pos.clone() : null;      // the caster stands still; frameCamera composes the view
+    // FREE THE CURSOR. A viewer is not mouse-look — clicking a button must not swing the view.
+    this._wasLock = game.input ? game.input.pointerLock : false;
+    if (game.input) game.input.pointerLock = false;
+    try { if (typeof document !== 'undefined' && document.pointerLockElement) document.exitPointerLock(); } catch {}
     this._buildChip();
     this._onKey = (e) => {
-      if (e.key === '.') { this.step(1); e.preventDefault(); }
-      else if (e.key === ',') { this.step(-1); e.preventDefault(); }
-      else if (e.key === '/') { this.cycleMode(); e.preventDefault(); }
+      if (e.key === '.' || e.key === 'ArrowRight') { this.step(1); e.preventDefault(); }
+      else if (e.key === ',' || e.key === 'ArrowLeft') { this.step(-1); e.preventDefault(); }
+      else if (e.key === '/' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { this.cycleMode(); e.preventDefault(); }
     };
     window.addEventListener('keydown', this._onKey, true);
     this.spawn();
@@ -56,9 +61,23 @@ export class BeamGallery {
     const c = this.caster, t = this.target; if (!c || !t) return;
     const dx = t.pos.x - c.pos.x, dy = (t.pos.y + 5) - (c.pos.y + 6), dz = t.pos.z - c.pos.z;
     const l = Math.hypot(dx, dy, dz) || 1;
-    if (c.aim3 && c.aim3.set) c.aim3.set(dx / l, dy / l, dz / l);
+    if (c.aim3 && c.aim3.set) c.aim3.set(dx / l, dy / l, dz / l);   // the BEAM fires at the target
     if (c.aim && c.aim.set) c.aim.set(dx / l, 0, dz / l);
     c.facing = Math.atan2(dx, dz);
+  }
+
+  // THE GALLERY OWNS THE CAMERA — game.cameraDrive yields to this (same pattern as the handheld
+  // device view). A proving stand is not mouse-look: the cursor stays free for the ◀ ▶ MODE
+  // buttons, and the view is COMPOSED — steered ~30° off the beam axis so the shaft crosses the
+  // frame side-on. Straight down the axis it foreshortens to a dot ("just looking at a pointer").
+  frameCamera(dt) {
+    const g = this.g, c = this.caster, t = this.target, w = g && g.world;
+    if (!w || !c) return false;
+    if (g.input) g.input.pointerLock = false;                    // clicking a button must not swing the view
+    const yaw = t ? Math.atan2(t.pos.x - c.pos.x, t.pos.z - c.pos.z) : c.facing;
+    w._lookActive = true; w._lookYaw = yaw - 0.52; w._lookPitch = 0.06;
+    w.chase(c, null, dt, 'bfp');                                 // the real BFP boom + collision, gallery-steered
+    return true;
   }
 
   _drop() {
@@ -94,18 +113,20 @@ export class BeamGallery {
   update() {
     const c = this.caster; if (!c) return;
     c.ki = c.maxKi; c.drainedT = 0; c.noPowers = true; c.energyInfinite = true;
-    this._aim();
+    if (this.g.input) this.g.input.pointerLock = false;               // free cursor — a viewer isn't mouse-look
+    if (this._home) { c.pos.copy(this._home); if (c.vel) c.vel.set(0, 0, 0); }   // caster stands still
+    this._aim();                                                       // beam + view stay locked on the target, never drift
     if (!this.beam || this.beam.dead) { this.spawn(); return; }
     const b = this.beam, pr = this.g.projectiles;
     b.sustaining = true;
-    // run the manager's per-beam prep the beam's own update expects (VEGA's spiral/siphon throws
-    // without axial support), THEN tick it directly — the gallery owns the beam so nothing else does.
+    // run only the per-beam prep the beam's own update expects (VEGA's spiral/siphon throws without
+    // axial support), THEN tick it directly. ⚠ NOT clipForContacts — that truncates the shaft at the
+    // target and was collapsing the beam to a stub ("the shaft is gone"). The gallery owns the tick.
     try {
       pr._directionBatch = (pr._directionBatch || 0) + 1;
       if (b._findAxialSupport) b._stepChest = b._findAxialSupport();
       b._directionBatch = pr._directionBatch;
       if (b._stepDirection && b.dir) b._stepDirection.copy(b.dir);
-      if (b.clipForContacts) b.clipForContacts(this.g);
       b.update(1 / 60, this.g);
     } catch (e) { this._lastErr = e.message; this._drop(); }
   }
@@ -148,6 +169,8 @@ export class BeamGallery {
     try { window.removeEventListener('keydown', this._onKey, true); } catch {}
     if (this.chip && this.chip.parentNode) this.chip.parentNode.removeChild(this.chip);
     this._drop();
+    if (this.g) this.g.mapCam = null;
+    if (this.g && this.g.input) this.g.input.pointerLock = this._wasLock;
     if (this.caster) { this.caster.noPowers = false; this.caster.energyInfinite = this._wasInfinite; }
     this.chip = null;
   }

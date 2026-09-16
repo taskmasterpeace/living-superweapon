@@ -1409,12 +1409,19 @@ class BeamHose {
       // spend the shared ki pool earlier in the reverse update order.
       if(dt<=0)return;
       if(!c.energyInfinite&&this.kiPerSec*dt>c.ki){game.onDrained?.(c,this);this._dispose(game);return;}
-      this.dir.copy(this._tmp);this.pn=2;this.grp.visible=true;
-      this._voice=this.game.audio.beamVoice?this.game.audio.beamVoice(c.pos):null;
+      this.dir.copy(this._tmp);
     }else{
       if(this._launchTarget)this.dir.copy(this._launchTarget).sub(this.muzzle).normalize();
       this._constrainAxial(this.dir,0);
     }
+    // ⚠ RESOLUTION RESTORES THE BODY — ON BOTH PATHS. A pose-gated beam is BUILT invisible
+    // (ctor: pn 0, grp hidden, light 0) and only resolution may un-hide it. `_poseLaunch` can be
+    // cleared between construction and resolution (the Beam Gallery clears it to fire without a
+    // launch animation), which used to route resolution through the else-branch above — and that
+    // branch never un-hid the group, so the shaft stayed invisible forever while the impact vfx
+    // kept drawing ("all you see is the end point"). Un-hiding belongs to resolution itself.
+    this.pn=Math.max(this.pn,2);this.grp.visible=true;
+    if(!this._voice)this._voice=this.game.audio.beamVoice?this.game.audio.beamVoice(this.caster.pos):null;
     this._launchResolved=true;this._launchTarget=null;
     if(this._chargedRelease){game.world.punch(.9);game.world.shake(.8);}
     // The first packets are born only after articulation. Constructor-time

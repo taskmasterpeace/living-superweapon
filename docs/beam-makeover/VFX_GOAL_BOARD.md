@@ -1213,3 +1213,19 @@ all data-driven; a Beam Gallery to explore them; fire that reads and scales; AP-
 spiral-smoke missiles on the same spine. Skill: `~/.claude/skills/wwa-beams`. Still open (the core
 render weakness): the additive shaft washes on the bright desert — the core+sheath+aura rebuild is the
 next real slice.
+
+**46 · THE VANISHING SHAFT + THE GALLERY VIEW** — Robert's live repro ("go away from a power and come
+back, the entire beam is gone — all you see is the end point") root-caused and fixed at the ENGINE.
+- **A pose-gated beam is BUILT invisible** (BeamHose ctor: pn 0, grp hidden, light 0) and only the
+  pendingLaunch resolve branch un-hid it. The gate arms on `caster.parts.rig` — which loads ASYNC, so
+  the gallery's first beam (rig not yet loaded) showed and every respawn after the rig landed was
+  constructed invisible; the gallery's `_poseLaunch=false` bypass then routed resolution through the
+  else-branch, which never restored the body. Fix: `resolveLaunch` restores pn/visibility/voice in the
+  common resolution tail — BOTH paths. Normal pose-launch behavior byte-identical (the restore runs at
+  the exact point the old line 1412 did).
+- **The gallery owns its camera now** (`frameCamera`, yielded to by `game.cameraDrive` — the handheld-
+  device pattern): free cursor for the ◀ ▶ MODE buttons (cameraDrive's `pointerLock=active` re-assert
+  was re-arming mouse-look every frame), and the view is COMPOSED ~30° off the beam axis via the real
+  BFP chase boom, so the shaft crosses the frame side-on instead of foreshortening to a dot.
+- Verified live in-engine: gated ctor (pn 0/hidden) → 90 gallery ticks → pn 15, visible, resolved,
+  voice up; camMode chase, lookYaw == beamYaw−0.52 exactly; pointer lock off.

@@ -4980,6 +4980,10 @@ export class Game {
    */
   cameraDrive(dt) {
     if(this.handheldDeviceView?.frameCamera(dt))return;
+    // The Beam Gallery proving stand owns the view (same yield as the handheld device above):
+    // free cursor for its ◀ ▶ MODE buttons — returning here also skips the pointerLock=active
+    // re-assert below, which was re-arming mouse-look every frame after the gallery freed it.
+    if(this.ms?.gallery?.frameCamera?.(dt))return;
     const view=combatView(this),active=combatLookActive(this);
     if(!active)clearForegroundVisibility(this.world);
     if(this.input)this.input.pointerLock=active;
