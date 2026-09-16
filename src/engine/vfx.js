@@ -380,7 +380,7 @@ export class VFX {
     // flame tongues for fire, shards for ice, else sparks. This is what makes a SUPERNOVA read as a
     // roiling sphere of its element, not a smooth balloon (Robert's "how we gonna make fire spherical").
     const skinShape = imp.afterFx === 'frostmist' ? 'shard' : imp.afterFx === 'embers' ? 'flame' : null;
-    this.flash(pos, imp.kernel, radius * 0.5, 0.16);
+    this.flash(pos, imp.kernel, radius * 0.32, 0.16);   // a tighter heart — the family SHELL owns the read (iter 16)
     this._add({
       update: (dt) => {
         t += dt; const k = t / life, e = 1 - Math.pow(1 - k, 2.4);

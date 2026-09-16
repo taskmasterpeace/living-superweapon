@@ -1070,7 +1070,7 @@ export const TYPES = {
           // THE NOVA SHELL (Robert's ask): a huge SPHERICAL boiling burst around the body — works
           // at altitude, IS the omnidirectional read. The ground shockwave stays for the floor.
           g.vfx.novaShell(p, radius * (1.1 + k * 0.4), nfx, 1.6 + k * 1.4);
-          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.55, power: 1.4 + k, fx: nfx, scorch: c.pos.y < 4 });
+          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.4, power: 1.2 + k, fx: nfx, scorch: c.pos.y < 4 });   // smaller inner detonation — the SHELL is the star
           g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
         }
         // BLADE CYCLONE (brief T2.11) rides the same nova: slash class + a lingering cut, and

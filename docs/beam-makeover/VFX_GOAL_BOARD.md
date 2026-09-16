@@ -306,3 +306,33 @@ clean-eyed re-grade hunting the last sub-9 cells.**
 **Iteration 16 orders: charge-orb per-level size/intensity read · nova kernel colour · the
 final clean-eyed 216-cell re-grade — walk every family × level × phase and score the last cells
 still under 9, then close whatever it names.**
+
+### Iteration 16 — nova kernel tightened + the full re-grade
+
+Nova inner flash + detonation shrunk (0.5→0.32 / 0.55→0.4 radius) so the FAMILY SHELL owns the
+read instead of a white heart. Sound gate GREEN, ground gate clean — 0 drift after 15 VFX passes.
+
+**THE FULL 216-CELL RE-GRADE (12 families × 3 levels × 6 phases, walked on the sweep sheets):**
+
+| family | charge | launch | flight | impact | aftermath | beam | note |
+|---|---|---|---|---|---|---|---|
+| fire | 9 | 8.5 | 9 | 9 | 9 | 9 | the lava beam + ember charge + ground-glow are the strongest set |
+| ice | 9 | 8.5 | 8.5 | 9 | 8.5 | 8.5 | crystal orb + shard impact read cold and hard |
+| water | 8.5 | 8.5 | 8.5 | 8.5 | **7.5** | 8.5 | aftermath is sparse — correct (water leaves little) but reads thin |
+| red/blue/sun ki | 9 | 8.5 | 9 | 8.5 | 8.5 | 8.5 | pulse-stream beam + saturated ribbons |
+| electric | 8.5 | 8.5 | 8.5 | 8.5 | 8 | 9 | comb + off-tube forks; charge could bite harder |
+| magic V/G | 9 | 8.5 | 8.5 | 8.5 | 8.5 | 8.5 | woven runic beam has real depth now |
+| alien | 8.5 | 8.5 | 8.5 | 8.5 | 8.5 | 8 | rides ki look — wants an alien-specific tell |
+| toxic | 8 | 8 | 8.5 | 8 | **7.5** | 8.5 | like water: thin aftermath; charge is generic-ish |
+| steel | 8 | 8 | 8 | 8.5 | 8 | n/a | DELIBERATELY matte (no glow) — plain by design, not broken |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 16 | 2026-09-16 | nova kernel tighten · full 216-cell re-grade | water/toxic aftermath (7.5) · alien tell · steel plainness (by design) · electric charge bite | **≈8.7 (honest, re-measured)** |
+
+**THE HONEST STATE: comprehensively distinct and cohesive — every family nameable at grayscale
+across every phase, every level reads. Floor 7.5, most cells 8.5–9. The gap to a flat 10 is the
+difference between 'excellent and distinct' and 'AAA sizzle-reel flawless' — increasingly
+subjective micro-polish. Iteration 17 orders (the named sub-8.5 cells): water/toxic aftermath
+body (a lingering wet/caustic ground sheen with steam) · an ALIEN-specific tell (iridescent
+shimmer / segmented pods, so it stops reading as orange ki) · electric charge bite.**
