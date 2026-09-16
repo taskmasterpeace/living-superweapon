@@ -1,4 +1,4 @@
-import {beginDeathPresentation,sampleDeathPresentation,deathPoseJoints,seedDeathContactMeshes} from './death-presentation.js';
+import {beginDeathPresentation,sampleDeathPresentation,advanceDeathPresentation,deathPoseJoints,seedDeathContactMeshes} from './death-presentation.js';
 import {advanceGuidedSpearPose,animateGuidedSpearPose,restoreGuidedSpearPose} from './guided-spear.js';
 import {physicalBodyWeightLb} from '../data/body-mass.js';
 import {vehicleContactSpeed,vehicleImpactDamage} from './shared-impact.js';
@@ -1636,9 +1636,12 @@ export class Fighter {
 
     if (this.state === 'ko') {
       if(this._deathPresentation){
-        const s=this._deathPresentation;s.elapsed=Math.min(s.duration,s.elapsed+dt);sampleDeathPresentation(this);
-        if(s.elapsed>=s.duration){const capturedJoints=deathPoseJoints(this);const restorePose=seedDeathContactMeshes(this,capturedJoints);this._deathPresentation=null;this.ragdoll=new Ragdoll(this,new THREE.Vector3(),{capturedJoints,restorePose,downward:true});this.ragdoll.coreContact?.settleIsland(game.world);for(const point of Object.values(this.ragdoll.P))point.prev.copy(point.pos);this.ragdoll.asleep=true;this.ragdoll._authoredRest=true;}
-        else return;
+        const status=advanceDeathPresentation(this,dt,game);
+        if(status==='play')return;                                     // the authored clip owns the frame; the actor is already posed
+        if(status==='abandon'){                                        // struck/displaced mid-clip → abandon to a full physics ragdoll from the current pose
+          this._deathPresentation=null;this.ragdoll=new Ragdoll(this,this.vel.clone().add(new THREE.Vector3(0,12,0)),{downward:false});
+        }else{                                                         // 'handoff' — clip complete: the settled pose becomes a RIGID authored-rest corpse (cannot spin; gravity-settles; sleeps)
+          const capturedJoints=deathPoseJoints(this);const restorePose=seedDeathContactMeshes(this,capturedJoints);this._deathPresentation=null;this.ragdoll=new Ragdoll(this,new THREE.Vector3(),{capturedJoints,restorePose,downward:true});this.ragdoll.coreContact?.settleIsland(game.world);for(const point of Object.values(this.ragdoll.P))point.prev.copy(point.pos);this.ragdoll.asleep=true;this.ragdoll._authoredRest=true;}
       }
       this._updateKO(dt, game);
       if (this.ragdoll) { this.ragdoll.step(dt, game); this.ragdoll.apply(this); this._sync(); return; }

@@ -3056,3 +3056,53 @@ Files: `src/engine/entity.js`, `src/core/util.js` (`PW_AIR`). Gate: `LSW.moveSui
   fights the momentum-commitment grammar and corrupted the tier-0 fighter's V1. `!_openSky`-scoped, so
   the city keeps it byte-for-byte; a clumsy flier in PowerWorld is "bad" through lower speed and worse
   hover, not a swerve.
+
+## §50 · THE DEATH & REACTION RESOLVER — authored deaths off the merged registry (2026-09-15)
+- Robert: *"Wire in the runtime death-reaction resolver using the already-merged Mac Asset Lab data."*
+  The registry (`public/models/modular-hero/death-reaction-registry.json`, Mission A) shipped with the
+  `asset-lab-death-set` merge and had **no runtime consumer** — `death-presentation.js` hard-coded ONE
+  clip (`Death01`) for soldiers and the handoff froze the ragdoll. Now the registry is the single source
+  of truth for the flow: **lethal damage → compatible context → an ACCEPTED authored slot → one-shot on
+  the modular actor → hold physics through the clip → clip-complete → rigid authored-rest corpse.**
+- **THE REGISTRY IS THE SELECTOR** (`death-presentation.js`). `beginDeathPresentation` reads the killing
+  blow's direction (`deathDirection` — attacker vs the victim's `(sin,cos)` forward), the posture
+  (airborne param), and the cause, then `chooseDeathSlot` maps to an ACCEPTED slot only (status ≠
+  `awaiting-source`): grounded front → `death.impact-front.a` (Death01) · grounded rear →
+  `death.impact-rear.a` (Death02) · bleed-out → `collapse.weakened` (registry: gunshots must NOT use it)
+  · airborne → the `death.airborne.fall → fall.loop → impact` chain. **No mirroring** — an unbuilt
+  direction (left/right/prone/crouched) falls back to the nearest BUILT slot with a logged reason, or to
+  the physics ragdoll. Nothing hard-codes a clip per context.
+- ⚠ **THE GLB CARRIES Death01 AND NOTHING ELSE OF THE SET.** The self-proof caught it: Death02, the
+  knockback, the airborne chain and the get-ups live in `warworld-motion-bank.json`, not baked into
+  `modular-hero.glb`. `loadDeathRegistry` now also parses the accepted war-bank clips ONCE (shared,
+  immutable source) and `attachDeathClips(c)` copies them onto each soldier's actor at load — the same
+  pattern as the paid bank. A slot whose clip is not on the actor is never chosen (safe fallback).
+- ⚠ **THE DEFAULT `fetch` MUST BE BOUND** (`fetch.bind(globalThis)`) — `modular-character.js` calls
+  `loadDeathRegistry()` with no arg, and an unbound `fetch` throws *Illegal invocation* in the browser,
+  which would have silently disabled the whole feature in the live game while the bound-fetch test passed.
+- **THE HANDOFF IS THE SHIPPED `_authoredRest` CORPSE** (`ragdoll.js:155`), reused deliberately: it holds
+  the settled death pose, only gravity-settles to the ground, and sleeps. **It cannot rotate**, so the
+  documented `maxAngularVelocityRadS` clamp (6 general / 2 settled) is realised at its floor — an already-
+  settled body that CANNOT helicopter. Zero ragdoll.js change, so the city KO/ragdoll is byte-identical.
+  ⚠ **A launched death is NOT a settled death** — killing impulse > 28 u/s → no presentation, full physics
+  ragdoll (the body tumbles with the blow). And a fresh hit / displacement DURING the clip **abandons** to
+  a full ragdoll from the current pose (`advanceDeathPresentation` returns `'abandon'`), per the registry's
+  "if displaced mid-clip, abandon." `_ko` clears `launchT` when it commits so the fatal blow's own launch
+  doesn't false-abandon on frame one.
+- **NONLETHAL HEAVY KNOCKDOWN** rises through the accepted get-up: `modular-character.js`'s impact-recovery
+  pose now calls `getupTake(f,'supine')` → `getup.from-supine` (paired with `knockdown.impact-front.heavy`),
+  falling back to the shipped `Impact_Getup` until the paid KG get-up is attached. The reaction path
+  (stun-fall → impact-recovery → get-up → control) is the one that already existed; it now uses the
+  accepted clip and still returns control.
+- **THE RESOLVER IS PRESENTATION ONLY.** It runs BETWEEN the existing `_ko` (which already booked the kill)
+  and the existing ragdoll — it never re-KOs, re-drops loot, or fires a second damage event. Verified:
+  `handleKO` fires **exactly once** per soldier across the whole sequence; drops/corpse-persistence/Elo are
+  untouched.
+- Harness: `LSW.deathSuite()` (`src/bench/death-reaction.js`, driver `tools/death-reaction-browser.mjs`) —
+  drives real front/rear/airborne KOs and the knockdown through `takeDamage`, **18/18, 0 console errors**:
+  front→Death01 · rear→Death02 · authored death before ragdoll · rigid handoff · Δ0u spin over 1s · settles
+  to sleep · corpse persists · handleKO once · a corpse cannot act · knockdown returns control.
+- **Left deliberately** (`docs/BACKLOG.md`): the airborne chain is best-effort "where the state is
+  compatible" (falls back to the physics ragdoll otherwise); the `knockdown.impact-front.heavy` DOWN clip is
+  available but the down phase is still the physics stun-fall (the get-up is the wired half); and the paid
+  get-up only lands once the async paid bank is attached (Impact_Getup covers the gap).

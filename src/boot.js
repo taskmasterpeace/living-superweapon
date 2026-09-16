@@ -689,6 +689,7 @@ export function boot(P = PROFILE_FULL) {
   handle.impactSuite = async (o) => (await import('./bench/pwimpact.js')).impactSuite(game, hud, o);
   handle.groundSuite = async (o) => (await import('./bench/ground.js')).groundSuite(game, o);
   handle.audioSuite = async (o) => (await import('./bench/audio.js')).audioSuite(game, hud, o);
+  handle.deathSuite = async (o) => (await import('./bench/death-reaction.js')).deathSuite(game, hud, o);
   handle.injectCityDrag = async (f) => (await import('./bench/pwmove.js')).injectCityDrag(game, f);
   handle.injectVelocityWritingTransition = async (f) => (await import('./bench/transition.js')).injectVelocityWritingTransition(game, f);
   handle.injectBadGait = async (f) => (await import('./bench/transition.js')).injectBadGait(game, f);

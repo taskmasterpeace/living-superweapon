@@ -1,4 +1,4 @@
-import {sampleDeathPresentation} from './death-presentation.js';
+import {sampleDeathPresentation,getupTake,loadDeathRegistry,attachDeathClips} from './death-presentation.js';
 import impactGetup from '../data/impact-getup-clip.json' with {type:'json'};
 import {animateModularHeldGrip,animateModularHeldReceiver} from './modular-held-pose.js';
 import {addModularMotions,canPoseInfectedFlight,poseInfectedFlight} from './modular-motions.js';
@@ -122,7 +122,10 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
    const r=f._impactRecovery,u=T.MathUtils.clamp((r.elapsed-.25)/.85,0,1);
    // Preserve current native end pose for a short final blend back to control.
    const native=[];c.actor.traverse(o=>{if(o.isBone)native.push([o,o.position.clone(),o.quaternion.clone()]);});
-   c.pose('Impact_Getup',u);
+   // Nonlethal heavy knockdown rises through the ACCEPTED registry get-up
+   // (getup.from-supine, paired with knockdown.impact-front.heavy); Impact_Getup
+   // is the safe fallback until the purchased KG get-up is attached.
+   c.pose(getupTake(f,'supine')||'Impact_Getup',u);
    const blend=1-T.MathUtils.smoothstep(r.contactAge??r.elapsed,0,.15)*(1-T.MathUtils.smoothstep(u,.8,1));
    for(const [bone,position,q]of native){bone.position.lerp(position,blend);bone.quaternion.slerp(q,blend);}
    c.actor.updateWorldMatrix(true,true);
@@ -154,5 +157,9 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   if(f._modularCharacter!==c||f._modularEpoch!==epoch)return;
   attachPaidMotionBank(f,c,bank);f._paidMotionError=null;
  }).catch(error=>{if(f._modularCharacter===c)f._paidMotionError=error.message;});
+ // Soldiers get the authored death/knockdown/airborne clips the GLB does not carry,
+ // so the death-reaction resolver can select them. Late, off the playable frame.
+ if(typeof window!=='undefined'&&(f.def.highwallBiological===true||heroModelOf(f.def).equipment==='soldier'))
+  loadDeathRegistry().then(()=>{if(f._modularCharacter===c&&f._modularEpoch===epoch)attachDeathClips(c);}).catch(()=>{});
  return c;
 }

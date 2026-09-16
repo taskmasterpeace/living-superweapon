@@ -1,0 +1,117 @@
+{
+ "suite": "death-reaction",
+ "pass": 18,
+ "fail": 0,
+ "total": 18,
+ "errors": [],
+ "rows": [
+  {
+   "name": "SELF: soldier carries the modular actor",
+   "pass": true,
+   "got": true,
+   "want": "a modular character"
+  },
+  {
+   "name": "SELF: death registry loaded",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "SELF: front death clip (Death01) on actor",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "SELF: rear death clip (Death02) on actor",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "C1 front-impact kill selects Death01",
+   "pass": true,
+   "got": "Death01",
+   "want": "Death01"
+  },
+  {
+   "name": "C2 authored death plays BEFORE ragdoll (front)",
+   "pass": true,
+   "got": "pres=true rag=false",
+   "want": "pres=true rag=false"
+  },
+  {
+   "name": "C1 rear-impact kill selects Death02",
+   "pass": true,
+   "got": "Death02",
+   "want": "Death02"
+  },
+  {
+   "name": "C3 handed off to a ragdoll after the clip",
+   "pass": true,
+   "got": "rag=true pres=false",
+   "want": "rag=true pres=false"
+  },
+  {
+   "name": "C3 handoff is the rigid authored-rest corpse",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "C3 the body does not spin (Δ<1u over 1s after settle)",
+   "pass": true,
+   "got": 0,
+   "want": "< 1u"
+  },
+  {
+   "name": "C3 corpse settles to sleep",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "C4 corpse persists as an entity",
+   "pass": true,
+   "got": true,
+   "want": "present, not alive"
+  },
+  {
+   "name": "C5/C8 handleKO fired exactly once for the soldier",
+   "pass": true,
+   "got": 1,
+   "want": 1
+  },
+  {
+   "name": "C6 KO state holds; a corpse cannot fire or move",
+   "pass": true,
+   "got": "ko=true acted=false",
+   "want": "ko=true acted=false"
+  },
+  {
+   "name": "C7 heavy knockdown enters the impact-recovery reaction",
+   "pass": true,
+   "got": true,
+   "want": true
+  },
+  {
+   "name": "C7 the accepted get-up clip resolves",
+   "pass": true,
+   "got": "Impact_Getup",
+   "want": "a get-up clip on the actor"
+  },
+  {
+   "name": "C7 control returns after the get-up (alive, not KO)",
+   "pass": true,
+   "got": "recovered=true alive=true state=idle",
+   "want": "recovered, alive, controllable"
+  },
+  {
+   "name": "NO CONSOLE ERRORS",
+   "pass": true,
+   "got": 0,
+   "want": 0
+  }
+ ]
+}

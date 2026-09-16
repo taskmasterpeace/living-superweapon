@@ -3794,3 +3794,37 @@ honestly lopsided, production build passes, sim still 0.64ms/frame.
   option later but the offline procedural path is the product default. Versus mode. Ring-out KOs. Netcode (LAN-ready).
 - Number keys only reach heroes 1–10; TORCH/APEX/SPECTER/VANGUARD are TAB-only for now.
 - Ragdoll tuning knobs live in `ragdoll.js` (masses in `REST`, brace stiffness in `BONES`, `GROUND_R`, sleep threshold).
+
+## THE DEATH & REACTION RESOLVER (2026-09-15) — the merged registry got a runtime, COMBAT_MANUAL §50
+- Robert: *"Wire in the runtime death-reaction resolver using the already-merged Mac Asset Lab data.
+  Use only the currently proven slots; ignore awaiting-source."* The Mission A registry
+  (`public/models/modular-hero/death-reaction-registry.json`) shipped with the `asset-lab-death-set`
+  merge and had **no runtime consumer** — `death-presentation.js` hard-coded ONE clip (`Death01`) for
+  soldiers and the handoff froze the ragdoll. Now the registry is the SELECTOR: lethal damage →
+  context → an ACCEPTED slot → one-shot on the modular actor → hold physics → clip-complete → the
+  rigid `_authoredRest` corpse. Grounded front→Death01, rear→Death02 (direction from the killing blow
+  vs `(sin,cos)` facing), airborne fall→impact chain, bleed-out→collapse.weakened. **No mirroring** —
+  an unbuilt direction falls back to the nearest BUILT slot with a logged reason, else the physics
+  ragdoll. `data/soldier-family.js` units (`faceted-v1` + `equipment:'soldier'`) are the carriers.
+- ⚠ **THE GLB CARRIES Death01 AND NOTHING ELSE OF THE SET** — the self-proof caught it. Death02, the
+  knockback, the airborne chain and get-ups live in `warworld-motion-bank.json`, not the GLB.
+  `loadDeathRegistry` parses the accepted war-bank clips once (shared, immutable) and `attachDeathClips`
+  copies them onto each soldier's actor at load, same as the paid bank. A slot whose clip isn't on the
+  actor is never chosen.
+- ⚠ **AN UNBOUND `fetch` DEFAULT THROWS *Illegal invocation* IN THE BROWSER** — `modular-character.js`
+  calls `loadDeathRegistry()` with no arg, so the default is `fetch.bind(globalThis)`. The bound-fetch
+  test would have gone green while the live game silently never attached the clips.
+- ⚠ **REUSE `_authoredRest`, DON'T TOUCH ragdoll.js.** The shipped rigid-corpse handoff holds the
+  settled pose and gravity-settles — it **cannot spin**, so the documented 6/2 rad/s clamp is realised
+  at its floor and acceptance "does not spin indefinitely" is free with the city KO byte-identical.
+  A launched death (impulse > 28 u/s) → no presentation, full physics ragdoll; a hit/displacement
+  MID-CLIP → `advanceDeathPresentation` returns `'abandon'` → full ragdoll. `_ko` clears `launchT` on
+  commit so the fatal blow's own launch doesn't false-abandon on frame one.
+- ⚠ **PRESENTATION ONLY — no second event.** It runs BETWEEN the existing `_ko` (kill already booked)
+  and the existing ragdoll; it never re-KOs, re-drops loot or re-damages. Verified `handleKO` fires
+  exactly once. Nonlethal knockdown rises through the accepted `getup.from-supine` (impact-recovery
+  path), falling back to `Impact_Getup`, and still returns control.
+- Harness `LSW.deathSuite()` (`src/bench/death-reaction.js` + `tools/death-reaction-browser.mjs`):
+  **18/18, 0 console errors** through real `takeDamage` KOs. Golden Path beat #2 is now WIRED
+  (`docs/GOLDEN_PATH.md`). Deliberately left in `docs/BACKLOG.md`: airborne "where compatible", the
+  knockdown DOWN clip, the async paid get-up, and all awaiting-source slots.

@@ -321,3 +321,16 @@ closed 2026-07-26 by `hud.updateHands`.** What is left:
   (the only quiet corner once the stick and fire button are placed) and drops the label and the
   consequence line. Verified as geometry on a desktop viewport; never held in a hand.
 
+
+## Death & reaction resolver — deliberately left (2026-09-15, COMBAT_MANUAL §50)
+- **Airborne death chain is best-effort "where compatible."** `death.airborne.fall → fall.loop → impact`
+  plays with a manual gravity descent; anything anomalous falls back to the physics ragdoll (today's
+  behaviour) — additive, zero regression. Not stress-tested across every launch angle.
+- **The knockdown DOWN clip is not driving the down phase.** `knockdown.impact-front.heavy` (Hit_Knockback)
+  is attached and paired, but the down phase is still the physics stun-fall; the wired half is the get-up
+  (`getup.from-supine`). A future pass can play the authored knockback on a heavy nonlethal hit.
+- **Paid get-up is async.** `getup.from-supine` (paid `Paid_AS_KG_Back_Getup`) lands only once the paid
+  motion bank has attached; until then the shipped `Impact_Getup` covers it (control still returns).
+- **awaiting-source slots stay unbuilt** until the purchased Windows KG library transfers
+  (`docs/TRANSFER_REQUEST_ANIMATIONS.md`): left/right-impact deaths, prone/crouched deaths, rear knockdown,
+  staggers. The resolver falls back to the nearest built slot; no mirrored/improvised clip is ever used.
