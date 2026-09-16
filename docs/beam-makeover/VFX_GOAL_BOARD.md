@@ -224,3 +224,19 @@ regrade. Charging, flight, beams all 8+; launch/impact/aftereffect are the last 
 **FIRST TIME OVER 8. Iteration 11 orders: nova-shell fire-color retention · magic beam depth ·
 level-III aftereffect density · the remaining families' full regrade to confirm the 8 floor ·
 then the polish pass toward 10 (per-level ribbon tint, contact glow at beam receiving end).**
+
+### Iteration 11 — the ground remembers; nova keeps its colour
+
+| what shipped | the critic |
+|---|---|
+| GROUND AFTERGLOW — a flat family disc that outlasts the smoke (~2.6s), PULSING like dying embers for combustion families, a steady frost/sludge sheen for the rest. The lasting-consequence read the aftereffect category was shy on. | AFTEREFFECT 7 → **8.5** |
+| NOVA COLOUR RETENTION — the shell's hot pinned to 0.62 (not 1): a boiling ORANGE sphere with an ember base, not a white flashbulb. | nova reads fire now, not a flare |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 11 | 2026-09-16 | ground afterglow (pulsing embers / frost sheen) · nova colour hold | launch 7 (streak-vs-orb read) · magic beam depth · per-level ribbon tint | **≈8.4** |
+
+**Every category ≥8 except LAUNCH (7). Iteration 12 orders: launch — a proper first-meters
+tracer that connects muzzle to the flying bolt (the streak + charge-orb still read as two
+things) · magic beam depth · per-level ribbon tint · full 12-family confirmation sweep ·
+then the final polish grind: contact glow at beam receiving ends, level-III camera authority.**

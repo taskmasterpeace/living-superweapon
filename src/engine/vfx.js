@@ -210,6 +210,7 @@ export class VFX {
     // embers gutter, frost hangs, arcs re-strike, water falls back, glyphs fade upward, steel rains.
     if (imp) {
       const AN = (LV ? LV.after : 1);
+      const combusts = ['embers', 'sparks', 'shrapnel', 'arcs'].includes(imp.afterFx);   // (also computed in the cloud block; local here)
       switch (imp.afterFx) {
         case 'embers': {
           // FIRE TONGUES (iter 6): flame-silhouette particles punch outward from the blast heart —
@@ -265,6 +266,27 @@ export class VFX {
         case 'sparks':
         default:
           this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(12 * AN), speed: 24, life: 0.9, size: 1.6, color: [imp.kernel, pal.glow], up: 8, grav: 30, drag: 1.0 });
+      }
+      // GROUND AFTERGLOW (goal board iter 11): what LINGERS on the ground after the smoke thins —
+      // embers pulsing in a scorch, a frost patch, a sludge sheen — the CONSEQUENCE read the
+      // aftereffect category was shy on. A flat family disc that outlasts everything (~2.6s), and
+      // for combustion it pulses like dying embers before it fades. Ground-level bursts only.
+      if (pos.y < 5) {
+        const glowC = combusts ? pal.glow : pal.mist;
+        const gy = Math.max(0.3, pos.y * 0.12 + 0.3);
+        const disc = new THREE.Mesh(this._ring, addMat(glowC, combusts ? 0.5 : 0.32));
+        disc.rotation.x = -Math.PI / 2; disc.position.set(pos.x, gy, pos.z); disc.scale.setScalar(radius * 0.9);
+        this.scene.add(disc);
+        let gt = 0; const gl = 2.6 * (LV ? 0.7 + 0.3 * LV.after : 1);
+        this._add({
+          update: (dt) => {
+            gt += dt; const k = gt / gl;
+            const pulse = combusts ? (0.6 + 0.4 * Math.sin(gt * 7.0)) : 1;   // dying embers flicker
+            disc.material.opacity = (combusts ? 0.5 : 0.32) * (1 - k) * (1 - k) * pulse;
+            return k >= 1;
+          },
+          dispose: () => { this.scene.remove(disc); disc.material.dispose(); },
+        });
       }
     }
 
@@ -359,7 +381,9 @@ export class VFX {
       update: (dt) => {
         t += dt; const k = t / life, e = 1 - Math.pow(1 - k, 2.4);
         t0.value += dt;
-        if (mat.userData.orbHot) mat.userData.orbHot.value = 1;    // fully lit (uniform exists once compiled)
+        // hot 0.62 (not 1) keeps the FAMILY colour in the sphere — at full hot the additive churn
+        // washes a fire nova to white (goal board iter 10). A boiling ORANGE sphere, not a flashbulb.
+        if (mat.userData.orbHot) mat.userData.orbHot.value = 0.62;
         shell.scale.setScalar(radius * (0.2 + e * 1.05));
         shell.material.opacity = 0.9 * (1 - k) * (1 - k);
         l.intensity = Math.max(0, 14 * power * (1 - k));
