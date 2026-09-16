@@ -25,7 +25,17 @@ varying float vShape;
 uniform float uTime;
 uniform float uFlamePass;
 void main() {
+  // round dots blend additively (pass 0); flame + shard silhouettes normal-blend (pass 1)
   if((vShape>.5)!=(uFlamePass>.5))discard;
+  if(vShape>1.5){
+    // SHARD (ice spikes, crystal debris): a hard-edged elongated diamond with a bright spine —
+    // the silhouette that says "solid fragment", not a soft puff. One shape, any family color.
+    vec2 s=gl_PointCoord-.5;
+    float diamond=abs(s.x)*3.0+abs(s.y)*1.35;   // narrow + tall = a shard, not a lozenge
+    if(diamond>.5)discard;
+    float spine=1.0-smoothstep(0.0,.12,abs(s.x));
+    gl_FragColor=vec4(mix(vColor,vec3(1.0),spine*.7),(1.0-smoothstep(.32,.5,diamond))*vAlpha);return;
+  }
   if(vShape>.5){
     // Fire tongues rise and curl; energy/snow retain their existing soft dots.
     float height=1.0-gl_PointCoord.y;
@@ -107,7 +117,7 @@ export class Particles3D {
     this.size[i] = this.size0[i] = o.size || 2.4;
     this.shrink[i] = o.shrink === false ? 0 : 1;
     this.alpha[i] = 1;
-    this.shape[i]=o.shape==='flame'?1:0;
+    this.shape[i]=o.shape==='flame'?1:o.shape==='shard'?2:0;
   }
 
   // radial / directional burst

@@ -221,7 +221,9 @@ export class VFX {
         }
         case 'frostmist':
           this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(12 * AN), speed: 2.5, life: 3.0, size: 6, color: [pal.mist, pal.smoke[0]], up: 1.2, grav: -0.4, drag: 2.2 });
-          this.P.burst(pos.x, pos.y + 0.5, pos.z, { count: Math.round(10 * AN), speed: 16, life: 0.8, size: 1.2, color: [pal.core, pal.glow], up: 8, grav: 40, drag: 0.8 });   // shard glitter
+          // ICE SPIKES (iter 7): real shard silhouettes burst out and fall — a fragment, not glitter
+          this.P.burst(pos.x, pos.y + 0.5, pos.z, { count: Math.round(9 * AN), speed: 18, life: 0.85, size: 3.4, color: [pal.core, pal.glow], up: 10, grav: 55, drag: 0.6, shape: 'shard' });
+          this.P.burst(pos.x, pos.y + 0.5, pos.z, { count: Math.round(8 * AN), speed: 14, life: 0.7, size: 1.1, color: [pal.core, '#ffffff'], up: 6, grav: 40, drag: 0.8 });
           break;
         case 'arcs': {
           // re-strikes must OUTLIVE the flash — the aftermath frame is where electricity says

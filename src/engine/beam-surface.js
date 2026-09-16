@@ -27,7 +27,8 @@ export function beamVisualFamily(options={}){
  if(options.faceOrigin)return 'ray';
  const fam=options.fxFam;   // the powerfx family, threaded from spawnBeamFor (Refs #42 iter 5)
  if(fam==='fire'||options.material==='fire'||options.dtype==='fire')return 'fire';
- if(fam==='ice'||fam==='water'||options.dtype==='cold')return 'ice';
+ if(fam==='ice'||options.dtype==='cold')return 'ice';
+ if(fam==='water'||fam==='toxic')return 'fluid';
  if(fam==='electric')return 'shock';
  if(fam==='magicViolet'||fam==='magicGreen')return 'magic';
  if(fam==='energyRed'||fam==='energyBlue'||fam==='energySun'||fam==='alien')return 'ki';
@@ -71,8 +72,31 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
  } else if(family==='ray'){
   time={value:0};shadeRayCore(core,time);core.side=THREE.DoubleSide;
   glow.opacity*= .45;   // a ray is nearly all core — the halo stays a whisper
+ } else if(family==='fluid'){
+  time={value:0};shadeFluidCore(core,time);core.side=THREE.DoubleSide;
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE TORRENT (water/toxic): a pressurised jet, not a beam — turbulent surging bands that flow
+// down the arc, brightest along the spine, with a churning translucent skin. Color-agnostic.
+function shadeFluidCore(material,time){
+ material.forceSinglePass=true;material.side=THREE.DoubleSide;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.fluidTime=time;
+  shader.vertexShader='attribute float beamArc;varying float fluidArc;varying vec3 fluidField,fluidNormal,fluidEye;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+fluidArc=beamArc;fluidField=normal;fluidNormal=normalize(normalMatrix*normal);fluidEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
+  shader.fragmentShader='uniform float fluidTime;varying float fluidArc;varying vec3 fluidField,fluidNormal,fluidEye;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(fluidField);
+float flow=fluidArc*.4-fluidTime*16.0;
+float surge=.5+.5*sin(flow+sin(flow*.5+dot(fld,vec3(3.1,5.7,2.3))));
+float turb=.5+.5*sin(flow*1.7-dot(fld,vec3(6.2,2.1,4.4)));
+float facing=abs(dot(normalize(fluidNormal),normalize(fluidEye)));
+float band=smoothstep(.35,.85,surge*.65+turb*.35);
+diffuseColor.rgb=mix(diffuseColor.rgb*.7,diffuseColor.rgb*1.5+vec3(.3),band);
+diffuseColor.a*=(.4+.6*band)*(.4+.6*facing)*smoothstep(0.0,1.2,fluidArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-fluid-v1';
 }
 
 // THE RAY (faceOrigin — heat vision, optic blasts): not a hose. A white-hot filament with the
@@ -85,10 +109,11 @@ function shadeRayCore(material,time){
 rayArc=beamArc;rayNormal=normalize(normalMatrix*normal);rayEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
   shader.fragmentShader='uniform float rayTime;varying float rayArc;varying vec3 rayNormal,rayEye;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
 float facing=abs(dot(normalize(rayNormal),normalize(rayEye)));
-float core=pow(facing,3.0);
-float shimmer=.93+.07*sin(rayArc*3.1+rayTime*47.0);
-diffuseColor.rgb=mix(diffuseColor.rgb*.95,vec3(1.9,1.82,1.65),core)*shimmer;
-diffuseColor.a*=(.3+1.0*core)*smoothstep(0.0,.8,rayArc);`);
+float core=pow(facing,2.2);                 // wider hot core (was pow 3 — read thin AND dim)
+float shimmer=.9+.1*sin(rayArc*3.1+rayTime*47.0);
+float edge=smoothstep(.0,.5,1.0-facing);    // the authored color survives as a heat-shimmer rim
+diffuseColor.rgb=mix(diffuseColor.rgb*(1.0+edge*.6),vec3(2.4,2.25,2.0),core)*shimmer;
+diffuseColor.a*=(.45+1.0*core)*smoothstep(0.0,.6,rayArc);`);
  };
  material.customProgramCacheKey=()=> 'beam-ray-v1';
 }
