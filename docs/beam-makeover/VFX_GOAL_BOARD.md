@@ -1170,3 +1170,46 @@ smoke-trail missiles, a beam gallery/explorer.
 **In-game (chase cam, worktree server /powerworld.html):** NOVA Star Lance = a thin needle · MARSHAL
 Alien Vision = beads · MYSTWARD Eldritch Whip (E) = a lashing tail · plus iter-40's TORCH cone / KANO
 pulse / VEGA corkscrew / MAJESTY focus.
+
+---
+
+## Iterations 42–44 (2026-09-16) — the /goal four: gallery · more · fire · projectiles
+
+Robert set a four-part goal; each shipped and verified as its own slice (all third-person, no headless
+stills — he grades live).
+
+**42 · MORE MODES + FAMILIES + THE GALLERY** (commit dbdaa2b)
+- Three more behaviour modes: `taper` (fat hand → fine tip), `throb` (whole beam breathes), `zigzag`
+  (angular lateral). Authored: IRONCLAD Unibeam=taper, TITAN Twin Cannon=throb, VOLT Arc Beam=zigzag.
+  Twelve modes total, verified by `_sweep` unit test.
+- The **VOID family** (the dark/absorbing beam Robert liked on the poster): near-black normal-blended
+  core, the authored colour surviving only as an unstable rim + smoky distortion. `material:'shadow'`;
+  RIFT's Rift Ray carries it. `beam-surface.js shadeVoidCore`.
+- **THE BEAM GALLERY** (`engine/beam-gallery.js`, ◈ button on the PowerWorld title, encounter:'gallery'):
+  a proving stand — one caster, one invulnerable target, all 24 roster beams on a wheel; `,`/`.` cycle
+  the beam, `/` cycles a MODE override to see every behaviour on one beam; a chip reads OWNER · NAME ·
+  BUILD · TEMPER · MODE. It OWNS its beam (pulled from projectiles.list, ticked directly with
+  poseLaunch:false + energyInfinite) so the manager's dt=0 pre-passes can't starve emission. Verified
+  live: SOL and KANO emit full-length in chase cam; KANO's waveform visibly zigzags.
+
+**43 · THE FIRE PASS** (commit f4c8778) — reads as flame, cheaper, and the catch-fire base.
+- Burning now emits the pool's flame SHAPE (ember→orange→yellow + soot) at the SAME per-frame budget
+  (one shared instanced pool, rate-capped) — a hundred burning things cost what the pool already costs.
+- `game.ignite(f,{dps,dur,src})`: the ONE front door for "non-metal catches fire", gated to non-metal,
+  routed through the burn DoT (inherits resistances + choke point + KO booking). Verified: ignite(RIME)
+  true & burning; ignite(TITAN metal) false & not burning.
+- Fire beam gains a white-hot heart on its densest flame (one mix, same pass) so it has tonal range.
+
+**44 · PROJECTILES** (commit 23a8628) — same data spine (a flag on the ability).
+- **AP = RED**: a bullet with `pierce>0` draws with MAT_BULLET_AP (tungsten slug) + MAT_TRACER_AP
+  (#ff2a1a). pierce forwards through projectile + rifle spawners. MERC's AP Sidearm carries it —
+  verified tracer #ff2a1a.
+- **SPIRAL SMOKE MISSILE**: `missile:true` → a slender rocket that noses into its path with the SMOKE
+  emitted on a helix around the flight line (the corkscrew is in the exhaust — cheap, readable).
+  IRONCLAD Micro-Missiles carry it (homing:3) — verified mesh + homing + smoke.
+
+**Where the third-person system stands:** BUILD × TEMPER × **MODE (12)** × **FAMILY (now incl. void)**,
+all data-driven; a Beam Gallery to explore them; fire that reads and scales; AP-red bullets and
+spiral-smoke missiles on the same spine. Skill: `~/.claude/skills/wwa-beams`. Still open (the core
+render weakness): the additive shaft washes on the bright desert — the core+sheath+aura rebuild is the
+next real slice.
