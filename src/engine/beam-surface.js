@@ -24,8 +24,12 @@ diffuseColor.a*=density*density;`);
 export function beamVisualFamily(options={}){
  // Heat vision deals thermal damage but is still an authored optical ray.
  if(options.faceOrigin)return 'energy';
- if(options.material==='fire'||options.dtype==='fire')return 'fire';
- if(options.dtype==='cold')return 'ice';
+ const fam=options.fxFam;   // the powerfx family, threaded from spawnBeamFor (Refs #42 iter 5)
+ if(fam==='fire'||options.material==='fire'||options.dtype==='fire')return 'fire';
+ if(fam==='ice'||fam==='water'||options.dtype==='cold')return 'ice';
+ if(fam==='electric')return 'shock';
+ if(fam==='magicViolet'||fam==='magicGreen')return 'magic';
+ if(fam==='energyRed'||fam==='energyBlue'||fam==='energySun'||fam==='alien')return 'ki';
  return 'energy';
 }
 
@@ -55,8 +59,77 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   shadeIceCore(core,time);
   core.blending=THREE.NormalBlending;core.side=THREE.DoubleSide;core.opacity=1;
   tip.color.set('#eaffff');if(detail)detail.color.set('#d8f2ff');
+ } else if(family==='shock'){
+  time={value:0};shadeShockCore(core,time);core.side=THREE.DoubleSide;
+ } else if(family==='ki'){
+  time={value:0};shadeKiCore(core,time);core.side=THREE.DoubleSide;
+ } else if(family==='magic'){
+  time={value:0};shadeSigilCore(core,time);core.side=THREE.DoubleSide;
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE COMB (electric) — hairline bolt lanes crawling the tube, jumping on a ~22Hz hash clock:
+// stepped displacement reads as ARCING; smooth drift reads as hair (the mined comb law).
+// Color-agnostic: modulates whatever the material's authored color is — the shader owns structure.
+function shadeShockCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.shockTime=time;
+  shader.vertexShader='attribute float beamArc;varying float shockArc;varying vec3 shockField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+shockArc=beamArc;shockField=normal;`);
+  shader.fragmentShader='uniform float shockTime;varying float shockArc;varying vec3 shockField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(shockField);
+float ang=atan(fld.y,fld.x)/6.28318+.5;
+float tick=floor(shockTime*22.0);
+float lanes=0.0;
+for(int i=0;i<3;i++){
+ float fi=float(i);
+ float off=fract(sin(tick*12.9898+fi*78.233)*43758.5453)*2.0-1.0;
+ float cell=fract(ang*3.0+fi*.333+off*.22+shockArc*.055);
+ lanes=max(lanes,pow(1.0-smoothstep(0.0,.15,abs(cell-.5)*2.0),2.0));
+}
+float flick=.7+.3*fract(sin(tick*3.7)*13.51);
+diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),lanes*.85);
+diffuseColor.a*=(.16+lanes*1.25)*flick*smoothstep(0.0,1.2,shockArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-shock-v1';
+}
+
+// THE STREAM (ki) — traveling energy packets racing muzzle→tip: the single cheapest
+// "stream, not laser" read, riding the traveled arc so bends carry their pulses.
+function shadeKiCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.kiTime=time;
+  shader.vertexShader='attribute float beamArc;varying float kiArc;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+kiArc=beamArc;`);
+  shader.fragmentShader='uniform float kiTime;varying float kiArc;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+float pulse=pow(.5+.5*sin(kiArc*.35-kiTime*34.0),7.0);
+float pulse2=pow(.5+.5*sin(kiArc*.13-kiTime*21.0+2.1),9.0);
+float hot=max(pulse,pulse2*.7);
+diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.9+vec3(.55),hot);
+diffuseColor.a*=(.5+.6*hot)*smoothstep(0.0,1.2,kiArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-ki-v1';
+}
+
+// THE INSCRIPTION (magic) — rune dashes drifting slowly down the shaft with a deeper band
+// pulse underneath: deliberate, written, wrong-physics. Violet and green share the program;
+// the hue is the material's own (the purple fence stays in powerfx's validator).
+function shadeSigilCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.magicTime=time;
+  shader.vertexShader='attribute float beamArc;varying float magicArc;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+magicArc=beamArc;`);
+  shader.fragmentShader='uniform float magicTime;varying float magicArc;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+float dash=smoothstep(.14,0.0,abs(fract(magicArc*.55+magicTime*.6)-.5)-.18);
+float bandPulse=pow(.5+.5*sin(magicArc*.9-magicTime*9.0),5.0);
+diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.6+vec3(.3),dash*.7+bandPulse*.4);
+diffuseColor.a*=(.35+.75*max(dash,bandPulse*.6))*smoothstep(0.0,1.2,magicArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-sigil-v1';
 }
 
 // THE LAVA CRUST — dark rock quantized into the octagon's facets, molten cracks scrolling along

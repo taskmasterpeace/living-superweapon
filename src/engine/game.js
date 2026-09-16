@@ -81,8 +81,9 @@ import {inventoryAdmission,captureHeldWeapon,storeWeaponSnapshot,storedWeapon,co
 import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
-import { beamBuildOf, beamTemperOf } from '../data/visual.js';
+import { beamBuildOf, beamTemperOf, visOf } from '../data/visual.js';
 import { sfxOf } from '../data/sfx.js';
+import { fxOf } from '../data/powerfx.js';
 import { Gamepad } from '../core/gamepad.js';
 import {updateMovementGears,resetMovementGears} from '../core/movement-gears.js';
 import { runSlot, performEvade } from './abilities.js';
@@ -3761,6 +3762,9 @@ export class Game {
       build: beamBuildOf(def), temper: beamTemperOf(def),
       // element-true voice (Refs #42 L2): the beam's hum/impact/shutdown all speak its element
       sfx: sfxOf(def, caster.def, p),
+      // ...and its SURFACE (iter 5): the powerfx family routes the beam core shader
+      // (fire→lava crust, ice→crystal plates, electric→comb lanes, ki→pulse stream, magic→sigils)
+      fxFam: fxOf(visOf(def), def, caster.def, p).family,
     });
   }
 
