@@ -1324,7 +1324,7 @@ export class World {
     const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 2 });  // HDR + light MSAA (crisp edges)
     this.composer = new EffectComposer(this.renderer, rt);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth * 0.5, innerHeight * 0.5), 0.66, 0.6, 0.8);      // half-res bloom (~4× cheaper)
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth * 0.5, innerHeight * 0.5), 0.72, 0.7, 0.72);      // half-res bloom (~4× cheaper); Refs #42 iter 19: threshold 0.8→0.72 + strength 0.66→0.72 + radius 0.6→0.7 so the hot energy cores BLOOM the way Robert remembers ("a lot of bloom") — matte bullets/steel stay under threshold by the ki-only-glow rule
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     // ⚠ THE PRINT PASS RUNS LAST, AFTER TONE MAPPING. Halftone, palette snapping, grain and dither
@@ -3249,7 +3249,7 @@ export class World {
     this.composer.setPixelRatio(pr);   // THE tier bug: EffectComposer caches its construction-time
     this.composer.setSize(innerWidth, innerHeight);   // ratio — tiers never actually shrank the scene pass
     this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
-    this.bloom.strength = this._threatRoom?.active ? .12 : t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
+    this.bloom.strength = this._threatRoom?.active ? .12 : t === 2 ? 0.72 : t === 1 ? 0.6 : 0.45;   // iter 19: richer glow (was 0.66/0.55/0.42)
     this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
     // City chase retains its cheap contact shadows. Open-sky combat now moves
     // the shadow volume with the airborne fighter, so body self-shadow remains

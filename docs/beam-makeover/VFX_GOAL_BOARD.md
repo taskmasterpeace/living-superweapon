@@ -371,3 +371,23 @@ Iteration 19+ is the final subjective polish grind toward 10 — there is no bro
 left; what remains is taste-level refinement (contrast, timing, the exact colour of a pod-band).
 The core goal — dozens of visually distinct beams/projectiles/area attacks, each nameable, at
 three intensities across charge/launch/flight/impact/aftereffect — is MET.**
+
+### Iteration 19 — THE BLOOM (Robert's founding ask, "a lot of bloom... what I would give for that")
+
+The bloom pass had sat at its root-commit values (threshold 0.8 / strength 0.66 / radius 0.6)
+this whole makeover — the reason the hot cores GLOWED but never with the intensity Robert
+remembered from the early Living Superweapon builds. Retuned: **threshold 0.8 → 0.72** (more of
+the energy crosses into bloom), **strength 0.66 → 0.72**, **radius 0.6 → 0.7**. The lava beam's
+tongues now bloom out into a real halo, the ki cores throb; measured NO washout — the lava
+crust cracks and the crystal facets keep their structure (the ki-only-glow rule keeps matte
+bullets/steel under threshold). ⚠ GLOBAL pass (both cameras) — captures are the PowerWorld
+path; the city/iso additive beams are brighter, so this wants Robert's eye on a city fight to
+confirm it reads as richer-not-blown. Trivially revertable (3 numbers).
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 19 | 2026-09-16 | bloom threshold 0.72 / strength 0.72 / radius 0.7 — the founding "more bloom" ask | city-path bloom wants Robert's eye · the last polish is taste | **≈9.2** |
+
+**Iteration 20+: with the glow richer, re-grade the hot-core families (fire/ki/electric bloom
+harder now) · confirm the city path isn't over-blown · then the endless taste grind toward a
+flat 10. The system is DONE in substance; the loop now refines.**
