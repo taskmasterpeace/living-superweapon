@@ -291,6 +291,43 @@ export class VFX {
         case 'shrapnel':
           this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(16 * AN), speed: 34, life: 0.7, size: 1.3, color: pal.debris, up: 10, grav: 90, drag: 0.4 });
           break;
+        case 'astral': {   // ALIEN energy does NOT spark and fall — it ORBITS and SHIMMERS (its charge is
+                           // orbit, its flight iridescent orange↔teal). Impact = a swirling iridescent
+                           // bloom whose motes circle the heart and RISE where earthly sparks fly out
+                           // and fall. altGlow is the teal half of the iridescent flight, carried here.
+          const teal = imp.altGlow || pal.mist;
+          // THE IRIDESCENT SIGNATURE: a bright TEAL ring inside the orange shockwave. No energy family
+          // puts teal on an impact, so this is the unmistakable "not earthly" tell even against the blast.
+          this.ring(pos, { color: teal, r0: radius * 0.08, r1: radius * 0.95, life: 0.85, flat: true, opacity: 0.72 });
+          this.ring(pos, { color: pal.glow, r0: radius * 0.2, r1: radius * 1.25, life: 0.95, flat: true, opacity: 0.5 });
+          // an iridescent VAPOR — normal-blend smoke, so it READS on the bright blast where additive
+          // teal washes out (the additive-can't-render-on-bright law). Alien's aftermath SHIMMERS
+          // orange↔teal where the energy families billow neutral soot.
+          this.smokePuffs(pos, { count: Math.round(6 * AN), colors: [teal, pal.mist, pal.glow], rise: 5, dur: 2.5, size: 3.8, spread: radius * 0.42, opacity: 0.36 });
+          const n = Math.round(20 * AN);
+          for (let i = 0; i < n; i++) {   // a RING launched TANGENTIALLY — a swirl, not a spray; rises (grav<0), not falls; two-tone
+            const a = (i / n) * Math.PI * 2, r = radius * 0.55, sp = 10 + rand(-2, 2);
+            this.P.spawn({ x: pos.x + Math.cos(a) * r, y: pos.y + 1.5, z: pos.z + Math.sin(a) * r, vx: -Math.sin(a) * sp, vy: rand(1.5, 4.5), vz: Math.cos(a) * sp, life: 1.5, size: 3.0, color: (i % 2 ? pal.glow : teal), grav: -1.6, drag: 1.3, shrink: true });
+          }
+          if (pos.y < 6) {   // beat 2: a slower swirl LIFTS after the flash — residual charge orbiting up and thinning
+            let at = 0, aw = 0; const waves = Math.max(1, Math.round(2 * AN));
+            this._add({
+              update: (dt) => {
+                at += dt;
+                if (at > 0.4 * (aw + 1) && aw < waves) {
+                  aw++;
+                  for (let i = 0; i < 7; i++) {
+                    const a = (i / 7) * Math.PI * 2 + aw * 0.7, r = radius * 0.4;
+                    this.P.spawn({ x: pos.x + Math.cos(a) * r, y: pos.y + 1 + aw * 2, z: pos.z + Math.sin(a) * r, vx: -Math.sin(a) * 4, vy: rand(2, 4), vz: Math.cos(a) * 4, life: 1.7, size: 2.6, color: (i % 2 ? pal.glow : teal), grav: -1.8, drag: 1.8, shrink: true });
+                  }
+                }
+                return aw >= waves;
+              },
+              dispose: () => {},
+            });
+          }
+          break;
+        }
         case 'sparks':
         default: {
           // ENERGY DISSIPATION (goal board iter 22): the energy/ki families (red/blue/sun + alien)

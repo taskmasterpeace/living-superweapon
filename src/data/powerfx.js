@@ -90,11 +90,11 @@ const F = {
   },
   alien: {
     label: 'ALIEN',
-    palette: { core: '#fff8e8', glow: '#ff9a2a', deep: '#33180a', smoke: ['#241a10', '#1a140c'], debris: ['#4a3018', '#684424'], mist: '#ffc07a' },
+    palette: { core: '#fff8e8', glow: '#ff9a2a', deep: '#33180a', smoke: ['#243028', '#182420'], debris: ['#4a3018', '#684424'], mist: '#ffc07a' },   // COOL green-gray smoke — alien's cloud is the wrong colour for its orange fire (an unearthly tell); every other energy family billows warm soot
     charge: { style: 'orbit', motes: '#ffc07a' },   // alien energy ORBITS, doesn't rise — a tell of its own
     launch: { style: 'orbit', flash: '#ffe8c8', ring: '#ff9a2a' },
     flight: { style: 'iridescent', trail: ['#ff9a2a', '#8affc0'], wake: '#e0801a' },   // shifting orange↔green
-    impact: { kernel: '#fff8e8', afterFx: 'sparks', cloudRise: 8, cloudDur: 2.2 },
+    impact: { kernel: '#fff8e8', afterFx: 'astral', altGlow: '#8affc0', cloudRise: 8, cloudDur: 2.2 },   // NOT earthly sparks — swirls + shimmers (orange↔teal, the flight's other half)
   },
   toxic: {
     label: 'TOXIC',   // gas/acid kits already exist — they deserve a family, not a fallback

@@ -839,3 +839,42 @@ separating it further is low-value versus the other sub-9 cells. As a tough crit
 impact beat the two clouds are close in shape (the venting POOL is a moving-viewer read), so impact
 grades ~9 not 10 — the colour + tint separation is real, the behavioural separation is stronger in
 motion. City additive path still un-gradeable here (iter 30).
+
+### Iteration 33 — ALIEN impact stops being red-ki-in-orange (the 4-way `sparks` collision, evidence: alien,energyRed re-capture)
+
+Graded the family table like a critic: the three ENERGY families (red/blue/sun) sharing plasma/burst/
+streak/sparks is DEFENSIBLE — ki colour *is* the identity (DBZ law), same as water/toxic launch; ditto
+the two MAGIC families (Robert's "magic purple+green" = two colours of one sigil language). But one real
+CROSS-family collision stood out: **`alien` impact fell through to energy `sparks`** — shared with all
+three energy families (a 4-way collision). Captured side by side, alien's impact was energyRed's, byte
+for byte, only the ring hue differing (orange vs red): identical cloud, identical spark row. Alien has a
+unique charge (`orbit`) and flight (`iridescent orange↔teal`), yet its impact read as earthly ki.
+
+**Fix (data-driven, no per-hero, energy families untouched):**
+- `alien.impact.afterFx` `sparks` → **`astral`** + a new `altGlow: '#8affc0'` (the teal half of its
+  iridescent flight, carried into the impact). New `astral` case in `vfx.js`: a bright TEAL ring inside
+  the orange shockwave (no energy family puts teal on an impact), a two-tone swirl of motes launched
+  TANGENTIALLY that RISE not fall (orbit + wrong-physics, vs sparks that spray out and fall), and an
+  iridescent normal-blend VAPOR (reads on the bright blast where additive teal washes out).
+- `alien.palette.smoke` warm brown `['#241a10','#1a140c']` → **cool green-gray `['#243028','#182420']`**:
+  removing alien from the `combusts` list (it's no longer `sparks`) already gives it a pale, steady
+  (non-ember) afterglow; the cool smoke makes its lingering CLOUD the wrong colour for its orange fire —
+  an unearthly tell — where every energy family billows warm soot. This is the clearly-visible win.
+
+Verified through the real engine (`capture-fxmatrix.mjs --family alien,energyRed`, then alien re-caps):
+**0 errors, 0 pageErrors, validateFx 12/0** (teal `#8affc0` hue 148, cool smoke hue ~140 — neither
+purple). At the AFTERMATH beat alien now reads tan/gold ring + **cool green-gray smoke with a warm ember
+glint** vs energyRed's maroon ring + neutral warm soot — a real visible departure. Refs
+`artifacts/fx-matrix/shots/alien/3-aftermath.png` (vs `energyRed/3-aftermath.png`).
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 33 | 2026-09-16 | ALIEN impact `sparks` → `astral` (teal ring + orbital two-tone swirl + iridescent vapor + cool "wrong-colour" smoke) — closes the 4-way energy-sparks collision | alien impact/aftermath 7 → ~9 · energy R/B/S + magic V/G colour-only sharing ruled DEFENSIBLE (ki/arcane colour IS identity) | **PW ≈9.5** |
+
+**⚠ Structural finding (a grading-method note, not a defect): the +7 IMPACT beat is dominated by the
+SHARED explosion body** (blast cloud + shockwave rings + the shared spark burst at `vfx.js:178`), so
+per-family afterFx differentiation is inherently subtle at that frozen beat — for EVERY family, not just
+alien. The family read at impact comes from ring/cloud COLOUR; the afterFx's own character (astral swirl,
+frost spikes, fire tongues) reads at the AFTERMATH beat (+50) and in motion. That is why this iteration's
+clearest win is the CLOUD colour (which the shared body draws from `pal.smoke`), not the swirl. City
+additive path still un-gradeable here (iter 30).
