@@ -391,3 +391,24 @@ confirm it reads as richer-not-blown. Trivially revertable (3 numbers).
 **Iteration 20+: with the glow richer, re-grade the hot-core families (fire/ki/electric bloom
 harder now) · confirm the city path isn't over-blown · then the endless taste grind toward a
 flat 10. The system is DONE in substance; the loop now refines.**
+
+### Iteration 20 — the bloom risk closed by scoping, not by hoping
+
+The iter-19 bloom retune was GLOBAL, and I flagged the city/iso path as unverified. Tried to
+capture it — the PowerWorld-tuned harness renders the city path black (needs the theater +
+news-scissor setup it doesn't do), so I could not confirm the city visually. The responsible
+call was NOT to ship an unverifiable global change: the richer bloom (threshold 0.72 / strength
+0.72 / radius 0.7) is now SCOPED to `camMode !== 'iso'` (the chase/PowerWorld path, where the
+beam game is played and where it's verified), and the iso CITY keeps its exact original tuning
+(0.8 / 0.66). Re-driven per-camera in `_applyQuality`, which already re-runs on a camera swap.
+Verified: rich bloom still lands on the chase capture; the city is untouched by construction —
+the regression risk is eliminated, not just unlikely.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 20 | 2026-09-16 | bloom richness scoped to the chase camera (city tuning restored) — risk closed | (city bloom is a separate DELIBERATE choice now, not a regression) | **≈9.2** |
+
+**⚠ HARNESS GAP LOGGED: no iso/city-path fx capture exists (the harness is PowerWorld-only).
+If Robert wants the richer bloom in the CITY too, that's a one-line change (drop the `rich`
+gate) — but it should be eyeballed in a real city fight first. Iteration 21+: the taste grind,
+and — if wanted — a city-path capture harness so the iso game gets the same graded coverage.**
