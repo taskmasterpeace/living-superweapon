@@ -22,4 +22,10 @@ export const LIBRARY_BEAMS = [
     mode: 'beaded', cost: 6, cd: 0.4, radius: 1.6, tipSpeed: 460, maxLen: 135, dps: 56,
     kiPerSec: 19, steer: 10, color: '#2a7bff', color2: '#dff2ff', density: 1.25,
     edge: { amp: 0.66, teeth: 5, step: 12, drift: 1.1 } },
+  // "you need to create an ice beam" — the library's cold citizen. Field shape copied from RIME's
+  // Cryo Beam (dtype cold drives the ice family + crystal plates); lance mode keeps it a clean
+  // frozen needle the whole length.
+  { id: 'glacierlance', type: 'beam', name: 'Glacier Lance', dtype: 'cold', mode: 'lance',
+    cost: 6, cd: 0.4, radius: 1.3, tipSpeed: 640, maxLen: 140, dps: 44, kiPerSec: 17,
+    steer: 11, color: '#7fd4ff', color2: '#ffffff', density: 1.1 },
 ];

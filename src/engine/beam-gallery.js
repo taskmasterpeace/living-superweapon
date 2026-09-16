@@ -1,6 +1,7 @@
 import { ROSTER } from '../data/characters.js';
 import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES, visOf } from '../data/visual.js';
 import { LIBRARY_BEAMS } from '../data/beams.js';
+import { TYPES } from './abilities.js';
 
 // THE BEAM GALLERY — Robert: "flip through every beam×mode in third person, no fight. Best way for me
 // to explore them later." A proving stand, not a battle: one caster, one invulnerable target down-range,
@@ -32,8 +33,22 @@ export class BeamGallery {
         if (a && a.type === 'projectile') this.shots.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
       }
     }
-    this.kind = 'beam';                      // 'beam' | 'shot' — which wheel the stand is on
+    // THE SPRAY WHEEL — "the wide short spray... we need to be able to control that... certain
+    // things should go so far and so wide" (the sliders). Driven through the REAL cone ability
+    // body (TYPES.cone) with a stand-owned state — zero mirror drift; the sliders override the
+    // exact `range`/`arc` fields the engine's hit test and spray read.
+    this.cones = [];
+    for (const d of ROSTER) {
+      if (!d.abilities) continue;
+      for (const k of ['lmb', 'rmb', 'q', 'e', 'f', 'r']) {
+        const a = d.abilities[k];
+        if (a && a.type === 'cone') this.cones.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
+      }
+    }
+    this.kind = 'beam';                      // 'beam' | 'shot' | 'cone' — which wheel the stand is on
     this.shotI = 0; this._shotT = 0;
+    this.coneI = 0; this._coneSt = {};
+    this.coneRange = null; this.coneArc = null;   // null = the ability's own authored numbers
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
@@ -129,13 +144,23 @@ export class BeamGallery {
 
   step(d) {
     if (this.kind === 'shot') { this.shotI = (this.shotI + d + this.shots.length) % this.shots.length; this._shotT = 0; this._updateChip(); return; }
+    if (this.kind === 'cone') { this._stopCone(); this.coneI = (this.coneI + d + this.cones.length) % this.cones.length; this._syncSliders(); this._updateChip(); return; }
     this.i = (this.i + d + this.list.length) % this.list.length; this.spawn();
   }
   cycleMode() { if (this.kind !== 'beam') return; this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
   toggleKind() {
-    this.kind = this.kind === 'beam' ? 'shot' : 'beam';
-    if (this.kind === 'shot') { this._drop(); this._shotT = 0; this._updateChip(); }
-    else this.spawn();
+    if (this.kind === 'cone') this._stopCone();
+    this.kind = this.kind === 'beam' ? 'shot' : this.kind === 'shot' ? 'cone' : 'beam';
+    if (this.kind === 'beam') this.spawn();
+    else { this._drop(); this._shotT = 0; this._updateChip(); }
+    if (this._sliderRow) this._sliderRow.style.display = this.kind === 'cone' ? 'flex' : 'none';
+    if (this.kind === 'cone') this._syncSliders();
+  }
+  // the held spray fades out through the body's own release branch — never a hard cut
+  _stopCone() {
+    try { TYPES.cone(this.caster, this.cones[this.coneI]?.ab || {}, this._coneSt, this.g, { held: false, dt: 1 / 60 }); } catch {}
+    if (this._coneSt._loop) { try { this._coneSt._loop.stop(); } catch {} this._coneSt._loop = null; }
+    this._coneSt = {};
   }
 
   // FIRE ONE SHOT through the real spawnProjectile door. ⚠ The field mapping mirrors the
@@ -182,6 +207,17 @@ export class BeamGallery {
       if (this._shotT <= 0 && this.shots.length) { this._fireShot(this.shots[this.shotI].ab); this._shotT = 0.6; }   // ~0.55s flight to the stand target — keep one in the air
       return;
     }
+    if (this.kind === 'cone') {                                        // the SPRAY wheel: hold the REAL cone body every frame
+      const it = this.cones[this.coneI];
+      if (it) {
+        const def = { ...it.ab };
+        if (this.coneRange != null) def.range = this.coneRange;        // the sliders override the exact fields
+        if (this.coneArc != null) def.arc = this.coneArc;              // the engine's hit test + spray read
+        try { TYPES.cone(c, def, this._coneSt, this.g, { held: true, dt: 1 / 60, pressed: false, released: false }); }
+        catch (e) { this._lastErr = e.message; }
+      }
+      return;
+    }
     if (!this.beam || this.beam.dead) { this.spawn(); return; }
     const b = this.beam, pr = this.g.projectiles;
     b.sustaining = true;
@@ -220,14 +256,52 @@ export class BeamGallery {
     const faster = mkBtn('+', 'Faster look ( = )', () => this.setSpeed(1));
     const fireBtn = mkBtn('🔥', 'Set the target on fire (the real ignite path)', () => this.igniteTarget());
     const chartBtn = mkBtn('CHART', 'Open the beam chart — the whole language, every beam', () => window.open('./beam-chart.html', '_blank'));
-    const kindBtn = mkBtn('⇄ SHOTS', 'Switch the stand between BEAMS and PROJECTILES', () => { this.toggleKind(); kindBtn.textContent = this.kind === 'beam' ? '⇄ SHOTS' : '⇄ BEAMS'; });
+    const kindBtn = mkBtn('⇄ SHOTS', 'Cycle the stand: BEAMS → SHOTS → SPRAYS', () => {
+      this.toggleKind();
+      kindBtn.textContent = this.kind === 'beam' ? '⇄ SHOTS' : this.kind === 'shot' ? '⇄ SPRAYS' : '⇄ BEAMS';
+    });
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
     el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn);
+    // THE SLIDERS ("some sliders where... certain things should be able to go so far and so
+    // wide") — they write the exact `range`/`arc` fields the cone hit test + spray read. Shown
+    // only on the SPRAY wheel. Vertical aperture is NOT a field the engine has yet — no fake dial.
+    const srow = document.createElement('div');
+    srow.style.cssText = 'display:none;flex-basis:100%;justify-content:center;align-items:center;gap:10px;padding-top:5px;';
+    const mkS = (lab, min, max, step, fmt, on) => {
+      const w = document.createElement('label'); w.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;color:#9fd4ff;';
+      const t = document.createElement('span'); t.textContent = lab;
+      const r = document.createElement('input'); r.type = 'range'; r.min = min; r.max = max; r.step = step; r.style.width = '120px';
+      const v = document.createElement('b'); v.style.cssText = 'color:#f5e6c8;min-width:44px;';
+      r.oninput = () => { on(+r.value); v.textContent = fmt(+r.value); this._updateChip(); };
+      w.append(t, r, v); srow.appendChild(w); return { r, v };
+    };
+    this._sRange = mkS('REACH', 10, 120, 2, v => v + 'u', v => this.coneRange = v);
+    this._sArc = mkS('WIDTH', 0.15, 1.5, 0.05, v => Math.round(v * 114.6) + '°', v => this.coneArc = v);
+    srow.appendChild(mkBtn('↺', 'Back to the authored numbers', () => { this.coneRange = null; this.coneArc = null; this._syncSliders(); this._updateChip(); }));
+    el.style.flexWrap = 'wrap'; el.appendChild(srow); this._sliderRow = srow;
     document.body.appendChild(el);
     this.chip = el; this._chipText = text;
   }
+  _syncSliders() {
+    if (!this._sRange) return;
+    const a = this.cones[this.coneI]?.ab || {};
+    const r = this.coneRange ?? a.range ?? 34, w = this.coneArc ?? a.arc ?? 1.05;
+    this._sRange.r.value = r; this._sRange.v.textContent = r + 'u';
+    this._sArc.r.value = w; this._sArc.v.textContent = Math.round(w * 114.6) + '°';
+  }
+
   _updateChip() {
     if (!this._chipText) return;
+    if (this.kind === 'cone') {
+      const it = this.cones[this.coneI]; if (!it) return;
+      const a = it.ab, r = this.coneRange ?? a.range ?? 34, w = this.coneArc ?? a.arc ?? 1.05;
+      const tags = [a.cold && 'COLD', a.gasDot && 'GAS', a.kiDrain && 'DRAIN', a.spikes && 'GROUND SPIKES',
+        a.magnet && 'MAGNET', a.sonic && 'SONIC', a.lift && 'LIFT'].filter(Boolean).join(' · ') || 'SPRAY';
+      this._chipText.innerHTML = `<b style="color:#f5b21a">≋ SPRAY STAND</b> &nbsp; ${this.coneI + 1}/${this.cones.length}<br>`
+        + `<b style="font-size:13px">${it.heroName}</b> — ${it.name}<br>`
+        + `<span style="color:#9fd4ff">${tags} · REACH ${r}u · WIDTH ${Math.round(w * 114.6)}°${(this.coneRange != null || this.coneArc != null) ? ' · EDITED' : ''}</span>`;
+      return;
+    }
     if (this.kind === 'shot') {
       const it = this.shots[this.shotI]; if (!it) return;
       const a = it.ab;
@@ -249,6 +323,7 @@ export class BeamGallery {
   dispose() {
     try { window.removeEventListener('keydown', this._onKey, true); } catch {}
     if (this.chip && this.chip.parentNode) this.chip.parentNode.removeChild(this.chip);
+    this._stopCone();
     this._drop();
     if (this.g) this.g.mapCam = null;
     if (this.g && this.g.input) this.g.input.pointerLock = this._wasLock;
