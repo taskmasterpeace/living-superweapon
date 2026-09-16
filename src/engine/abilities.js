@@ -19,7 +19,7 @@ import {handEmissionPosition,volleyPattern,volleySides,attackEntryCost} from './
 import {firearmEmitter} from './weapon-emission.js';
 import {bowEmitter,restoreBowEquipment} from './bow-pose.js';
 import {firearmAmmo,emptyFirearm,cancelFirearmReload} from './firearm-ammo.js';
-import {energyShellMaterial} from './energy-burst-material.js';
+import {energyShellMaterial, chargeOrbCore} from './energy-burst-material.js';
 import {conflictingHandSlot} from './cast-channels.js';
 import {constructForSlot,resolveConstructPolicy} from './construct-policy.js';
 import {naniteUseReason} from './nanite-pose.js';
@@ -62,7 +62,15 @@ function finishPaidCharge(c, def, st) { st._chargeEntryCost=0;st._chargeInvested
 function chargeOrb(c, st, color) {
   if (!st.orb) {
     const spherical=st.def.type==='charge';
-    const core = new THREE.Mesh(ORB_GEO, spherical?new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.55,roughness:.28,metalness:.08}):ORB_CORE_MAT);
+    // FAMILY-COLOURED CHARGE ORB (Refs #42 iter 9): the churning element core, not a white balloon.
+    let coreMat;
+    if (spherical) {
+      const fx = fxOf(visOf(st.def), st.def, c.def);
+      const kind = fx.f.charge.style === 'crystal' ? 'crystal' : fx.f.charge.style === 'sigil' ? 'rune' : 'plasma';
+      st._orbTime = { value: 0 };
+      coreMat = chargeOrbCore(fx.f.palette.glow, fx.f.palette.core, st._orbTime, kind);
+    }
+    const core = new THREE.Mesh(ORB_GEO, coreMat || ORB_CORE_MAT);
     const glow = new THREE.Mesh(ORB_GEO, spherical?energyShellMaterial(color,.72):new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
     glow.scale.setScalar(1.6);
     if(spherical){core.scale.setScalar(.55);glow.scale.setScalar(1);}
@@ -75,6 +83,12 @@ function chargeOrb(c, st, color) {
     st.orb = new THREE.Group(); st.orb.add(core, glow);
     if(st.def.type==='beam'||spherical) { st.gather=new ChargeGather(color,c.def?.effects?.charge);st.orb.add(st.gather); }
     c._game.scene.add(st.orb);
+  }
+  // drive the churn + fill: time advances, hot rises with charge (killed to a soft glow at rest)
+  if (st._orbTime) {
+    st._orbTime.value = (c._game?.time) || (st._orbTime.value + 0.016);
+    const hot = st.def.type === 'charge' ? Math.min(1, (st.chargeT || 0) / (st.def.maxCharge || 1.6)) : 0.5;
+    const hu = st.orb.children[0].material.userData; if (hu && hu.orbHot) hu.orbHot.value = hot;
   }
   return st.orb;
 }

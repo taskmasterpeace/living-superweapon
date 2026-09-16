@@ -190,3 +190,22 @@ cell from "good" to "AAA freeze-frame".**
 **Iteration 9 orders: THE CHARGE ORB — family-colored churning material + geometry (ember ball /
 crystal / rune sphere), kill the white blowout · magic beam depth · impact dome final
 restructure · full sweep + regrade.**
+
+### Iteration 9 — THE CHARGE ORB (the white balloon is dead)
+
+`chargeOrbCore` replaces the emissive MeshStandard sphere: family GLOW as the body, churning
+hot cells reaching only to the CORE color, hot rising with charge fill. Three churn kinds off
+the family's charge.style — `plasma` (smooth churn), `crystal` (hard-snapped facets, ice),
+`rune` (slow bands, magic). Driven by the same per-frame clock the gather uses.
+
+| category | was → now | the critic |
+|---|---|---|
+| CHARGING | 6.5 → **8.5** | fire orb is a churning ember ball, ice a faceted cold sphere, magic a runed globe — each holds its color, none blows to white. The single biggest single-frame jump since the ribbon. |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 9 | 2026-09-16 | family charge-orb cores (plasma/crystal/rune churn, hot rises with fill) | magic beam depth · impact dome · ray level-III edge · nova-shell (SUPERNOVA) not yet its own category | **≈7.9** |
+
+**Iteration 10 orders: magic beam depth · impact dome final restructure (peak too soft still) ·
+SUPERNOVA nova-shell as its own spherical fire category (Robert's ask) · full 12-family sweep +
+regrade. Charging, flight, beams all 8+; launch/impact/aftereffect are the last sub-8 cells.**
