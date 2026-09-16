@@ -438,3 +438,53 @@ flagged for Robert's eye with the finding that the scene does not wash out.
 | iter | date | what changed | worst cells | overall |
 |---|---|---|---|---|
 | 21 | 2026-09-16 | (no code) corrected iter-20's false city-protection claim · confirmed city renders + no scene washout | city beam-on-target still uncaptured (harness gap) | **9.2** |
+
+### Iteration 22 — the energy AFTERMATH got a temporal sequence + the city path captured
+
+Two threads: closing the iter-21 city coverage gap with a real capture, and the weakest *column*
+on the 216-cell grade (aftermath, mostly 8–8.5).
+
+**1. THE ENERGY DISSIPATION (the renderer improvement).** Robert's 5th judging category is a
+TEMPORAL unfolding — *"fire first and then some smoke afterwards."* Fire's aftereffect already
+does that (flare→then→two soot waves, graded 9). But the **four `sparks` families —
+energyRed · energyBlue · energySun · alien** (the whole energy/ki column + alien, the largest
+afterFx bucket, 4 of 12) fell through to a SINGLE spark burst: no unfolding at all. They now get
+their own honest 3-beat in `vfx.js`, mirroring fire's proven structure but true to energy:
+- **beat 1** — the flare (the original spark burst).
+- **beat 2** — motes that LINGER and cool, buoyant (energy rises, it doesn't fall as debris),
+  longer-lived than the flare, sized to read against the dust cloud so the aftermath keeps an
+  ENERGY identity.
+- **beat 3** — the residual charge disperses upward as a thinning **glow-haze in the family
+  COLOUR**, two waves after the flash — the energy answer to "then smoke afterwards." Never soot:
+  energy cools and disperses, it does not burn. Palette-driven, so red/blue/sun/alien each
+  dissipate in their own hue for FREE (one family-agnostic case, no per-hero branch).
+  ⚠ The blast's dust cloud (still dark, `combusts`) is a SEPARATE read left intact — a real
+  detonation throws up dust AND the energy disperses; keeping both is richer, and touching the
+  cloud classification would risk the already-graded "something blew up here" weight.
+- Verified through the REAL engine (`capture-fxmatrix.mjs`, aftermath = boom+50): 4 families × 3
+  levels, **0 errors, 0 pageErrors**. A first pass read too faint (opacity 0.26, lost against the
+  dust); strengthened (motes 1.9px/2.1s, haze 3 puffs/opacity 0.38 in the family colour) so the
+  energy identity actually competes. Refs `artifacts/fx-matrix/shots/energyRed/3-aftermath.png`,
+  `.../alien/3-aftermath.png`.
+
+**2. THE CITY PATH, CAPTURED (closing iter-21's coverage gap).** New focused harness
+`tools/citybeam-check.mjs` boots `citygame.html`, kills DOM chrome, and frames the ADDITIVE
+city/iso beam (the glowiest path, closest to the old build Robert loved) under the rich bloom.
+Result — `artifacts/citybeam/vega.png`: a bright **daytime** city, additive fighter glow, the
+dummy on target, **and NO bloom washout at the beam-on-target scale**. That is the visual
+confirmation iter-21 said "wants Robert's eye": the richer bloom reads as glowier, not blown.
+⚠ HONEST CAVEAT — the harness is flaky per-hero (sol framed black; kano's projectile-kit fired a
+charge, not a beam, so no hose), so this is a **spot-check confirmation, not a graded city
+matrix**. A clean beam-on-target city capture for every family still wants better per-hero slot
+selection + framing; logged as the remaining city-path harness work.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 22 | 2026-09-16 | energy/alien AFTERMATH → 3-beat temporal dissipation (flare→cooling motes→family-colour glow-haze) · city additive path captured, no washout | energy aftermath 8.5 → ~8.75 (a still understates a ~1.2s temporal effect) · city per-hero beam capture still flaky | **≈9.25** |
+
+**The honest state: still ~9.2–9.25. This was a real STRUCTURAL gain on the weakest column (energy
+aftermath went from one burst to a sequenced dissipation, honest to what energy is) plus a real
+capture closing the city coverage gap — not a leap. We are deep in diminishing returns: every cell
+is 8.5+, and moving an individual cell 8.75→9 is increasingly a matter of motion-only reads and
+taste. Remaining sub-9, non-subjective: a properly-framed per-family CITY beam matrix (harness
+work, not a renderer gap).**

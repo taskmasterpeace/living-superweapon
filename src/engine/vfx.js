@@ -277,8 +277,37 @@ export class VFX {
           this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(16 * AN), speed: 34, life: 0.7, size: 1.3, color: pal.debris, up: 10, grav: 90, drag: 0.4 });
           break;
         case 'sparks':
-        default:
-          this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(12 * AN), speed: 24, life: 0.9, size: 1.6, color: [imp.kernel, pal.glow], up: 8, grav: 30, drag: 1.0 });
+        default: {
+          // ENERGY DISSIPATION (goal board iter 22): the energy/ki families (red/blue/sun + alien)
+          // fell through to ONE spark burst where fire has flare→then→smoke. Robert's aftereffect
+          // ask is a TEMPORAL unfolding, so energy gets its own honest 3-beat, mirroring the proven
+          // embers structure but true to energy: the flash cracks, the air stays LIVE with cooling
+          // motes, then the residual charge LIFTS and thins as a glow-HAZE — never soot, because
+          // energy cools and disperses, it does not burn. Palette-driven, so each colour dissipates
+          // in its own hue for free (the blast's dust cloud, still dark, is a separate read above).
+          this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(12 * AN), speed: 24, life: 0.9, size: 1.6, color: [imp.kernel, pal.glow], up: 8, grav: 30, drag: 1.0 });   // beat 1: the flare
+          // beat 2: motes that LINGER and cool — buoyant (energy rises), longer-lived than the flare;
+          // sized to actually READ against the dust cloud so the aftermath keeps an ENERGY identity
+          this.P.burst(pos.x, pos.y + 1.2, pos.z, { count: Math.round(12 * AN), speed: 6, life: 2.1, size: 1.9, color: [pal.glow, pal.core, pal.mist], up: 7, grav: -2.2, drag: 1.7, shrink: true });
+          // beat 3: the residual charge disperses upward as a thinning glow-haze in the family COLOUR,
+          // two waves after the flash — the energy answer to fire's "then smoke afterwards"
+          if (pos.y < 6) {
+            let et = 0, ew = 0; const ewaves = Math.max(1, Math.round(2 * AN));
+            this._add({
+              update: (dt) => {
+                et += dt;
+                if (et > 0.38 * (ew + 1) && ew < ewaves) {
+                  ew++;
+                  this.smokePuffs({ x: pos.x + rand(-radius, radius) * 0.25, y: pos.y + 1 + ew * 1.6, z: pos.z + rand(-radius, radius) * 0.25 },
+                    { count: 3, colors: [pal.glow, pal.core, pal.mist], rise: 6, dur: 1.7, size: 3.2 + power * 1.3, spread: radius * 0.28, opacity: 0.38 });
+                }
+                return ew >= ewaves;
+              },
+              dispose: () => {},
+            });
+          }
+          break;
+        }
       }
       // GROUND AFTERGLOW (goal board iter 11): what LINGERS on the ground after the smoke thins —
       // embers pulsing in a scorch, a frost patch, a sludge sheen — the CONSEQUENCE read the
