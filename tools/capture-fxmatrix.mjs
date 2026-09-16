@@ -7,6 +7,7 @@
 // Output: artifacts/fx-matrix/shots/<family>/<L>-<phase>.png + index.json + per-family sheets.
 //   node tools/capture-fxmatrix.mjs [--family fire,ice] [--sheets] [--port 5188]
 import { mkdir, writeFile, access } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
 import { spawn, execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
@@ -17,7 +18,13 @@ const SHEETS = process.argv.includes('--sheets');
 const OUT = 'artifacts/fx-matrix';
 
 async function startVite() {
-  const child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['vite', '--port', String(PORT), '--strictPort'], { cwd: process.cwd(), stdio: 'pipe', shell: process.platform === 'win32' });
+  // ⚠ FRESH SERVE OR THE GRADE IS A LIE (goal board iter 37): a STALE `node_modules/.vite` cache can
+  // serve an OLD transform of a source file — measured, a stale cache served a game.js WITHOUT the
+  // branch's knockback + iter-35 launch changes while vfx.js was fresh, so game.js-driven VFX graded
+  // against code that was never running. `--force` nukes the optimizer cache so every capture reflects
+  // the worktree on disk. (The `/__pw_playtest_identity` endpoint can assert the tree if this recurs.)
+  try { rmSync('node_modules/.vite', { recursive: true, force: true }); } catch {}
+  const child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['vite', '--port', String(PORT), '--strictPort', '--force'], { cwd: process.cwd(), stdio: 'pipe', shell: process.platform === 'win32' });
   const t0 = Date.now();
   for (;;) {
     try { const r = await fetch(`http://localhost:${PORT}/`); if (r.ok) break; } catch {}

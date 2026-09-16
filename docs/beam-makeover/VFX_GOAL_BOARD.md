@@ -978,3 +978,49 @@ now masking them. Ref `artifacts/fx-matrix/sheets/fire.jpg` (clean).
 artifact; a clean gauge is the precondition for trusting any of those grades sit where I logged them. The
 probe method (`scene.traverse` → geometry/color/world-pos dump) is the reusable way to identify any future
 capture photobomb. No VFX renderer changed; no regression. City additive path still un-gradeable (iter 30).
+
+### Iteration 37 — KNOCKBACK MEASURED (finally), and A STALE GAUGE CAUGHT (capture served OLD code)
+
+Two findings, one of them alarming. First graded the four un-examined families off clean sheets: energyBlue
+/Sun/magicGreen inherit their counterparts' vocabulary (fine, ~9), steel reads pale/gray across all phases
+BY DESIGN ("matte world, never glow"). Then went to grade the one rubric deliverable I'd only ever
+hand-waved — **"scaling knockback"** — by measuring it, not asserting "the multiplier exists".
+
+⚠ **THE MEASUREMENT FIRST SHOWED KNOCKBACK DOES NOT SCALE** (v0 identical 60.3 across L1/L2/L3), which
+would be a real bug in an explicit deliverable. Chased it: `takeDamage` scales knockback correctly with the
+kb vector (direct test 20.7/29.6/50.2), but `areaDamage` passed a FIXED kb (26.44) regardless of `kbMul`.
+The worktree `areaDamage` clearly multiplies by `kbMul` — so the RUNTIME was executing different code.
+Probed the served module: **a STALE `node_modules/.vite` cache was serving an OLD transform of game.js**
+(without the branch's knockback code OR iter-35's launch changes), while vfx.js served fresh — so
+game.js-driven cells could grade against code that was never running. Confirmed by dumping
+`g.areaDamage.toString()` (stale: no `kbMul`) and the `/__pw_playtest_identity` endpoint (right worktree/
+branch/revision once the cache was cleared). This is the memory's documented "vite watcher miss".
+
+**After clearing `.vite`, knockback scales EXACTLY as designed** (measured through the real `areaDamage`,
+`kbMul` = `FX_LEVELS.kb` 0.7/1.0/1.7):
+
+| level | kb passed | launch passed | applied vx |
+|---|---|---|---|
+| I (0.7) | 18.51 | 9.25 | 18.2 |
+| II (1.0) | 26.44 | 13.22 | 26.0 |
+| III (1.7) | 44.94 | 22.47 | 44.3 |
+
+A level-III blast shoves **2.4× harder** than a level-I, horizontal AND vertical, exactly the ladder ratio.
+**"Scaling knockback" is verified, not asserted.** The code was always right; the earlier "no scaling" was
+the stale gauge.
+
+**Fix (`tools/capture-fxmatrix.mjs startVite`):** `rmSync('node_modules/.vite')` + `vite --force` so every
+capture nukes the optimizer cache and reflects the worktree on disk — a stale transform can never silently
+invalidate a grade again. Verified: energyRed re-captured fresh, iter-35's saturated-red launch bloom + burst
+ring present, 0 errors.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 37 | 2026-09-16 | MEASURED scaling knockback (L3 shoves 2.4× L1, exact ladder ratio) · fixed a STALE `.vite` cache that served OLD game.js — capture now forces a fresh serve | none — knockback deliverable confirmed working; the gauge that hid it is fixed | **PW ≈9.6** |
+
+⚠ **Scope note:** only iter-35 touched game.js among 32–36; the stale cache could have shown its launch
+captures against old code, but the fresh re-capture confirms the iter-35 design reads (saturated bloom +
+bold burst ring). All other iterations touched vfx.js/powerfx.js/projectiles.js, which served fresh
+throughout (the iter-32→34 changes were visible in their captures). City additive path still un-gradeable
+(iter 30). The `.vite` trap and the `--force` fix are the reusable lesson: **verify the served code, never
+assume the dev server reflects the disk.**
