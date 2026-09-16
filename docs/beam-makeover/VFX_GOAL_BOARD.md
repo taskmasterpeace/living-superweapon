@@ -1100,3 +1100,43 @@ sludge, iter 38), and the impact now carries the element at the ring AND the spa
 a flat 10 is subjective polish (the pale detonation centre is arguably correct; steel's charge orb is a
 rarely-fired artificial cell) plus the CITY additive path, still un-gradeable in this environment (iter
 30) — that one needs Robert's GPU eyeball. City additive path aside, the readable matrix is ≈9.65.
+
+---
+
+## Iteration 40 (2026-09-16) — THE PIVOT: third person only, and the BEHAVIOR-MODE axis
+
+⚠ **Robert's live rulings supersede the cron wording and the whole readable/top-down grade above.**
+"That isometric shit is gone. It's done." All beam grading now happens from the PowerWorld **chase
+camera**, and Robert grades it **himself in the running game** — no more headless still captures (the
+top-down fx-matrix and the iso city are the WRONG views and are why the power catalog "didn't vibe").
+The ≈9.65 readable-path score is retired; it graded a camera the game no longer uses.
+
+**Diagnosis (verified at code level), why beams read as "plain, no presence" in third person:** the
+shaft is additive + thin, and `BeamHose`'s per-mesh `onBeforeRender` *reduces* opacity when the eye
+looks along the beam axis — which is the DEFAULT angle when you fire forward in chase cam. All the
+energy lives at the muzzle and impact; the shaft has no volume. Fix track = layered core+sheath+aura
+with a non-additive core so it survives the bright desert (next slice).
+
+**Shipped this iteration — the THIRD anatomy axis (the poster's "beam behavior variations").** BUILD
+(how much beam) × TEMPER (what the detail layer does) now × **MODE** (what the TUBE ITSELF does):
+`straight · pulsed · spiral · waveform · converging · diverging`. Data-driven, no per-hero if-chains:
+`beamModeOf(a)` derives from what the ability already declares (`spiral:true`→spiral, `air`→waveform,
+`light`→converging) and any `mode:` authored field wins. `MODE_LOOK` table in `data/visual.js`;
+consumed in `projectiles.js _sweep` as ring-CENTER displacement / radius profile around the true hit
+path. Authored so far: TORCH Flame Jet=diverging, ANNIHILATOR ARRAY + CIRCUIT White Noise=pulsed;
+VEGA spiral + MAJESTY light + KANO air derive automatically.
+
+**Verified (unit test on a synthetic straight path, chase-cam beam, `_sweep` direct):**
+straight lat 0.00 · **converging** r 0.24→0.15 (focuses to a point) · **diverging** r 0.14→0.38
+(flamethrower cone) · **pulsed** modulated · **spiral** lat 0.24 (real corkscrew) · **waveform** lat
+0.31. Lateral swing ≈1 beam-radius — the visual never strays from the damage capsule, so the preview
+can't lie. Also flipped the default hero body faceted-v1 → superhero-male (commit 48c5f3e).
+
+⚠ **Harness note:** the desktop app launched `npm run dev` from the MAIN checkout, so 5180/5190 served
+`D:\lsw` (no MODE_LOOK) while the worktree edits sat unserved — the concurrent-checkout hazard. Ran
+the worktree's own vite on 5191 to grade the real source. Emission is pose-gated (`_poseLaunch`,
+`pn` stays 0 until the launch animation fires) so a full headless firing still can't be captured —
+which is fine now that Robert eyeballs it live.
+
+**In-game to look at (chase cam):** TORCH Flame Jet should splay to a cone · KANO/CIRCUIT Wave Cannon
+should pulse down the shaft · VEGA Violet Lance corkscrews · MAJESTY Photon Stream narrows to a point.

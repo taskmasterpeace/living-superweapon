@@ -6,7 +6,7 @@ import {BeamGroundContact} from './beam-ground-contact.js';
 import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
 import {resolveThrowRelease} from './throwable-action.js';
-import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
+import { BUILD_LOOK, TEMPER_LOOK, MODE_LOOK } from '../data/visual.js';
 import { sfxOfVis } from '../data/sfx.js';
 import { fxOf } from '../data/powerfx.js';
 import {createBeamMaterials,createBeamSourceMaterial,beamVisualFamily} from './beam-surface.js';
@@ -977,6 +977,10 @@ class BeamHose {
     this.build = BUILD_LOOK[o.build] || BUILD_LOOK.hose;
     this.temper = TEMPER_LOOK[o.temper] || TEMPER_LOOK.steady;
     this.temperName = o.temper || 'steady';
+    // BEHAVIOR MODE — the tube's own geometry (the anatomy poster's third axis). Presentation
+    // only: the hit polyline stays `path`, and every mode keeps its swing within ~one radius.
+    this.mode = MODE_LOOK[o.mode] || MODE_LOOK.straight;
+    this.modeName = o.mode || 'straight';
     this.maxLen = o.maxLen || 120;
     this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
     this.pushForce=o.pushForce??(o.faceOrigin?0:368);
@@ -1211,6 +1215,24 @@ class BeamHose {
         rad=contactRadius*nozzle;
       }
       if(curve)rad=Math.min(rad,curve.radii[i]);
+      // BEHAVIOR MODE — the anatomy poster's third axis, on the tube ITSELF. Radius modes
+      // reshape the profile (packets race outward; focus gathers or sprays); lateral modes
+      // displace the ring CENTER around the true path, which stays the hit polyline. The
+      // swing ramps in from the muzzle so the stream stays attached to the hand, and calms
+      // into a receiver so the beam still lands ON the body rather than whipping past it.
+      const M=this.mode; let mox=0,moy=0,moz=0;
+      if(M.kind!=='straight'){
+        const mt=this.game.time;
+        if(M.kind==='pulsed'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=1-M.depth*.5+M.depth*p*p*p; }
+        else if(M.kind==='converging') rad*=M.wide+(M.tight-M.wide)*t;
+        else if(M.kind==='diverging') rad*=M.wide+(M.spread-M.wide)*t;
+        else {
+          const ramp=Math.min(1,arc/(baseR*5))*(receiver?clamp((length-arc)/Math.max(1,baseR*4),0,1):1);
+          const A=baseR*M.amp*ramp;
+          if(M.kind==='spiral'){ const th=arc*M.k-mt*M.speed; const c=Math.cos(th)*A,s=Math.sin(th)*A; mox=ex*c+fx*s;moy=ey*c+fy*s;moz=ez*c+fz*s; }
+          else { const s=Math.sin(arc*M.k-mt*M.speed)*A; mox=ex*s;moy=ey*s;moz=ez*s; }
+        }
+      }
       for (let r = 0; r < R; r++) {
         const a = (r / R) * Math.PI * 2;
         // Uneven flame lobes only shrink the already bounded visual envelope.
@@ -1218,9 +1240,9 @@ class BeamHose {
           ?.48+.52*(.5+.5*Math.sin(a*3+arc*.23-this.game.time*11+Math.sin(arc*.12+a*2))) : 1;
         const ca = Math.cos(a) * rad*flame, sa = Math.sin(a) * rad*flame;
         const w = (i * R + r) * 3;
-        pos[w] = px + ex * ca + fx * sa;
-        pos[w + 1] = py + ey * ca + fy * sa;
-        pos[w + 2] = pz + ez * ca + fz * sa;
+        pos[w] = px + mox + ex * ca + fx * sa;
+        pos[w + 1] = py + moy + ey * ca + fy * sa;
+        pos[w + 2] = pz + moz + ez * ca + fz * sa;
         if(normal){
           normal[w]=ex*Math.cos(a)+fx*Math.sin(a);normal[w+1]=ey*Math.cos(a)+fy*Math.sin(a);normal[w+2]=ez*Math.cos(a)+fz*Math.sin(a);
           if(tangent){tangent[w]=tx;tangent[w+1]=ty;tangent[w+2]=tz;}

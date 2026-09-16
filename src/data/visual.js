@@ -226,6 +226,10 @@ function tellOf(a) {
 // Nothing keys on a character id.
 export const BEAM_BUILDS = ['ray', 'hose', 'torrent'];
 export const BEAM_TEMPERS = ['steady', 'helix', 'kink', 'roil', 'crystal', 'sinuous', 'surge', 'churn'];
+// THE THIRD AXIS — BEHAVIOR MODE (Robert's anatomy poster, 2026-09-16: "pulse, spiral, waveform,
+// convergent — I like this stuff"). BUILD is how much beam there is, TEMPER is what the detail
+// layer does INSIDE it; MODE is what the TUBE ITSELF does — the geometry, not the surface.
+export const BEAM_MODES = ['straight', 'pulsed', 'spiral', 'waveform', 'converging', 'diverging'];
 
 export const BUILD_MEANING = {
   ray:     'thin and hard-edged, almost no sheath — a cutting instrument',
@@ -264,6 +268,19 @@ export function beamTemperOf(a) {
   return TEMPER_FOR_MATERIAL[materialOf(src)] || 'steady';
 }
 
+// MODE derives from what the ability already declares — never a hand list of weapons.
+// `spiral: true` has always meant the drill, so the tube now corkscrews for real; `air` is
+// compressed pressure (a Wave Cannon IS a waveform); `light` is optics, and optics FOCUS.
+export function beamModeOf(a) {
+  if (a && a.mode && BEAM_MODES.includes(a.mode)) return a.mode;
+  if (a && a.spiral) return 'spiral';
+  const src = { ...(a || {}), ...((a && a.vis) || {}) };
+  const m = materialOf(src);
+  if (m === 'air') return 'waveform';
+  if (m === 'light') return 'converging';
+  return 'straight';
+}
+
 // How each axis renders. Two tables, read by the beam at construction, so the engine holds no
 // opinion about any individual weapon.
 //   BUILD:  sheath opacity · core radius as a fraction of the beam · tip scale · flare toward the tip
@@ -283,6 +300,19 @@ export const TEMPER_LOOK = {
   surge:   { detail: 'surge',   n: 18, amp: 0.45, rate: 7.0 },
   churn:   { detail: 'ring',    n: 12, amp: 1.15, rate: 3.0 },
 };
+//   MODE: what the TUBE geometry does. k = spatial frequency (rad per world unit of traveled arc),
+//   speed = how fast the pattern races muzzle→tip (u/s), amp = lateral swing as a multiple of the
+//   beam radius (kept ≈1 radius so the visual never strays far from the damage capsule the path
+//   defines — the preview must not lie), depth = how deep a pulse pinches, wide/tight/spread =
+//   radius multipliers at the muzzle/tip for the focus modes.
+export const MODE_LOOK = {
+  straight:   { kind: 'straight' },
+  pulsed:     { kind: 'pulsed',     k: 0.52, speed: 30, depth: 0.45 },
+  spiral:     { kind: 'spiral',     k: 0.55, speed: 9,  amp: 1.05 },
+  waveform:   { kind: 'waveform',   k: 0.34, speed: 12, amp: 1.35 },
+  converging: { kind: 'converging', wide: 1.45, tight: 0.42 },
+  diverging:  { kind: 'diverging',  wide: 0.62, spread: 1.50 },
+};
 
 export function visOf(a) {
   if (!a || typeof a !== 'object') return null;
@@ -297,6 +327,7 @@ export function visOf(a) {
     tell: tellOf(src),
     build: a.type === 'beam' ? beamBuildOf(a) : null,     // beams only: how much of it there is
     temper: a.type === 'beam' ? beamTemperOf(a) : null,   // beams only: what it is doing inside
+    mode: a.type === 'beam' ? beamModeOf(a) : null,       // beams only: what the tube itself does
   };
 }
 

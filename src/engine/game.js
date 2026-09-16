@@ -81,7 +81,7 @@ import {inventoryAdmission,captureHeldWeapon,storeWeaponSnapshot,storedWeapon,co
 import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
-import { beamBuildOf, beamTemperOf, visOf } from '../data/visual.js';
+import { beamBuildOf, beamTemperOf, beamModeOf, visOf } from '../data/visual.js';
 import { sfxOf } from '../data/sfx.js';
 import { fxOf } from '../data/powerfx.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -3762,8 +3762,9 @@ export class Game {
       // streams may still be spawned without a fighter's animation channel.
       poseLaunch:true,chargedRelease:!!def.charge,
       // THE BEAM ANATOMY (data/visual.js): BUILD is how much of it there is, TEMPER is what it is
-      // doing inside. Both derived from the ability's own radius and material, both overridable.
-      build: beamBuildOf(def), temper: beamTemperOf(def),
+      // doing inside, MODE is what the tube itself does (pulse/spiral/waveform/focus — the
+      // anatomy poster's behavior axis). All derived from the ability's own data, all overridable.
+      build: beamBuildOf(def), temper: beamTemperOf(def), mode: beamModeOf(def),
       // element-true voice (Refs #42 L2): the beam's hum/impact/shutdown all speak its element
       sfx: sfxOf(def, caster.def, p),
       // ...and its SURFACE (iter 5): the powerfx family routes the beam core shader

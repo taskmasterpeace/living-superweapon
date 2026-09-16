@@ -196,7 +196,7 @@ export const ROSTER = [
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
     sig: ['LMB Flame Jet (fire beam)', 'R SUPERNOVA (the whole tank, one blast)', 'E Flaming Fist (fly-in)', 'Thorns: burns grabbers'],
     abilities: {
-      lmb: { type: 'beam', material: 'fire', name: 'Flame Jet', cost: 4, cd: 0.3, radius: 1.4, tipSpeed: 821, maxLen: 120, dps: 56, kiPerSec: 16, steer: 12, color: '#ff6a1a', color2: '#ffd24a', dtype: 'fire' },
+      lmb: { type: 'beam', material: 'fire', mode: 'diverging', name: 'Flame Jet', cost: 4, cd: 0.3, radius: 1.4, tipSpeed: 821, maxLen: 120, dps: 56, kiPerSec: 16, steer: 12, color: '#ff6a1a', color2: '#ffd24a', dtype: 'fire' },
       rmb: { type: 'cone', name: 'Fire Blast', kiPerSec: 18, range: 34, arc: 1.05, dps: 30, push: 20, color: '#ff6a1a', dtype: 'fire' },
       q: { type: 'projectile', name: 'Fireball', cost: 7, cd: 0.4, damage: 16, speed: 80, radius: 1.5, blast: 8, homing: 2.4, color: '#ff5a1a', color2: '#ffd24a', dtype: 'fire' },
       e: { type: 'melee', name: 'Flaming Fist', cost: 12, cd: 1.0, damage: 24, range: 12, arc: 0.8, lunge: 60, knock: 48, launch: 14, fly: true, color: '#ffd24a' },
@@ -310,7 +310,7 @@ export const ROSTER = [
       e: { type: 'cone', name: 'Vent Blast', kiPerSec: 16, range: 30, arc: 1.2, dps: 18, push: 50, lift: 4, color: '#c9cfd9' },
       f: { type: 'buff', name: 'Overdrive Core', cost: 26, cd: 20, mult: 1.6, dur: 11, heal: 30, color: '#ff9a2a', color2: '#fff' },
       shift: { type: 'dash', name: 'Thruster Dash', cost: 6, cd: 0.7, power: 96, iframes: 0.22, color: '#ff9a2a' },
-      r: { type: 'beam', material: 'energy', name: 'Annihilator Array', cost: 24, cd: 14, radius: 3.4, tipSpeed: 626, maxLen: 170, dps: 126, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffb03a', color2: '#ffffff' },
+      r: { type: 'beam', material: 'energy', mode: 'pulsed', name: 'Annihilator Array', cost: 24, cd: 14, radius: 3.4, tipSpeed: 626, maxLen: 170, dps: 126, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffb03a', color2: '#ffffff' },
     },
   },
   {
@@ -679,7 +679,7 @@ export const ROSTER = [
     blurb: 'The accident left him half machine — the machine half never runs dry. BOOYAH is a technical term.',
     abilities: {
       lmb: { type: 'rifle', name: 'Sonic Cannon', cost: 3, interval: 0.14, damage: 11, speed: 165, radius: 0.7, blast: 3.4, spread: 0.03, recoil: 1.6, color: '#7fe6ff', color2: '#fff' },
-      rmb: { type: 'beam', material: 'air', name: 'White Noise Beam', cost: 8, cd: 0.6, radius: 2.2, tipSpeed: 605, maxLen: 150, dps: 76, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#7fe6ff', color2: '#eaffff' },
+      rmb: { type: 'beam', material: 'air', mode: 'pulsed', name: 'White Noise Beam', cost: 8, cd: 0.6, radius: 2.2, tipSpeed: 605, maxLen: 150, dps: 76, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#7fe6ff', color2: '#eaffff' },
       q: { type: 'projectile', name: 'Shock Grapple', cost: 8, cd: 0.5, damage: 16, speed: 110, radius: 1, blast: 6, homing: 2.6, color: '#7fe6ff', color2: '#fff' },
       e: { type: 'cone', name: 'Overload Vent', kiPerSec: 16, range: 28, arc: 1.2, dps: 17, push: 46, color: '#7fe6ff' },
       f: { type: 'buff', name: 'System Surge', cost: 26, cd: 20, mult: 1.55, dur: 10, heal: 25, color: '#7fe6ff', color2: '#fff' },
