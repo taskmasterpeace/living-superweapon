@@ -110,3 +110,28 @@ impact dome restructure + family debris silhouettes · full 12-family sweep + re
 **Iteration 5 orders: full 12-family sweep + regrade · electric/magic/energy beam surfaces
 (comb lanes for shock, streamline pulses for ki, sigil-banded arcane) · beam contact glow at
 the receiving end · family debris silhouettes on impact (ice spikes, fire tongues).**
+
+### Iteration 5 — every beam family has a surface; full sweep regraded (216 frames, 0 errors)
+
+| category | score | the critic |
+|---|---|---|
+| CHARGING | **6** | styles live everywhere; family orb GEOMETRY (crystal orb vs plasma ball vs rune ring) still queued |
+| LAUNCHING | **6** | holds; wants a first-meters streak + level-III camera punch |
+| FLIGHT | **6.5** | 22-node ribbons + styles; per-style ribbon tinting next |
+| IMPACT | **6** | shell-as-flash landed; family DEBRIS SILHOUETTES (ice spikes, fire tongues) still the gap |
+| AFTEREFFECT | **6** | warm-to-soot works; level-III density + ground residue read still shy |
+
+Beam surfaces (feeding the phase cells): **fire 8.5 · ice 8 · electric 7.5** (arcing strobe
+lanes read true; wants an occasional fork breaking OFF the tube) · **ki 6.5** (pulses travel
+but the stream washes PALE — the pulse must contrast against saturated body color, not
+against white) · magic ~7 provisional · ⚠ faceOrigin rays (SOL's Heat Ray — the original
+hairline complaint!) still route to GENERIC on purpose and need their own RAY treatment:
+intense thin core + heat-shimmer edge.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 5 | 2026-09-16 | shock comb · ki stream · magic sigils · fxFam router · full 6-column sweep | ki beam saturation · faceOrigin rays untouched · impact debris | **≈6.6** |
+
+**Iteration 6 orders: the RAY treatment for faceOrigin beams (SOL's Heat Ray at last) ·
+ki stream saturation fix · electric off-tube forks · family impact debris silhouettes ·
+charge orb geometry per family.**
