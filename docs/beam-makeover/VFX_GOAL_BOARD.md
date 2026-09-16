@@ -412,3 +412,29 @@ the regression risk is eliminated, not just unlikely.
 If Robert wants the richer bloom in the CITY too, that's a one-line change (drop the `rich`
 gate) — but it should be eyeballed in a real city fight first. Iteration 21+: the taste grind,
 and — if wanted — a city-path capture harness so the iso game gets the same graded coverage.**
+
+### Iteration 21 — CORRECTING iter-20's claim (the city was never protected)
+
+Probed the citygame.html path directly to close the coverage gap, and it disproved iter-20:
+
+1. **`camMode` is `'chase'` in the CITY game, not `'iso'`.** Only the map/atlas TOOL is iso.
+   So the iter-20 `camMode !== 'iso'` gate did NOT spare the city — the city gets the RICH bloom
+   too. My iter-20 commit message ("the city keeps its exact original tuning") was **wrong**, and
+   this corrects the record rather than leaving a false claim in the log.
+2. **The earlier "black city capture" was the ESTABLISHING CARD**, not a render failure — the
+   city path has no `_frontlinePreparing`, so the catalog harness's `waitReady` returned before
+   the card dismissed. With `#hEstablish` hidden the city renders fine (47 scene children, real
+   buildings/trees/birds).
+3. **Scene-level bloom check: NO washout.** The daytime city reads bright but structured — the
+   rich bloom does not blow it out at the scene level. (A beam-on-target city grade still wants a
+   framed capture — the probe's camera pitch was too low to catch the horizontal beam.)
+
+**The honest resolution: the richer bloom is live in ALL gameplay (city + PowerWorld, both
+chase); only the map tool stays tame, which is correct. The `rich` gate is doing something real
+and defensible — just not what iter-20 said it did.** No code change this iteration: the scoping
+is left as-is (it correctly spares the tools), the claim is corrected, and the city-beam bloom is
+flagged for Robert's eye with the finding that the scene does not wash out.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 21 | 2026-09-16 | (no code) corrected iter-20's false city-protection claim · confirmed city renders + no scene washout | city beam-on-target still uncaptured (harness gap) | **9.2** |
