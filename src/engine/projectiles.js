@@ -1678,6 +1678,16 @@ class BeamHose {
         game.particles.burst(this.path[index],this.path[index+1],this.path[index+2],{count:2,speed:5,up:3,grav:-2,life:.32,size:Math.min(.65,this.radius*.3),color:['#ff9b24','#ffc84a'],drag:2});
       }
     }
+    // OFF-TUBE FORKS (iter 6): electricity does not stay in its lane — a small bolt breaks off a
+    // random reached point every ~0.13s. Same emission idiom as fire's embers, one primitive call.
+    if(this.visualFamily==='shock'&&this.sustaining&&this.pn>2){
+      this._forkClock=(this._forkClock||0)+dt;
+      if(this._forkClock>=.13){
+        this._forkClock%=.13;
+        const fi=Math.min(this.pn-1,Math.max(1,(Math.random()*(this.pn-1))|0))*3;
+        game.vfx.lightning({x:this.path[fi],y:this.path[fi+1],z:this.path[fi+2]},{color:this.color,count:1,radius:3+this.radius*2,height:4});
+      }
+    }
     const B = this.build;
     const renderCurve=this._curve?.update(this.path,Math.max(2,this.pn),this.sustaining?this.dir:null,this.radius);
     this._sweep(this._coreGeo, this.radius * (this.visualFamily==='fire'?.94:B.coreR), 1,renderCurve);

@@ -135,3 +135,20 @@ intense thin core + heat-shimmer edge.
 **Iteration 6 orders: the RAY treatment for faceOrigin beams (SOL's Heat Ray at last) ·
 ki stream saturation fix · electric off-tube forks · family impact debris silhouettes ·
 charge orb geometry per family.**
+
+### Iteration 6 — the founding complaint answered
+
+| what shipped | the critic |
+|---|---|
+| **THE RAY** — `faceOrigin` beams route to `shadeRayCore`: white-hot filament, authored color at the edge, constant optical intensity, faint shimmer, halo dropped to a whisper. SOL's Heat Ray is now an *intentional thin ray*, not the accidental hairline that started this whole makeover. | **7** — thin + deliberate now; wants more core punch + a heat-shimmer edge band at level III |
+| **KI SATURATION FIX** — core body carries the saturated family hue; pulses push THAT hue to white by brightness. Blue ki reads as a blue lance with racing packets instead of a pale wash. | **ki 6.5 → 8** |
+| **ELECTRIC OFF-TUBE FORKS** — a bolt breaks off a random reached point ~7×/s (fire-ember idiom, one primitive). | **electric 7.5 → 8** |
+| **FIRE TONGUES ON IMPACT** — flame-silhouette particles punch out of the blast heart (the aShape:'flame' the cones use). Ice spikes still want a shape-shader pass (only round+flame silhouettes exist today). | impact fire cell up; ice debris queued |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 6 | 2026-09-16 | faceOrigin RAY · ki saturation · electric forks · fire-tongue debris | ray core punch · ice debris silhouette · charge orb geometry · water/toxic beams generic | **≈7.1** |
+
+**Iteration 7 orders: ray core intensity + level-III shimmer edge · ice-spike impact
+silhouette (particle shape shader) · water/toxic beam surfaces · per-family charge-orb
+geometry · full 12-family sweep + regrade.**

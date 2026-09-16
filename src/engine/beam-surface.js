@@ -22,8 +22,9 @@ diffuseColor.a*=density*density;`);
 // Shared by the live hose and graphics preparation. Hold preparation materials
 // for the stage lifetime so Three retains their compiled program references.
 export function beamVisualFamily(options={}){
- // Heat vision deals thermal damage but is still an authored optical ray.
- if(options.faceOrigin)return 'energy';
+ // Heat vision is an authored OPTICAL RAY — its own treatment, not a tube's (iter 6:
+ // SOL's hairline was the makeover's founding complaint and generic was never going to fix it).
+ if(options.faceOrigin)return 'ray';
  const fam=options.fxFam;   // the powerfx family, threaded from spawnBeamFor (Refs #42 iter 5)
  if(fam==='fire'||options.material==='fire'||options.dtype==='fire')return 'fire';
  if(fam==='ice'||fam==='water'||options.dtype==='cold')return 'ice';
@@ -62,11 +63,34 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
  } else if(family==='shock'){
   time={value:0};shadeShockCore(core,time);core.side=THREE.DoubleSide;
  } else if(family==='ki'){
-  time={value:0};shadeKiCore(core,time);core.side=THREE.DoubleSide;
+  // the WASH fix (iter 6): the core body carries the SATURATED family hue (the sheath color),
+  // and the traveling pulses push that same hue to white through brightness — never pale base.
+  time={value:0};core.color.set(color);shadeKiCore(core,time);core.side=THREE.DoubleSide;
  } else if(family==='magic'){
   time={value:0};shadeSigilCore(core,time);core.side=THREE.DoubleSide;
+ } else if(family==='ray'){
+  time={value:0};shadeRayCore(core,time);core.side=THREE.DoubleSide;
+  glow.opacity*= .45;   // a ray is nearly all core — the halo stays a whisper
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE RAY (faceOrigin — heat vision, optic blasts): not a hose. A white-hot filament with the
+// authored color at its edge, constant optical intensity, a faint high-frequency shimmer.
+function shadeRayCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.rayTime=time;
+  shader.vertexShader='attribute float beamArc;varying float rayArc;varying vec3 rayNormal,rayEye;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+rayArc=beamArc;rayNormal=normalize(normalMatrix*normal);rayEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
+  shader.fragmentShader='uniform float rayTime;varying float rayArc;varying vec3 rayNormal,rayEye;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+float facing=abs(dot(normalize(rayNormal),normalize(rayEye)));
+float core=pow(facing,3.0);
+float shimmer=.93+.07*sin(rayArc*3.1+rayTime*47.0);
+diffuseColor.rgb=mix(diffuseColor.rgb*.95,vec3(1.9,1.82,1.65),core)*shimmer;
+diffuseColor.a*=(.3+1.0*core)*smoothstep(0.0,.8,rayArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-ray-v1';
 }
 
 // THE COMB (electric) — hairline bolt lanes crawling the tube, jumping on a ~22Hz hash clock:
@@ -108,8 +132,9 @@ kiArc=beamArc;`);
 float pulse=pow(.5+.5*sin(kiArc*.35-kiTime*34.0),7.0);
 float pulse2=pow(.5+.5*sin(kiArc*.13-kiTime*21.0+2.1),9.0);
 float hot=max(pulse,pulse2*.7);
-diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.9+vec3(.55),hot);
-diffuseColor.a*=(.5+.6*hot)*smoothstep(0.0,1.2,kiArc);`);
+// saturated body between pulses; the pulse pushes the SAME hue toward white (never a pale base)
+diffuseColor.rgb=mix(diffuseColor.rgb*.8,diffuseColor.rgb*2.4+vec3(.25),hot);
+diffuseColor.a*=(.62+.55*hot)*smoothstep(0.0,1.2,kiArc);`);
  };
  material.customProgramCacheKey=()=> 'beam-ki-v1';
 }

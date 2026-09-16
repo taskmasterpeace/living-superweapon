@@ -195,6 +195,9 @@ export class VFX {
       const AN = (LV ? LV.after : 1);
       switch (imp.afterFx) {
         case 'embers': {
+          // FIRE TONGUES (iter 6): flame-silhouette particles punch outward from the blast heart —
+          // the debris of a fire event IS fire (the aShape:'flame' silhouette the cones already use)
+          this.P.burst(pos.x, pos.y + 1.5, pos.z, { count: Math.round(8 * AN), speed: 16, life: 0.55, size: 4.2, color: [pal.glow, pal.core], up: 9, grav: -1.5, drag: 1.6, shrink: true, shape: 'flame' });
           this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(14 * AN), speed: 5, life: 2.2, size: 1.4, color: [pal.glow, pal.mist], up: 6, grav: 2.5, drag: 1.8 });
           // "fire first and then some smoke afterwards" (Robert's /goal, verbatim): flames LICK the
           // ground where it landed, then a second, sootier wave takes over as they die.
