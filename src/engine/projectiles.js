@@ -313,7 +313,14 @@ class Projectile {
       if (this._fx && this._fx.f.flight.style !== 'none') {
         const N = this._ribN = 22;
         this._ribPos = new Float32Array(N * 3);
-        this._ribCount = 0;
+        // SEED THE TRAIL BACK TO THE MUZZLE (goal board iter 12): a fresh bolt's ribbon is empty,
+        // so at the launch frame the shot and its muzzle flash read as TWO things. Pre-fill the
+        // node history straddling backward along -vel, so frame 1 already draws a trail joining the
+        // bolt to where it left the hand — one continuous "shot leaving", not a dot beside a flash.
+        const sp = Math.hypot(this.vel.x, this.vel.y, this.vel.z) || 1;
+        const bx = -this.vel.x / sp, by = -this.vel.y / sp, bz = -this.vel.z / sp, seedStep = this.radius * 1.4;
+        for (let i = 0; i < N; i++) { this._ribPos[i * 3] = this.pos.x + bx * seedStep * i; this._ribPos[i * 3 + 1] = this.pos.y + by * seedStep * i; this._ribPos[i * 3 + 2] = this.pos.z + bz * seedStep * i; }
+        this._ribCount = N;
         const rg = new THREE.BufferGeometry();
         rg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3).setUsage(THREE.DynamicDrawUsage));
         const cols = new Float32Array(N * 2 * 3);

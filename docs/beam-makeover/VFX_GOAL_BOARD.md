@@ -240,3 +240,19 @@ then the polish pass toward 10 (per-level ribbon tint, contact glow at beam rece
 tracer that connects muzzle to the flying bolt (the streak + charge-orb still read as two
 things) · magic beam depth · per-level ribbon tint · full 12-family confirmation sweep ·
 then the final polish grind: contact glow at beam receiving ends, level-III camera authority.**
+
+### Iteration 12 — launch connected; the 8 floor reached
+
+| what shipped | the critic |
+|---|---|
+| SEEDED RIBBON — a fresh bolt pre-fills its trail-node history straddling backward along -vel, so at frame 1 a continuous trail already joins the bolt to where it left the hand. The shot and its muzzle flash read as ONE departure now, not a dot beside a flash. | LAUNCH 7 → **8** |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 12 | 2026-09-16 | seeded launch ribbon (muzzle→bolt continuity) · full confirmation sweep | ALL CATEGORIES ≥8 — the work turns to polish toward 10 | **≈8.5** |
+
+**THE 8 FLOOR IS REACHED — every category (charge/launch/flight/impact/aftereffect) and every
+beam family grades ≥8. The goal is 10, so the remaining iterations are the polish grind:
+per-level ribbon tint · beam contact glow at the receiving end · magic beam depth · nova
+fire-tongue skin · level-III camera authority · water/toxic charge+flight parity · then a
+clean-eyed re-grade of all 216 cells hunting anything that would break an AAA freeze-frame.**
