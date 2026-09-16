@@ -31,7 +31,8 @@ export function beamVisualFamily(options={}){
  if(fam==='water'||fam==='toxic')return 'fluid';
  if(fam==='electric')return 'shock';
  if(fam==='magicViolet'||fam==='magicGreen')return 'magic';
- if(fam==='energyRed'||fam==='energyBlue'||fam==='energySun'||fam==='alien')return 'ki';
+ if(fam==='alien')return 'alien';
+ if(fam==='energyRed'||fam==='energyBlue'||fam==='energySun')return 'ki';
  return 'energy';
 }
 
@@ -74,8 +75,29 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   glow.opacity*= .45;   // a ray is nearly all core — the halo stays a whisper
  } else if(family==='fluid'){
   time={value:0};shadeFluidCore(core,time);core.side=THREE.DoubleSide;
+ } else if(family==='alien'){
+  time={value:0};shadeAlienCore(core,time);core.side=THREE.DoubleSide;
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE UNEARTHLY BEAM (alien): the ki stream, but the hue SHIFTS along the shaft (orange↔green) and
+// segmented pod-bands crawl it — energy that does not obey the palette, reading as not-of-this-world.
+function shadeAlienCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.alienTime=time;
+  shader.vertexShader='attribute float beamArc;varying float alienArc;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+alienArc=beamArc;`);
+  shader.fragmentShader='uniform float alienTime;varying float alienArc;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+float shift=.5+.5*sin(alienArc*.4-alienTime*6.0);
+vec3 other=vec3(.28,1.0,.55);                       // the green the family trail carries
+diffuseColor.rgb=mix(diffuseColor.rgb,other*.7+diffuseColor.rgb*.3,shift*.7);
+float pod=pow(.5+.5*sin(alienArc*.7-alienTime*11.0),4.0);   // segmented pods crawling
+diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*2.0+vec3(.3),pod*.6);
+diffuseColor.a*=(.4+.7*max(pod,.4))*smoothstep(0.0,1.2,alienArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-alien-v1';
 }
 
 // THE TORRENT (water/toxic): a pressurised jet, not a beam — turbulent surging bands that flow

@@ -353,3 +353,21 @@ shimmer / segmented pods, so it stops reading as orange ki) · electric charge b
 phase. Iteration 18 orders: the diminishing-returns polish — level-III impact camera authority ·
 alien beam surface (still rides ki) · a clean-eyed hunt for any single cell a critic would call
 below 9, closed one at a time.**
+
+### Iteration 18 — alien beam + level-III impact authority (all 8 beam surfaces distinct)
+
+| what shipped | the critic |
+|---|---|
+| ALIEN BEAM (`shadeAlienCore`) — the hue SHIFTS along the shaft (orange↔green) with segmented pod-bands crawling it: energy that doesn't obey the palette. Alien is now the 8th distinct beam surface (fire lava · ice crystal · shock comb · ki stream · ray filament · fluid jet · magic runes · alien iridescent). | alien beam to **8.5** |
+| LEVEL-III IMPACT CAMERA AUTHORITY — a heavy blast punches the frame + a beat of slowmo when the human's own big shot lands, so a III impact carries WEIGHT, not just size. | impact level-III read up |
+| ⚠ HARNESS BUG FOUND: the alien test kit was setting `dtype:'fire'`, which the beam router honours before `fxFam`, so "alien beam" was silently rendering FIRE's lava beam this whole time — the earlier "rides ki" grade was generous. Fixed: only fire sets dtype:fire; the rest route on fxFam. | a grade is only as honest as the harness |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 18 | 2026-09-16 | alien iridescent beam · level-III impact camera authority · matrix dtype-routing fix | steel (matte by design) · the last 8.5s are subjective | **≈9.0** |
+
+**NINE. All 8 beam surfaces distinct, all five phases distinct per family, all three levels read.
+Iteration 19+ is the final subjective polish grind toward 10 — there is no broken or generic cell
+left; what remains is taste-level refinement (contrast, timing, the exact colour of a pod-band).
+The core goal — dozens of visually distinct beams/projectiles/area attacks, each nameable, at
+three intensities across charge/launch/flight/impact/aftereffect — is MET.**

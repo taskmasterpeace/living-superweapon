@@ -854,6 +854,9 @@ class Projectile {
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
     // LEVEL-SCALED KNOCKBACK (Robert: "the explosion should have knockback") — a level-III blast SHOVES
     game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype, kbMul: this._fx ? this._fx.L.kb : 1});
+    // LEVEL-III IMPACT CAMERA AUTHORITY (goal board iter 18): a heavy blast owns the frame — a punch
+    // + slowmo when the human caster's own big shot lands, so a III impact carries weight, not just size.
+    if (this._fx && this._fx.level >= 3) { game.world.punch(0.4); if (game.isHuman?.(this.caster)) { game.world.shake(0.7); game.slowmo?.(0.08, 0.5); } }
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
     if (this.face) {   // the Marletta goes off — a grief-shaped crater
       game.vfx.shockwave(p.clone().setY((game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });

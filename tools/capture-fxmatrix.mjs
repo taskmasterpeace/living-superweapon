@@ -73,8 +73,9 @@ try {
       },
       setKit(fam, lvl, pal) {
         const t = this.tpl;
-        // dtype routes the BEAM element surface (beamVisualFamily reads dtype: fire→lava, cold→crystal)
-        const dt = fam === 'fire' || fam === 'alien' ? 'fire' : fam === 'ice' ? 'cold' : fam === 'water' ? 'cold' : undefined;
+        // dtype routes SOME beam surfaces (fire→lava, cold→crystal); the rest route on fxFam, so
+        // only set dtype where it's the intended path (alien must NOT set fire or it steals the lava).
+        const dt = fam === 'fire' ? 'fire' : fam === 'ice' ? 'cold' : fam === 'water' ? 'cold' : undefined;
         t.colors = { primary: '#2a2a2e', secondary: '#1a1a1e', accent: pal.glow, skin: '#c8a888' };
         t.abilities = {
           lmb: { type: 'projectile', name: 'FX Bolt', fxFamily: fam, fxLevel: lvl, color: pal.glow, color2: pal.core, damage: 14 * lvl, blast: 4 + lvl * 5, speed: 58, radius: 1 + lvl * 0.5, cost: 0, cd: 0.05, shock: lvl >= 2 },
