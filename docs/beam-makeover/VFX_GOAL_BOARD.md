@@ -709,3 +709,35 @@ capture path that renders THIS worktree's city — most reliably by asking Rober
 built-in browser pane while a worktree vite serves it — THEN grade the additive beam and fix if needed.
 Everything graded so far is the readable path; the additive city path is still an open question, not a
 solved white-out.
+
+### Iteration 29 — cracked the capture MECHANISM; the city page still renders BLACK/UNLIT in headless
+
+Chased the city capture properly. Two results, one good, one a wall.
+
+**GOOD — a reusable capture primitive.** `page.screenshot`, `canvas.toDataURL` AND `drawImage(canvas)`
+all return BLACK under `preserveDrawingBuffer:false` (they read the PRESENTED canvas). `gl.readPixels`
+reads the real framebuffer directly; encode it with a minimal Node PNG encoder (`zlib`, no deps
+available). That is the ONLY path that reads a WebGL render Playwright's screenshot can't — added to
+`capture-citymatrix.mjs` and reusable anywhere the presented-canvas trick fails.
+
+**THE WALL — the city page renders BLACK/UNLIT in headless Playwright.** With the readPixels capture
+working, measured over the WHOLE frame: **`maxRGB=9, brightFrac=0, bbox=null`** — the city scene never
+lights up (an early sparse sample caught a transient `centerMax=255` beam flicker, but the sustained
+frame is dark). ⚠ This is **CITY-SPECIFIC, not the harness**: `powerworld.html` renders LIT and gradeable
+in the SAME headless setup (that is the whole 216-cell fx matrix). Forcing `updateDayNight` + 4 renders
+did not light it. So it is a difference in the CITY's own render/light pipeline under headless SwiftShader.
+- ⚠ `preview_start` (built-in browser) serves the MAIN CHECKOUT `D:\lsw`, not this worktree (iter 28) —
+  that is the ONLY place the city rendered lit, and it was the BASE game.
+- Confirmed again: `player._openSky===false` on the city path (additive). The readable PowerWorld grade
+  (~9.4) stands — those are the worktree's own headless renders, which DO light up.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 29 | 2026-09-16 | cracked the readPixels+PNG capture mechanism · proved the CITY page renders BLACK/UNLIT in headless (city-specific; powerworld renders lit) · no code change to the game | **CITY beam STILL uncaptured — city renders unlit headless** | **PW 9.4 · CITY unknown** |
+
+**Honest state, unchanged in substance:** readable/PowerWorld ~9.4 (real, gradeable); the additive CITY
+beam is UNGRADED because THIS worktree's city renders unlit/black in every headless path, and the one
+lit render was the wrong (base) codebase. The capture mechanism is now solved; the blocker is getting the
+city SCENE to render lit off-screen. Next: either diagnose the city's headless-unlit render (its sun/hemi
+/composer vs powerworld's — powerworld works, so it is a concrete, bounded diff to find), or have Robert
+eyeball the lit city he plays and report whether fire/ice beams read distinctly. No blind city changes.
