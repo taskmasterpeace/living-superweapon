@@ -2,6 +2,8 @@ import { ROSTER } from '../data/characters.js';
 import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES, visOf } from '../data/visual.js';
 import { LIBRARY_BEAMS, LIBRARY_SHOTS } from '../data/beams.js';
 import { TYPES } from './abilities.js';
+import { FIREARMS } from '../data/armory.js';
+import { FX_LEVELS } from '../data/powerfx.js';
 
 // THE BEAM GALLERY — Robert: "flip through every beam×mode in third person, no fight. Best way for me
 // to explore them later." A proving stand, not a battle: one caster, one invulnerable target down-range,
@@ -36,6 +38,10 @@ export class BeamGallery {
       }
     }
     for (const s of LIBRARY_SHOTS) this.shots.push({ heroId: null, heroName: 'LIBRARY', slot: '—', ab: s, name: s.name });
+    // THE ARMORY LANES ("I haven't seen the shotgun stuff") — the 13 real firearms live in
+    // data/armory.js, not on any hero's kit, which is why the wheel never showed them. Their `ab`
+    // blocks are real rifle abilities (magazines, reloads and all), so the same driver fires them.
+    for (const w of FIREARMS) this.shots.push({ heroId: null, heroName: 'ARMORY', slot: w.cls, ab: { ...w.ab }, name: w.n });
     // THE SPRAY WHEEL — "the wide short spray... we need to be able to control that... certain
     // things should go so far and so wide" (the sliders). Driven through the REAL cone ability
     // body (TYPES.cone) with a stand-owned state — zero mirror drift; the sliders override the
@@ -55,6 +61,10 @@ export class BeamGallery {
     this.coneRange = null; this.coneArc = null; this.coneVArc = null;
     this.shotSpeed = null; this.shotGrav = null;    // GRAVITY = his "grenades float like Mars" tuner
     this.beamWidth = null; this.beamLen = null;
+    // THE LEVEL (null = the ability's own): I / II / III on the engine's OWN ladder — it writes
+    // `fxLevel`, the authored override powerfx.fxLevelOf already honours, so explosions, muzzle,
+    // charge orbs and style fx all scale through FX_LEVELS with no second system.
+    this.level = null;
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
@@ -139,6 +149,12 @@ export class BeamGallery {
     const { def } = this._current();
     if (this.beamWidth != null) def.radius = +(((def.radius || 1.6) * this.beamWidth)).toFixed(2);   // the FAT dial
     if (this.beamLen != null) def.maxLen = this.beamLen;                                             // the REACH dial
+    if (this.level) {                                        // LEVEL preview: the beam SHAFT doesn't read FX_LEVELS yet,
+      def.fxLevel = this.level;                              // so the stand scales width/output by the same L.scale row
+      const L = FX_LEVELS[this.level - 1];
+      def.radius = +((def.radius || 1.6) * L.scale).toFixed(2);
+      def.dps = Math.round((def.dps || 60) * L.scale);
+    }
     const beam = g.spawnBeamFor(c, def, def.charge ? (def.chargePower || 1.6) : 1);   // charge beams show at full width
     if (beam) {
       // ⚠ LEAVE IT IN projectiles.list so the manager runs every beam's real pre-passes (clash,
@@ -189,6 +205,7 @@ export class BeamGallery {
       def = { ...this.shots[this.shotI].ab };
       if (this.shotSpeed != null && def.speed) def.speed = Math.round(def.speed * this.shotSpeed);
       if (this.shotGrav != null && def.grav) def.grav = this.shotGrav;
+      if (this.level) def.fxLevel = this.level;
     } else if (this.kind === 'cone') {
       def = { ...this.cones[this.coneI].ab };
       if (this.coneRange != null) def.range = this.coneRange;
@@ -198,6 +215,7 @@ export class BeamGallery {
       def = this._current().def;
       if (this.beamWidth != null) def.radius = +((def.radius || 1.6) * this.beamWidth).toFixed(2);
       if (this.beamLen != null) def.maxLen = this.beamLen;
+      if (this.level) def.fxLevel = this.level;
     }
     const txt = JSON.stringify(def);
     try { navigator.clipboard?.writeText(txt); } catch {}
@@ -233,6 +251,7 @@ export class BeamGallery {
         const def = { ...it.ab };
         if (this.shotSpeed != null && def.speed) def.speed = Math.round(def.speed * this.shotSpeed);
         if (this.shotGrav != null && def.grav) def.grav = this.shotGrav;
+        if (this.level) def.fxLevel = this.level;   // rides fxOf everywhere: blast radius, clouds, kb, afterfx
         this._shotCycle += 1 / 60;
         if (this._shotSt.cd > 0) this._shotSt.cd -= 1 / 60;   // runSlot owns this in real play; the stand owns it here
         if (this._shotSt.cd > 0.5) this._shotSt.cd = 0.5;     // SHOW pacing: a 14s ult cooldown is combat truth, not stand truth
@@ -302,8 +321,13 @@ export class BeamGallery {
       this.toggleKind();
       kindBtn.textContent = this.kind === 'beam' ? '⇄ SHOTS' : this.kind === 'shot' ? '⇄ SPRAYS' : '⇄ BEAMS';
     });
+    const lvlBtn = mkBtn('LVL AUTO', 'The three levels (I / II / III) on the engine’s own FX ladder', () => {
+      this.level = this.level == null ? 1 : this.level >= 3 ? null : this.level + 1;
+      lvlBtn.textContent = 'LVL ' + (this.level ? ['I', 'II', 'III'][this.level - 1] : 'AUTO');
+      if (this.kind === 'beam') this.spawn(); else this._updateChip();
+    });
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
-    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn);
+    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn, lvlBtn);
     // THE DIALS ROW ("some sliders where... certain things should be able to go so far and so
     // wide") — three generic slider slots, reconfigured per wheel by _configSliders(): they write
     // the exact fields the engine reads. ⧉ ROW copies the edited row as paste-ready library JSON.
@@ -346,7 +370,7 @@ export class BeamGallery {
     }
     const a = this.list[this.i]?.ab || {};
     return [
-      { lab: 'FAT', min: .4, max: 3, step: .1, fmt: v => '×' + v, get: () => this.beamWidth ?? 1, set: v => { this.beamWidth = v; this.spawn(); } },
+      { lab: 'FAT', min: .4, max: 4.5, step: .1, fmt: v => '×' + v, get: () => this.beamWidth ?? 1, set: v => { this.beamWidth = v; this.spawn(); } },   // "about 4 times as big"
       { lab: 'REACH', min: 40, max: 240, step: 5, fmt: v => v + 'u', get: () => this.beamLen ?? a.maxLen ?? 120, set: v => { this.beamLen = v; this.spawn(); } },
     ];
   }
