@@ -324,10 +324,16 @@ class Projectile {
         const rg = new THREE.BufferGeometry();
         rg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3).setUsage(THREE.DynamicDrawUsage));
         const cols = new Float32Array(N * 2 * 3);
-        const gc = new THREE.Color(this._fx.f.palette.glow), cc = new THREE.Color(this._fx.f.palette.core);
+        // PER-LEVEL WEIGHT (goal board iter 15): a III bolt's trail is heavier — a white-hot head
+        // fading over a LONGER tail, a I bolt a short cool wisp. Level reads in the trail, not just
+        // the bolt body. `hd` = how white-hot the head runs; `fade` exponent = how far the tail carries.
+        const lvl0 = (this._fx.level || 1) - 1;
+        const hd = 0.5 + lvl0 * 0.6, fadeExp = 2.2 - lvl0 * 0.5;
+        const wc = new THREE.Color('#ffffff');
+        const gc = new THREE.Color(this._fx.f.palette.glow), cc = new THREE.Color(this._fx.f.palette.core).lerp(wc, Math.min(0.6, hd * 0.4));
         for (let i = 0; i < N; i++) {
           const t = i / (N - 1);
-          const c = cc.clone().lerp(gc, Math.min(1, t * 2)).multiplyScalar(1 - t * t);   // hot head, brightness IS the fade (additive)
+          const c = cc.clone().lerp(gc, Math.min(1, t * 2)).multiplyScalar(Math.pow(1 - t, fadeExp) * (0.85 + lvl0 * 0.15));
           cols.set([c.r, c.g, c.b], i * 6); cols.set([c.r, c.g, c.b], i * 6 + 3);
         }
         rg.setAttribute('color', new THREE.BufferAttribute(cols, 3));

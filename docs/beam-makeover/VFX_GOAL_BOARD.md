@@ -291,3 +291,18 @@ fire-tongue skin · level-III screen authority · then the final clean-eyed 216-
 **Iteration 15 orders: per-level ribbon width/tint (a III bolt's trail heavier than a I) · nova
 fire-tongue skin · level-III screen authority (charge-release kick) · then the final 216-cell
 clean-eyed re-grade hunting the last sub-9 cells.**
+
+### Iteration 15 — level reads in the trail; the nova boils
+
+| what shipped | the critic |
+|---|---|
+| PER-LEVEL RIBBON WEIGHT — a III bolt runs a white-hot head fading over a LONGER tail; a I bolt a short cool wisp. Level now reads in the TRAIL, not just the bolt body. | LEVEL READ (flight) 8 → **9** |
+| NOVA BOILING SKIN — the element licks off the expanding sphere surface for real (flame tongues for fire, shards for ice, sparks else), climbing the CURRENT radius and thinning as it fades. A roiling sphere of its element, not a smooth balloon. | SUPERNOVA reads fire now |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 15 | 2026-09-16 | per-level ribbon weight · nova boiling skin | nova kernel still white-cored · charge-orb level differentiation · final re-grade pending | **≈8.8** |
+
+**Iteration 16 orders: charge-orb per-level size/intensity read · nova kernel colour · the
+final clean-eyed 216-cell re-grade — walk every family × level × phase and score the last cells
+still under 9, then close whatever it names.**

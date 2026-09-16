@@ -375,7 +375,11 @@ export class VFX {
     const shell = new THREE.Mesh(this._sphere, mat);
     shell.position.copy(pos); shell.scale.setScalar(radius * 0.2); this.scene.add(shell);
     const l = this.borrowLight(pal.glow, 14 * power, radius * 3); l.position.copy(pos);
-    let t = 0; const life = 0.55 + power * 0.12;
+    let t = 0, skin = 0; const life = 0.55 + power * 0.12;
+    // THE BOILING SKIN (goal board iter 15): the element licks off the expanding surface for real —
+    // flame tongues for fire, shards for ice, else sparks. This is what makes a SUPERNOVA read as a
+    // roiling sphere of its element, not a smooth balloon (Robert's "how we gonna make fire spherical").
+    const skinShape = imp.afterFx === 'frostmist' ? 'shard' : imp.afterFx === 'embers' ? 'flame' : null;
     this.flash(pos, imp.kernel, radius * 0.5, 0.16);
     this._add({
       update: (dt) => {
@@ -384,7 +388,16 @@ export class VFX {
         // hot 0.62 (not 1) keeps the FAMILY colour in the sphere — at full hot the additive churn
         // washes a fire nova to white (goal board iter 10). A boiling ORANGE sphere, not a flashbulb.
         if (mat.userData.orbHot) mat.userData.orbHot.value = 0.62;
-        shell.scale.setScalar(radius * (0.2 + e * 1.05));
+        const R = radius * (0.2 + e * 1.05);
+        shell.scale.setScalar(R);
+        // tongues/shards climbing off the CURRENT surface, thinning out as the shell fades
+        skin += dt;
+        if (skin > 0.05 && k < 0.7) {
+          skin = 0;
+          const a = Math.random() * Math.PI * 2, ct = Math.random() * 2 - 1, st = Math.sqrt(1 - ct * ct);
+          const nx = st * Math.cos(a), ny = ct, nz = st * Math.sin(a), sp = R * 2.2;
+          this.P.spawn({ x: pos.x + nx * R, y: pos.y + ny * R, z: pos.z + nz * R, vx: nx * sp, vy: ny * sp + 1, vz: nz * sp, life: 0.4, size: 3, color: [pal.core, pal.glow], drag: 1.4, shrink: true, shape: skinShape });
+        }
         shell.material.opacity = 0.9 * (1 - k) * (1 - k);
         l.intensity = Math.max(0, 14 * power * (1 - k));
         return k >= 1;
