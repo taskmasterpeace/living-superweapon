@@ -181,7 +181,11 @@ export class VFX {
     // sparks + embers + smoke + tumbling DEBRIS with real gravity. ⚠ §7: in the close frame each
     // spark draws up to 9× its authored area (the perspective divide finally bites), so cap the count.
     const sparkN = (this._close ? Math.min(PW_FX.sparkCount, 26 + power * 14) : 26 + power * 14) * CN;
-    this.P.burst(pos.x, pos.y, pos.z, { count: sparkN, speed: 20 + power * 10, life: 0.6, size: 2.6, color: pal ? [imp.kernel, pal.glow, pal.core] : ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
+    // ⚠ THE SPARKS CARRY THE FAMILY COLOUR (goal board iter 39): weighted `[imp.kernel, pal.glow,
+    // pal.core]` the trail read 2/3 near-white for every family — the last samey element in the impact
+    // CENTRE after iter 34 coloured the shock ring. 2/3 glow + 1/3 hot-white kernel: fire sparks orange,
+    // ice cyan, magic purple, still with an incandescent core, never a shared white dot row.
+    this.P.burst(pos.x, pos.y, pos.z, { count: sparkN, speed: 20 + power * 10, life: 0.6, size: 2.6, color: pal ? [pal.glow, pal.glow, imp.kernel] : ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
     this.P.burst(pos.x, pos.y, pos.z, { count: (6 + power * 5) * CN, speed: 26 + power * 8, life: 1.0, size: 1.6, color: pal ? [...pal.debris, pal.deep] : ['#3a352c', '#57504a', color2], up: 14, grav: 60, drag: 0.6 });
     this.P.burst(pos.x, pos.y, pos.z, { count: 10 * CN, speed: 7, life: 1.1, size: 4.5, color: pal ? pal.smoke : ['#20222c', '#15161d'], up: 6, grav: -3, drag: 1.1 });
 

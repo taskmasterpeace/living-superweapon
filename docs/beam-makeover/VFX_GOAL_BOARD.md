@@ -1066,3 +1066,37 @@ puffs at +50, yet the sequential capture shows it — so it is either the dark d
 or a residual I could not pin in the frozen beat. It does NOT block family differentiation (all families
 share it) and sits out of the main impact read. Flagged for a future targeted pass rather than sinking
 more of this loop. City additive path still un-gradeable (iter 30).
+
+### Iteration 39 — the elusive smudge RESOLVED (it's the target) + the sparks carry the element
+
+Closed the iter-38 open item and made a real impact-centre improvement.
+- **The "dark smoke smudge" is the engulfed dark test-DUMMY** — resolved by construction. It appears ONLY
+  in the impact/aftermath cells, NEVER in the clean charge cell (which has the same dummy but no
+  explosion), so it is not set dressing and not a lingering artifact. A whole-scene probe found the only
+  elevated dark objects were `white-threat-room` seating boxes that DO NOT render (occluded by the stage —
+  the charge cell proves it). What is left is the dark dummy (`#1d4a5c` costume) sitting at the impact
+  centre, engulfed in the now-pale smoke, reading as a dark blob. **In-game the target is a colourful
+  hero, not a grey dummy — there is no family-VFX defect here.** Reverted a misdirected box-hide I tried
+  first; kept the working ring-hide.
+- **The impact SPARKS carry the family colour now** (`vfx.js`): the shared spark burst was weighted
+  `[imp.kernel, pal.glow, pal.core]` — 2/3 near-white for every family, so the horizontal spark trail read
+  as a shared white dot row, the last samey element in the impact CENTRE after iter 34 coloured the shock
+  ring. Now `[pal.glow, pal.glow, imp.kernel]` (2/3 glow + 1/3 hot-white kernel). Measured: magicViolet's
+  trail is now clearly PURPLE, fire's warm-orange near the muzzle; ring + sparks read cohesively in-family,
+  and the central flash stays hot-white (correct for a detonation). Strongest for saturated-glow families
+  (magic/energy/ice), subtle for warm ones (fire) — honest and expected.
+
+Verified (`capture-fxmatrix --family fire,magicViolet`, force-fresh): **0 errors**. Refs
+`artifacts/fx-matrix/shots/{magicViolet,fire}/3-impact.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 39 | 2026-09-16 | RESOLVED the aftermath "smudge" (it's the engulfed dark dummy = the TARGET, not a VFX defect) · impact SPARKS now carry the family colour (`[glow,glow,kernel]`) so the trail isn't a shared white dot row | the impact centre's last samey element (white spark trail) 8.5 → ~9 · no open family-VFX cell remains that I can pin | **PW ≈9.65** |
+
+**Where the loop stands:** the family × intensity × phase system reads distinctly across all 12 families
+(charge/launch/flight/impact each family-styled), levels scale (firecracker→event), knockback scales
+(measured 2.4× L1→L3, iter 37), beams are 8 distinct surfaces, residue is family-aware (frost/scorch/
+sludge, iter 38), and the impact now carries the element at the ring AND the sparks. The remaining gap to
+a flat 10 is subjective polish (the pale detonation centre is arguably correct; steel's charge orb is a
+rarely-fired artificial cell) plus the CITY additive path, still un-gradeable in this environment (iter
+30) — that one needs Robert's GPU eyeball. City additive path aside, the readable matrix is ≈9.65.
