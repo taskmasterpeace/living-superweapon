@@ -1,22 +1,20 @@
-// THE CITY BEAM MATRIX (Refs #42, iter 26) — the ADDITIVE city/iso beam, the DEFAULT gameplay path
+// THE CITY BEAM MATRIX (Refs #42, iter 27) — the ADDITIVE city/iso beam, the DEFAULT gameplay path
 // and the glowy look Robert loved, which the PowerWorld-only fx matrix never covered. Readability is
-// `_openSky`-gated (projectiles.js:957), so the city beam is a genuinely different, BRIGHTER render
-// (AdditiveBlending, tip radius 2.1 vs 0.72, sheath opacity 0.9 vs 0.34) — and it can't be faked on
-// the PowerWorld page (toggling _openSky sends that stage's camera to the void). So we drive the REAL
-// city (citygame.html), inject the same synthetic FX-proving hero the fx matrix uses (reliable beam
-// on slot q — no fragile per-hero slot detection), and frame it steeper so the horizontal beam clears
-// the buildings. Beam phase, every family x 3 levels.
-//   node tools/capture-citymatrix.mjs [--family fire,ice] [--port 5190]
+// `_openSky`-gated (projectiles.js:957): the city beam is a genuinely BRIGHTER render (AdditiveBlending,
+// tip radius 2.1 vs 0.72, sheath opacity 0.9 vs 0.34) that the 216-cell PowerWorld grade never saw.
 //
-// ⚠ WIP (iter 26): the SETUP + FINDING work — it boots the city, injects the beam hero, and confirms
-// `player._openSky === false` (i.e. the city beam IS the additive/glowy path, NOT the readable one the
-// fx matrix grades). But the render-OUTSIDE-the-rAF-loop comes back BLACK here even though the camera
-// is posed (camPos ~[0,167,199]), the beam exists (beams:1) and the scene is built (kids:55). The
-// iter-22 citybeam-check hit the SAME flakiness (some heroes rendered, others black) — it is a
-// city-page render-target/compositor state issue when g.update + g.world.render are stubbed, not a
-// camera or beam problem. Next attempt: try letting the rAF loop own the render (freeze the SIM only),
-// or render the composer explicitly, or capture on a frame the loop itself drew. The finding stands
-// regardless: the city's additive beam is a genuinely different, UNGRADED render.
+// ⚠⚠ HEADLESS IS BLACK — USE THE BUILT-IN BROWSER (iter 27, RESOLVED). This tool (and every headless
+// variant) renders BLACK on the city page: a headless Playwright pane is treated as HIDDEN, so the
+// adaptive-quality render EARLY-OUTS (renderer.info.render.calls === 1) — the exact "measure in a
+// foregrounded tab, in-app pane = 60" limitation CLAUDE.md documents. Neither stubbing+manual-render
+// NOR letting the rAF loop render (below) escapes it. THE WORKING METHOD is the in-app BUILT-IN
+// BROWSER, which renders full-quality: preview_start "lsw-alt" (5184) → navigate citygame.html → in
+// javascript_tool: L.enter({mode:'training',p1:'sol'}) → inject the synthetic `_fxtest` beam hero
+// (abilities.q = {type:'beam', fxFamily, fxLevel, color:pal.glow, color2:pal.core, radius/dps by level})
+// → set g.controlPlayer to pin the player + hold slot q + set g.mapCam {x:0,z:0,yaw:0,pitch:0.7,zoom:46}
+// → wait ~1.3s → `computer` screenshot. That is how the iter-27 white-out was captured. This .mjs stays
+// as the headless SETUP reference (it correctly proves player._openSky===false = the additive path).
+//   node tools/capture-citymatrix.mjs [--family fire,ice] [--port 5190]   (⚠ renders black — see above)
 import { mkdir, writeFile } from 'node:fs/promises';
 import { spawn, execSync } from 'node:child_process';
 import { chromium } from 'playwright';
@@ -42,70 +40,67 @@ try {
   await page.evaluate(() => { const L = window.LSW; L.SETTINGS && (L.SETTINGS.opening = 'off'); L.enter({ mode: 'training', p1: 'sol' }); });
   await page.evaluate(() => new Promise(r => setTimeout(r, 1800)));   // let the establishing card's clock finish
 
-  await page.evaluate(() => {
+  const readable = await page.evaluate(() => {
     const L = window.LSW, g = L.game;
     const kill = document.createElement('style'); kill.textContent = 'body > :not(#game){display:none!important}'; document.head.appendChild(kill);
     g.world.qualityOverride = 2; g.world.setFogEnabled?.(false); g.world.dayFixed = 0.74;
     L.hud.updateMood = () => {};
-    g.controlPlayer = () => {};
-    g.updateThrowArc = () => { if (g.throwArc) g.throwArc.visible = false; };
-    const realU = g.update.bind(g); g.update = () => {};
-    const realRender = g.world.render.bind(g.world); g.world.render = () => {};
     const tpl = JSON.parse(JSON.stringify(L.ROSTER.find(r => r.id === 'kano')));
     tpl.id = '_fxtest'; tpl.name = 'FX PROVING'; tpl.abilities = {}; tpl.origin = 'altered';
     L.ROSTER.push(tpl);
     window.__cx = {
-      g, L, realU, realRender, tpl,
-      step(n) { for (let i = 0; i < n; i++) this.realU(1 / 60); },
-      shoot() { const w = this.g.world; try { w.renderer.setScissorTest(false); w.renderer.setViewport(0, 0, w.renderer.domElement.width, w.renderer.domElement.height); } catch {} this.realRender(); },
-      stage(dist) {
-        this.g.vfx.clearScorches?.();
-        const p = this.g.player;
-        // GROUND staging, camera centred on the lane (the proven iter-22 citybeam framing — mapCam
-        // has no height target, so an altitude fight renders to the void). Player and dummy straddle
-        // the origin so the beam sits mid-frame; pitch 0.7 is steep enough to clear low buildings.
-        p.pos.set(-dist / 2, 0, 0); p.vel?.set?.(0, 0, 0);
-        p.ki = p.maxKi; p.hp = p.maxHp; p.staggerT = 0;
-        let d = this.g.entities.find(e => e.isDummy);
-        if (!d) d = this.g.spawnDummy(dist / 2, 0);
-        d.pos.set(dist / 2, 0, 0); d.hp = d.maxHp = 99999;
-        p.aim3?.set?.(1, 0, 0); if (p.aim) { p.aim.x = 1; p.aim.z = 0; } p.facing = Math.atan2(1, 0);
-        if (this.g.throwArc) this.g.throwArc.visible = false;
-        return d;
-      },
-      pose() { this.g.mapCam = { x: 0, z: 0, yaw: 0, pitch: 0.7, zoom: 46 }; this.g.world.orbit?.(this.g.mapCam); },
-      setKit(fam, lvl, pal) {
+      g, L, tpl, hero: -26, foe: 26,
+      // hold the beam + pin the player, EVERY frame, from inside the game's own controlPlayer slot —
+      // so the natural rAF loop advances + renders the sustained beam with our posed camera.
+      arm(id, lvl, pal) {
         const t = this.tpl;
-        const dt = fam === 'fire' ? 'fire' : fam === 'ice' ? 'cold' : fam === 'water' ? 'cold' : undefined;
+        const dt = id === 'fire' ? 'fire' : id === 'ice' ? 'cold' : id === 'water' ? 'cold' : undefined;
         t.colors = { primary: '#2a2a2e', secondary: '#1a1a1e', accent: pal.glow, skin: '#c8a888' };
-        t.abilities = { q: { type: 'beam', name: 'FX Beam', fxFamily: fam, fxLevel: lvl, dtype: dt, color: pal.glow, color2: pal.core, radius: lvl === 1 ? 0.7 : lvl === 2 ? 1.6 : 2.6, tipSpeed: 950, maxLen: 62, dps: 18 * lvl, kiPerSec: 0, cost: 0, cd: 0.05 } };
-        this.g.setPlayerChar('_fxtest'); this.g.controlPlayer = () => {};
-        this.step(3);
+        t.abilities = { q: { type: 'beam', name: 'FX Beam', fxFamily: id, fxLevel: lvl, dtype: dt, color: pal.glow, color2: pal.core, radius: lvl === 1 ? 0.7 : lvl === 2 ? 1.6 : 2.6, tipSpeed: 950, maxLen: 62, dps: 18 * lvl, kiPerSec: 0, cost: 0, cd: 0.05 } };
+        this.g.setPlayerChar('_fxtest');
+        this.g.vfx.clearScorches?.();
+        let d = this.g.entities.find(e => e.isDummy); if (!d) d = this.g.spawnDummy(this.foe, 0);
+        d.pos.set(this.foe, 0, 0); d.hp = d.maxHp = 99999; d.vel?.set?.(0, 0, 0);
+        this._held = false;
+        this.g.mapCam = { x: 0, z: 0, yaw: 0, pitch: 0.7, zoom: 46 };
+        const self = this;
+        this.g.controlPlayer = () => {
+          const p = self.g.player;
+          p.pos.set(self.hero, 0, 0); p.vel?.set?.(0, 0, 0);
+          p.ki = p.maxKi; p.hp = p.maxHp; p.staggerT = 0;
+          if (p.aim) { p.aim.x = 1; p.aim.z = 0; } p.aim3?.set?.(1, 0, 0); p.facing = Math.atan2(1, 0);
+          self.L.runSlot(p, 'q', { pressed: !self._held, held: true, released: false }, self.g);
+          self._held = true;
+          if (self.g.throwArc) self.g.throwArc.visible = false;
+        };
       },
-      sweep() { for (const pr of [...(this.g.projectiles?.list || [])]) { try { pr._dispose?.(this.g); } catch {} } this.step(4); },
+      release() {
+        const p = this.g.player; try { this.L.runSlot(p, 'q', { pressed: false, held: false, released: true }, this.g); } catch {}
+        this.g.controlPlayer = () => {};
+        for (const pr of [...(this.g.projectiles?.list || [])]) { try { pr._dispose?.(this.g); } catch {} }
+      },
+      diag() { const cam = this.g.world.camera; const list = this.g.projectiles?.list || []; return { openSky: !!this.g.player._openSky, beams: list.length, calls: this.g.world.renderer?.info?.render?.calls, camY: cam ? Math.round(cam.position.y) : null }; },
     };
+    return !!g.player._openSky;
   });
+  console.log(`  _openSky after enter = ${readable} (want false → additive beam)`);
 
   const FAMS = await page.evaluate(async () => { const fx = await import('/src/data/powerfx.js'); return Object.entries(fx.FX_FAMILIES).map(([id, f]) => ({ id, pal: f.palette })); });
   const fams = ONLY ? FAMS.filter(f => ONLY.includes(f.id)) : FAMS;
-  console.log(`city matrix: ${fams.length} families x 3 levels (ADDITIVE beam)`);
-  // confirm the beam really is additive on this page (the whole reason for the tool)
-  const readable = await page.evaluate(() => !!window.__cx.g.player._openSky);
-  console.log(`  player _openSky = ${readable} (want false → additive beam)`);
+  console.log(`city matrix: ${fams.length} families x 3 levels (ADDITIVE beam, live rAF render)`);
 
   for (const fam of fams) {
     for (const lvl of [1, 2, 3]) {
       try {
-        const diag = await page.evaluate(({ id, lvl, pal }) => { const c = window.__cx; c.setKit(id, lvl, pal); c.stage(52); c.sweep(); c.step(28);
-          for (let i = 0; i < 46; i++) { c.L.runSlot(c.g.player, 'q', { pressed: i === 0, held: true, released: false }, c.g); c.step(1); }
-          c.pose(); c.shoot();
-          const cam = c.g.world.camera; const beams = (c.g.projectiles?.list || []).filter(p => p.isBeam || p.constructor?.name?.includes('Beam')).length;
-          return { running: c.g.running, mapCam: !!c.g.mapCam, camPos: cam ? [Math.round(cam.position.x), Math.round(cam.position.y), Math.round(cam.position.z)] : null, proj: (c.g.projectiles?.list || []).length, beams, kids: c.g.scene?.children?.length, plY: Math.round(c.g.player.pos.y) }; }, { id: fam.id, lvl, pal: fam.pal });
-        if (lvl === 3) console.log(`  DIAG ${fam.id} L3:`, JSON.stringify(diag));
+        await page.evaluate(({ id, lvl, pal }) => window.__cx.arm(id, lvl, pal), { id: fam.id, lvl, pal: fam.pal });
+        await page.waitForTimeout(1200);   // let the rAF loop establish + sustain + draw the beam
         const path = `${OUT}/shots/${fam.id}-${lvl}-beam.png`;
         await page.locator('#game').screenshot({ path });
+        const d = lvl === 3 ? await page.evaluate(() => window.__cx.diag()) : null;
+        if (d) console.log(`  DIAG ${fam.id} L3:`, JSON.stringify(d));
         rows.push({ family: fam.id, level: lvl, beam: path.replace(OUT + '/', '') });
-        await page.evaluate(() => { const c = window.__cx; c.L.runSlot(c.g.player, 'q', { pressed: false, held: false, released: true }, c.g); c.step(30); c.sweep(); });
+        await page.evaluate(() => window.__cx.release());
+        await page.waitForTimeout(120);
       } catch (e) { rows.push({ family: fam.id, level: lvl, error: String(e.message).slice(0, 160) }); }
     }
     console.log(`  ${fam.id}: 3 levels`);

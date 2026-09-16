@@ -635,3 +635,40 @@ path. The CITY additive beam is now honestly logged as a REAL ungraded gap (it w
 "confirmation" in iters 21–25). The honest next task is the render-reliability fix in the city harness
 (let the rAF loop own the render / freeze the sim only), THEN grade the additive beam and fix whatever
 white-outs. That is a genuine renderer thread, not taste.**
+
+### Iteration 27 — the CITY beam CAPTURED (real browser) → it WHITE-OUTS. The biggest finding yet.
+
+**Cracked the capture, and it is bad news.** Every HEADLESS approach renders BLACK on the city page —
+a headless Playwright pane is treated as HIDDEN, so the adaptive-quality render EARLY-OUTS
+(`renderer.info.render.calls === 1`), the exact "measure in a foregrounded tab, in-app pane = 60"
+limitation CLAUDE.md documents. The WORKING method is the **in-app BUILT-IN BROWSER** (full quality):
+`preview_start "lsw-alt"` (5184) → `citygame.html` → inject the synthetic `_fxtest` beam hero → hold
+slot q + pose `mapCam` → `computer` screenshot. `player._openSky === false` confirmed (additive path).
+
+**THE FINDING (the most important of the whole makeover):** the city's additive beam is a WHITE-OUT.
+**Fire L3 and Ice L3 are INDISTINGUISHABLE white-hot lasers** — the lava crust (graded 9) and the ice
+crystal (8.5) surfaces are completely washed to white; the family colour and all across-the-tube
+structure are GONE. Every family renders as the same white laser. This **re-creates the exact "beams
+look alike" bug the makeover exists to kill — on the DEFAULT gameplay path Robert actually plays.** All
+the surface work (lava · crystal · ki helix · comb · runes · iridescent) is INVISIBLE in the city.
+
+- ⚠ **Cause is the additive BLEND, not primarily bloom.** The live city beam uses the TAME bloom
+  (measured threshold **0.8** / strength 0.66 / radius 0.6 — NOT the rich 0.72), and it STILL white-outs.
+  The bright additive sheath + tip + detail sum to white and bury the surface core.
+- A first fix (additive-path taming: core → NormalBlend + halved halo) was **INSUFFICIENT** and hit a
+  beam-material-structure puzzle (the LIVE beam core still reported additive blend at opacity 0.95, not
+  what a fire core should be) — so I **reverted** rather than ship a half-understood change to the beam
+  Robert plays. The fix needs the BeamHose material structure mapped first.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 27 | 2026-09-16 | CAPTURED the city path (built-in browser) · found the additive beam WHITE-OUTS (all families → identical white laser) · reverted an insufficient first fix | **CITY beam distinctness ~3/10 — the makeover's core goal FAILS on the default path** | **PW 9.4 · CITY ~3** |
+
+**⚠ THE MAKEOVER IS NOT DONE. Corrected honest state:** the readable **PowerWorld** path is ~9.4 and
+genuinely strong. The **CITY / default-gameplay** path — the one Robert plays and the additive glow he
+loved — WHITE-OUTS every beam to the same white laser, so on that path the beams still "look alike": the
+original problem, unsolved. This is a real ~3/10, not taste. **The central remaining renderer task:** map
+the BeamHose material structure (where `createBeamMaterials` core/glow/tip/detail actually go, why the
+live core read additive), then make the additive SURFACE dominate its own glow so families READ with the
+bloom — captured/verified in the built-in browser each pass. Everything before this iter was graded on a
+path most players never see; this is the work that actually reaches the game.
