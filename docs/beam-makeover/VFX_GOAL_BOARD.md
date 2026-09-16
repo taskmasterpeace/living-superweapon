@@ -672,3 +672,40 @@ the BeamHose material structure (where `createBeamMaterials` core/glow/tip/detai
 live core read additive), then make the additive SURFACE dominate its own glow so families READ with the
 bloom — captured/verified in the built-in browser each pass. Everything before this iter was graded on a
 path most players never see; this is the work that actually reaches the game.
+
+### Iteration 28 — ⚠ RETRACTION: iter-27's white-out was the WRONG CODEBASE (base game)
+
+**Correcting iter 27, which was captured on the wrong build.** Setting out to fix the "city white-out,"
+I went to map the BeamHose material structure in the built-in browser — and discovered the live beam had
+**no `visualFamily` field at all** and the served `beam-surface.js` had **no `beamVisualFamily`** (which
+has existed since iter 5). A cache-busted `no-store` fetch confirmed it: **the built-in browser's
+`preview_start` runs the dev server against the MAIN CHECKOUT (`D:\lsw`), not this worktree.** The main
+tree is on a pre-makeover branch, so **iter-27's captured "white-out" was the BASE game's beams, NOT my
+makeover.** The ~3/10 city grade is RETRACTED — I do not actually know my makeover's city-beam behaviour.
+
+**The capture traps, all confirmed this iteration:**
+- `preview_start` (built-in browser) serves the **main tree**, not the worktree (fetch had no
+  `beamVisualFamily`). Its render is the base game.
+- A Bash-started vite from the worktree (`npx vite --port 5186`) DOES serve my code (verified:
+  `beamVisualFamily` + the edit present), and the running beam then had `visualFamily:"fire"` + my fix
+  applied (core NormalBlend) — but the built-in browser **PANE is user-hidden**, so it renders BLACK (the
+  documented "hidden pane renders black"; a displayed pane = 60fps). I cannot force the pane to display.
+- Headless Playwright: BLACK (same hidden-pane throttle).
+- ⚠ So capturing THIS WORKTREE's city beam in a real render needs the browser pane DISPLAYED (user-side).
+
+**What still holds:** the `_openSky`-gated readable/additive split is real (`projectiles.js:957`, my
+worktree — verified `player._openSky===false` = additive city path). The readable **PowerWorld** grade
+(~9.4) is sound — those were the worktree's OWN headless vite (correct code). Reverted the iter-28 blind
+additive-taming fix (it was designed against an unconfirmed white-out; unverifiable = do not ship).
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 28 | 2026-09-16 | RETRACTED iter-27's white-out (it was the base game — preview_start serves the main tree) · reverted the blind fix · mapped the capture traps | **CITY additive beam = UNCAPTURED for the makeover** (unknown, not ~3) | **PW 9.4 · CITY unknown** |
+
+**Honest state:** the readable/PowerWorld makeover is ~9.4 and real. The additive CITY beam — whether my
+makeover's surfaces survive the additive blend — is **genuinely unknown**: I have never rendered this
+worktree's city beam (preview_start = base game; worktree-vite + hidden pane = black). The next task is a
+capture path that renders THIS worktree's city — most reliably by asking Robert to open/display the
+built-in browser pane while a worktree vite serves it — THEN grade the additive beam and fix if needed.
+Everything graded so far is the readable path; the additive city path is still an open question, not a
+solved white-out.
