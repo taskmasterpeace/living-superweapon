@@ -878,3 +878,38 @@ alien. The family read at impact comes from ring/cloud COLOUR; the afterFx's own
 frost spikes, fire tongues) reads at the AFTERMATH beat (+50) and in motion. That is why this iteration's
 clearest win is the CLOUD colour (which the shared body draws from `pal.smoke`), not the swirl. City
 additive path still un-gradeable here (iter 30).
+
+### Iteration 34 — THE SHOCK FRONT CARRIES THE ELEMENT (every family's impact at once, evidence: fire/ice/energyRed/magicViolet re-capture)
+
+Acted on iter-33's structural finding. Graded the LEVEL axis off a fire `--sheets` grid: the intensity
+ladder (0.72/1.0/1.55 scale · 0/1/2.2 cloud · 0.7/1.0/1.7 kb) reads well at impact — L1 a small pop, L3
+a big event. BUT grading the impact cell across families exposed the real cross-family weakness: **fire's
+L3 impact (the flagship LAVA family) looked nearly identical to energyRed's and alien's** — big white
+shockwave rings + pale cloud + a colour-tinted inner ring. Every family read as *the same white blast
+tinted a hue*; fire didn't look like lava, ice didn't look like frost.
+
+**Root cause (one line): the PRESSURE FRONT — the biggest, brightest ring of the blast — was drawn in
+`imp.kernel`, which is near-white for EVERY family** (fire cream `#fff3c8`, ice white, energy/alien
+off-white). So the dominant ring was white everywhere; the family colour only reached the smaller inner
+pressure ring and the sparks.
+
+**Fix (`vfx.js`, ONE blend, data-driven, gated on `if (fx)` so non-family explosions are untouched, no
+per-hero branch):** the shock front colour is now `THREE.Color(imp.kernel).lerp(pal.glow, 0.65)` — a HOT
+bright edge (keeps 35% kernel) that is unmistakably the element (65% glow). Fire's front is orange, ice's
+cyan, energyRed's red, magicViolet's purple (correctly the ONE purple-allowed family — `pal.glow` is
+purple only there, and `validateFx` still enforces the rest).
+
+Verified through the real engine (`capture-fxmatrix.mjs` fire,ice then energyRed,magicViolet):
+**0 errors, 0 pageErrors.** Side by side the L3 impacts now read fire=warm-orange · ice=cool-cyan ·
+energyRed=red · magicViolet=purple at the DOMINANT ring, where all four were near-white before. Refs
+`artifacts/fx-matrix/shots/{fire,ice,energyRed,magicViolet}/3-impact.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 34 | 2026-09-16 | SHOCK FRONT tinted `imp.kernel` → 0.65·`pal.glow` — every family's impact now reads in its own colour at the dominant ring, not a shared white blast | ALL 12 families' impact cells 8 → ~9 (the biggest cross-family lift in the run) · fire vs red-ki still both warm (honest — both are hot) | **PW ≈9.6** |
+
+**This is the broadest single lift so far: it raises the IMPACT cell for all 12 families at once** by
+fixing the shared-body white-dominance the iter-33 finding named, rather than one family's cell. The LEVEL
+ladder graded solid (firecracker → event reads at impact); knockback (`kb` 0.7/1.0/1.7) is a gameplay
+number feeding `areaDamage` and isn't shown by the pinned-dummy capture — verified by the multiplier, not
+the still. City additive path still un-gradeable here (iter 30).

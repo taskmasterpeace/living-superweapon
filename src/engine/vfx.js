@@ -163,7 +163,13 @@ export class VFX {
     // in 0.18s. This is the shock edge the eye reads as a detonation instead of an inflating ball;
     // it is the piece the soft fireball shell was never going to give. Family-cored, level-scaled.
     if (fx) {
-      const front = new THREE.Mesh(this._ring, addMat(imp.kernel, 0.95));
+      // ⚠ THE SHOCK FRONT CARRIES THE FAMILY COLOUR, not near-white (goal board iter 34). imp.kernel is
+      // near-white for EVERY family (fire cream, ice white, energy/alien off-white), so a kernel-coloured
+      // front — the biggest, brightest ring of the blast — made every family's impact read as the same
+      // white explosion tinted a hue. A 0.65 blend toward pal.glow keeps it a HOT bright edge but makes it
+      // unmistakably the element: fire's front is orange, ice's cyan, alien's iridescent orange.
+      const frontCol = new THREE.Color(imp.kernel).lerp(new THREE.Color(pal.glow), 0.65);
+      const front = new THREE.Mesh(this._ring, addMat(frontCol, 0.95));
       front.rotation.x = -Math.PI / 2; front.position.set(pos.x, (pos.y < 4 ? 0.4 : pos.y), pos.z); front.scale.setScalar(radius * 0.3);
       this.scene.add(front);
       let ft = 0; const fl = 0.18;
