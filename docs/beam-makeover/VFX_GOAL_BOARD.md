@@ -23,22 +23,27 @@ CHARGED, how it looks LAUNCHING, how it looks FLYING, how it looks when it IMPAC
 | magic-green | green + white sigils | |
 | alien | orange, off-white | VEGA-class; alien-ORIGIN heroes' energy reads alien |
 
-## The four phases × three intensity levels
+## THE FIVE JUDGED CATEGORIES (Robert's /goal, 2026-09-16 — the grading axes, verbatim intent)
 
-Every family must read at CHARGE · LAUNCH · FLIGHT · IMPACT, at levels I / II / III.
-Explosions carry LEVELS: smoke clouds, aftereffects (embers / frost mist / arc residue /
-droplets / fading glyphs), and **knockback that scales with level**.
+1. **CHARGING** — the gather in the hands
+2. **LAUNCHING** — the moment it leaves
+3. **FLIGHT** — going through the air
+4. **IMPACT** — the hit itself
+5. **AFTEREFFECT** — what lingers when the flash is gone: *"with fire, that might be some smoke —
+   or some fire first and then some smoke afterwards."* Judged on its OWN frame (boom+50),
+   where the aftermath carries the picture alone.
 
-## The critic's rubric (each cell graded 1–10; the bar is 10)
+Each at levels I / II / III. Explosions carry LEVELS: smoke clouds, aftereffects, and
+**knockback that scales with level**.
 
-1. **IDENTITY** — half a second, color removed: can you name the element? (Robert's grayscale law)
-2. **PHASE READ** — is it obviously charging vs launching vs flying vs landing?
-3. **LEVEL READ** — is a III unmistakably bigger/heavier than a I (silhouette, not just brightness)?
-4. **CRAFT** — no flat billboards where volume is expected, no white blowouts, no z-litter,
-   trails that lie about the path, clouds that pop out of existence.
-5. **CONSEQUENCE** — impacts leave the right residue, knockback matches the read, the world reacts.
+## The critic's lenses (applied to every category cell; the bar is 10)
 
-A cell scores 10 only when nothing in it would embarrass a AAA sizzle reel freeze-frame.
+- **IDENTITY** — half a second, color removed: can you name the element? (the grayscale law)
+- **LEVEL READ** — a III unmistakably heavier than a I (silhouette, not just brightness)
+- **CRAFT** — no white blowouts, no balloon washes, no popping clouds, no trails that lie
+- **CONSEQUENCE** — the right residue stays, knockback matches the read, the world reacts
+
+A cell scores 10 only when nothing in it would embarrass a AAA sizzle-reel freeze-frame.
 
 ## Score log (append per iteration — the tough critic writes here)
 

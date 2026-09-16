@@ -1,8 +1,9 @@
 // THE FX MATRIX (Refs #42, the /loop 10-10 goal): every family × level × phase, photographed
 // through the REAL engine. Injects one synthetic test hero whose kit is rebuilt per family
 // (authored fxFamily/fxLevel overrides — the same fields the lab will edit), fires it, and
-// freezes each phase at its readable beat:
-//   charge — mid-hold  ·  launch — release+3  ·  flight — mid-flight  ·  impact — boom+6 (cloud up)
+// freezes each phase at its readable beat (Robert's five judging categories, /goal 2026-09-16):
+//   charge — mid-hold · launch — release+3 · flight — mid-flight · impact — boom+7 (cloud up)
+//   aftermath — boom+50: the flash is GONE and what LINGERS is the subject (fire first, THEN smoke)
 // Output: artifacts/fx-matrix/shots/<family>/<L>-<phase>.png + index.json + per-family sheets.
 //   node tools/capture-fxmatrix.mjs [--family fire,ice] [--sheets] [--port 5188]
 import { mkdir, writeFile, access } from 'node:fs/promises';
@@ -118,6 +119,11 @@ try {
           c.step(7); c.shoot(); });
         shots.impact = `${dir}/${lvl}-impact.png`;
         await page.locator('#game').screenshot({ path: shots.impact });
+        // AFTERMATH — the fifth judged category: 43 more frames, the flash dead, the smoke/mist/
+        // arcs/glyphs carrying the frame alone. "Fire first and then some smoke afterwards."
+        await page.evaluate(() => { const c = window.__fx; c.step(43); c.shoot(); });
+        shots.aftermath = `${dir}/${lvl}-aftermath.png`;
+        await page.locator('#game').screenshot({ path: shots.aftermath });
         await page.evaluate(() => window.__fx.sweep());
         rows.push({ family: fam.id, level: lvl, ...Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, v.replace(OUT + '/', '')])) });
       } catch (e) { rows.push({ family: fam.id, level: lvl, error: String(e.message).slice(0, 160) }); }
@@ -130,11 +136,11 @@ try {
   if (SHEETS) {
     await mkdir(`${OUT}/sheets`, { recursive: true });
     for (const fam of fams) {
-      // reading order: L1 charge/launch/flight/impact · L2 · L3 — a 4x3 grid per family
+      // reading order per row: charge/launch/flight/impact/aftermath — L1, L2, L3 rows (5x3)
       try {
-        const list = [1, 2, 3].flatMap(l => ['charge', 'launch', 'flight', 'impact'].map(ph => `${OUT}/shots/${fam.id}/${l}-${ph}.png`));
+        const list = [1, 2, 3].flatMap(l => ['charge', 'launch', 'flight', 'impact', 'aftermath'].map(ph => `${OUT}/shots/${fam.id}/${l}-${ph}.png`));
         const inputs = list.map(f => `-i "${f}"`).join(' ');
-        execSync(`ffmpeg -y ${inputs} -filter_complex "concat=n=12:v=1:a=0 [s]; [s] scale=560:-1, tile=4x3" -frames:v 1 -q:v 4 "${OUT}/sheets/${fam.id}.jpg"`, { stdio: 'ignore' });
+        execSync(`ffmpeg -y ${inputs} -filter_complex "concat=n=15:v=1:a=0 [s]; [s] scale=480:-1, tile=5x3" -frames:v 1 -q:v 4 "${OUT}/sheets/${fam.id}.jpg"`, { stdio: 'ignore' });
       } catch { console.error(`sheet failed: ${fam.id}`); }
     }
   }
