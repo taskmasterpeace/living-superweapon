@@ -329,6 +329,18 @@ export const MODE_LOOK = {
   zigzag:     { kind: 'zigzag',     k: 0.60, speed: 18, amp: 1.20 },
 };
 
+// THE EDGE — the silhouette treatment a FAMILY paints on the tube WALL itself (Robert, 2026-09-16:
+// "flame should look a little bit more jagged... like a kid drew fire... and a little bit faster").
+// The old flame lobes were SINE waves — smooth by construction, which is exactly what he read. A
+// drawn flame is TRIANGLES, and real fire FLICKERS in discrete frames rather than swimming, so the
+// edge runs triangle teeth on a QUANTISED clock. `amp` = how deep the teeth bite (they only ever cut
+// INWARD — the visual envelope stays inside the hit radius, so the jag can never lie about reach),
+// `teeth` = tongues around the ring, `step` = flicker frames per second, `drift` = how far each
+// flicker frame re-rolls the tooth positions. Per-beam `edge:` on the ability overrides the family.
+export const FAMILY_EDGE = {
+  fire: { amp: 0.62, teeth: 5, step: 13, drift: 1.0 },
+};
+
 export function visOf(a) {
   if (!a || typeof a !== 'object') return null;
   const src = { ...a, ...(a.vis || {}) };

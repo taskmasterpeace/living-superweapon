@@ -6,7 +6,7 @@ import {BeamGroundContact} from './beam-ground-contact.js';
 import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
 import {resolveThrowRelease} from './throwable-action.js';
-import { BUILD_LOOK, TEMPER_LOOK, MODE_LOOK } from '../data/visual.js';
+import { BUILD_LOOK, TEMPER_LOOK, MODE_LOOK, FAMILY_EDGE } from '../data/visual.js';
 import { sfxOfVis } from '../data/sfx.js';
 import { fxOf } from '../data/powerfx.js';
 import {createBeamMaterials,createBeamSourceMaterial,beamVisualFamily} from './beam-surface.js';
@@ -1007,6 +1007,11 @@ class BeamHose {
     // only: the hit polyline stays `path`, and every mode keeps its swing within ~one radius.
     this.mode = MODE_LOOK[o.mode] || MODE_LOOK.straight;
     this.modeName = o.mode || 'straight';
+    // THE EDGE (FAMILY_EDGE / per-beam `edge:` override) — the family's silhouette on the tube
+    // wall. `animSpeed` is a LOOK dial (the gallery's speed control): it scales the mode + edge
+    // clocks only — tipSpeed, damage and ki never ride it.
+    this.edge = o.edge || FAMILY_EDGE[this.visualFamily] || null;
+    this.animSpeed = 1;
     this.maxLen = o.maxLen || 120;
     this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
     this.pushForce=o.pushForce??(o.faceOrigin?0:368);
@@ -1248,7 +1253,7 @@ class BeamHose {
       // into a receiver so the beam still lands ON the body rather than whipping past it.
       const M=this.mode; let mox=0,moy=0,moz=0;
       if(M.kind!=='straight'){
-        const mt=this.game.time;
+        const mt=this.game.time*(this.animSpeed||1);
         if(M.kind==='pulsed'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=1-M.depth*.5+M.depth*p*p*p; }
         else if(M.kind==='beaded'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=M.min+(1-M.min)*Math.pow(p,M.sharp); }
         else if(M.kind==='lance') rad*=M.tight;
@@ -1267,9 +1272,19 @@ class BeamHose {
       }
       for (let r = 0; r < R; r++) {
         const a = (r / R) * Math.PI * 2;
-        // Uneven flame lobes only shrink the already bounded visual envelope.
-        const flame=this.visualFamily==='fire'&&!receiver
-          ?.48+.52*(.5+.5*Math.sin(a*3+arc*.23-this.game.time*11+Math.sin(arc*.12+a*2))) : 1;
+        // THE EDGE — triangle teeth on a quantised clock ("like a kid drew fire"). The old lobes
+        // were sine waves: smooth by construction, which is exactly what read wrong. Teeth only
+        // ever CUT inward, so the visual envelope stays inside the hit radius and the jag can
+        // never lie about reach; the quantised `et` makes the silhouette FLICKER frame-to-frame
+        // instead of swimming, and each flicker frame re-rolls the tooth positions.
+        const E=this.edge; let flame=1;
+        if(E&&!receiver){
+          const et=Math.floor(this.game.time*(this.animSpeed||1)*E.step);
+          const th=a*E.teeth+arc*.6+Math.sin(li*7.13+et*.317)*2.6*E.drift;
+          const tri=Math.abs(th/Math.PI-Math.floor(th/Math.PI+.5))*2;
+          const bite=E.amp*(.62+.38*t);                     // tongues grow toward the tip
+          flame=1-bite+bite*tri;
+        }
         const ca = Math.cos(a) * rad*flame, sa = Math.sin(a) * rad*flame;
         const w = (i * R + r) * 3;
         pos[w] = px + mox + ex * ca + fx * sa;

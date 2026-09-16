@@ -1,5 +1,6 @@
 import { ROSTER } from '../data/characters.js';
 import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES } from '../data/visual.js';
+import { LIBRARY_BEAMS } from '../data/beams.js';
 
 // THE BEAM GALLERY — Robert: "flip through every beam×mode in third person, no fight. Best way for me
 // to explore them later." A proving stand, not a battle: one caster, one invulnerable target down-range,
@@ -18,12 +19,16 @@ export class BeamGallery {
         if (a && a.type === 'beam') this.list.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
       }
     }
+    // THE LIBRARY ROWS (data/beams.js) — beams that belong to NOBODY, on the same wheel as the
+    // roster's. That is the unassociation made visible: the stand's caster fires them fine.
+    for (const b of LIBRARY_BEAMS) this.list.push({ heroId: null, heroName: 'LIBRARY', slot: '—', ab: b, name: b.name });
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
     const ownIdx = p && p.def ? this.list.findIndex(x => x.heroId === p.def.id) : -1;
     this.i = ownIdx >= 0 ? ownIdx : 0;
     this.modeIdx = -1;                       // -1 = the beam's own mode; 0..n = force BEAM_MODES[idx]
+    this.speed = 1;                          // the LOOK-speed dial (beam.animSpeed) — mode + edge clocks only
     this.beam = null;
     this.caster = p;
     // ⚠ energyInfinite is the ONE thing that guarantees emission: the beam pays ki inside
@@ -45,6 +50,8 @@ export class BeamGallery {
       if (e.key === '.' || e.key === 'ArrowRight') { this.step(1); e.preventDefault(); }
       else if (e.key === ',' || e.key === 'ArrowLeft') { this.step(-1); e.preventDefault(); }
       else if (e.key === '/' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { this.cycleMode(); e.preventDefault(); }
+      else if (e.key === '-' || e.key === '_') { this.setSpeed(-1); e.preventDefault(); }
+      else if (e.key === '=' || e.key === '+') { this.setSpeed(1); e.preventDefault(); }
     };
     window.addEventListener('keydown', this._onKey, true);
     this.spawn();
@@ -102,6 +109,7 @@ export class BeamGallery {
       // (set in update) means spendKi always passes regardless of tick order — no starved shaft.
       beam._poseLaunch = false; beam._launchReady = true; beam.sustaining = true;
       const j = g.projectiles.list.indexOf(beam); if (j >= 0) g.projectiles.list.splice(j, 1);   // gallery owns the tick
+      beam.animSpeed = this.speed;
       this.beam = beam;
     }
     this._updateChip();
@@ -109,6 +117,11 @@ export class BeamGallery {
 
   step(d) { this.i = (this.i + d + this.list.length) % this.list.length; this.spawn(); }
   cycleMode() { this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
+  setSpeed(d) {
+    this.speed = Math.min(3, Math.max(0.25, Math.round((this.speed + d * 0.25) * 100) / 100));
+    if (this.beam) this.beam.animSpeed = this.speed;
+    this._updateChip();
+  }
 
   update() {
     const c = this.caster; if (!c) return;
@@ -150,8 +163,10 @@ export class BeamGallery {
     const prev = mkBtn('◀', 'Previous beam ( , )', () => this.step(-1));
     const next = mkBtn('▶', 'Next beam ( . )', () => this.step(1));
     const modeBtn = mkBtn('MODE ▸', 'Cycle behaviour mode ( / )', () => this.cycleMode());
+    const slower = mkBtn('−', 'Slower look ( - )', () => this.setSpeed(-1));
+    const faster = mkBtn('+', 'Faster look ( = )', () => this.setSpeed(1));
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
-    el.append(prev, text, next, modeBtn);
+    el.append(prev, text, next, modeBtn, slower, faster);
     document.body.appendChild(el);
     this.chip = el; this._chipText = text;
   }
@@ -162,7 +177,7 @@ export class BeamGallery {
     const forced = this.modeIdx >= 0 ? ' · LOCKED' : '';
     this._chipText.innerHTML = `<b style="color:#f5b21a">◈ BEAM GALLERY</b> &nbsp; ${this.i + 1}/${this.list.length}<br>`
       + `<b style="font-size:13px">${item.heroName}</b> — ${item.name}<br>`
-      + `<span style="color:#9fd4ff">${build.toUpperCase()} · ${temper} · ${mode}${forced}</span>`;
+      + `<span style="color:#9fd4ff">${build.toUpperCase()} · ${temper} · ${mode}${forced} · SPD ×${this.speed}</span>`;
   }
 
   dispose() {
