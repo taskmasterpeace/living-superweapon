@@ -130,7 +130,10 @@ try {
         shots.aftermath = `${dir}/${lvl}-aftermath.png`;
         await page.locator('#game').screenshot({ path: shots.aftermath });
         await page.evaluate(() => window.__fx.sweep());
-        // BEAM — mid-sustain: the sixth column (iter 4: element cores — lava crust, crystal plates)
+        // BEAM — mid-sustain: the sixth column (iter 4: element cores — lava crust, crystal plates).
+        // ⚠ This is the READABLE (_openSky) PowerWorld beam; the CITY's ADDITIVE beam is graded by
+        // tools/capture-citymatrix.mjs (iter 26 — readability is _openSky-gated, projectiles.js:957,
+        // so it can't be faked on this page: toggling _openSky here sends the stage camera to the void).
         await page.evaluate(() => { const c = window.__fx; c.stage(52); c.step(28);
           for (let i = 0; i < 46; i++) { c.L.runSlot(c.g.player, 'q', { pressed: i === 0, held: true, released: false }, c.g); c.step(1); }
           c.shoot(); });

@@ -599,3 +599,39 @@ the muzzle-flash heart, which is honest for a blast.
 READS at level III without white-balling, and all 8 beam surfaces are structured. The makeover is
 substantively at a strong, cohesive place; remaining work is the deferred city-path confirmation and
 motion-only taste.**
+
+### Iteration 26 — CORRECTING a false claim: the CITY beam is a different, UNGRADED render
+
+I have said since iter 21 that "the beam shader is camMode-agnostic, so the PowerWorld grade transfers
+to the city." **That was wrong, and this corrects it.** Traced the beam blend to its source:
+
+- `projectiles.js:957`: `this._combatReadability = !!caster._openSky`.
+- The **READABLE** beam (NormalBlending, tip radius **0.72**, sheath opacity **0.34**, a curve, fewer
+  sparks) is used **ONLY in PowerWorld** (`_openSky`).
+- The **CITY / default-gameplay beam** (`_openSky` false — the additive, glowy look Robert loved) is
+  **AdditiveBlending, tip radius 2.1, sheath opacity 0.9** — genuinely BRIGHTER and different.
+- The fx matrix boots `powerworld.html`, so **the entire 216-cell beam grade is the readable beam**;
+  the city's additive beam has never been graded. The element cores DO run in both paths
+  (`beam-surface.js:49`), but on an additive, much brighter blend — exactly the kind that white-outs
+  surface structure under the rich bloom (the iter-23/25 white-ball lesson). So the ki helix (iter 24)
+  and the lava crust could read well readable and wash out additive; **unknown until captured.**
+
+**Built `tools/capture-citymatrix.mjs`** to grade it — the fx matrix's reliable synthetic-injection on
+`citygame.html`, which confirmed `player._openSky === false` (the additive path, proving the finding).
+⚠ But the render-OUTSIDE-the-rAF-loop comes back BLACK on the city page even though the camera is posed
+(camPos ~[0,167,199]), the beam exists (`beams:1`) and the scene is built (`kids:55`) — the SAME
+flakiness iter-22's citybeam-check hit (some heroes rendered, others black). It is a city-page
+render-target/compositor-state issue when `g.update` + `g.world.render` are stubbed, not a camera or
+beam problem. The tool + the black-render notes are committed as a WIP foundation.
+⚠ Also tried faking the additive beam by toggling `_openSky=false` on the PowerWorld page — it renders
+BLACK (that stage's camera depends on the flag); documented in `capture-fxmatrix.mjs` so nobody repeats it.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 26 | 2026-09-16 | corrected the false "grades transfer" claim · proved the CITY beam is additive + ungraded · built the city-capture WIP (render still black) | **CITY additive beam UNGRADED** (a real gap, not confirmation) · render-outside-loop on the city page | **9.4 (readable path only)** |
+
+**No grade change — I will not grade a path I could not capture.** The ~9.4 is the PowerWorld / readable
+path. The CITY additive beam is now honestly logged as a REAL ungraded gap (it was falsely dismissed as
+"confirmation" in iters 21–25). The honest next task is the render-reliability fix in the city harness
+(let the rAF loop own the render / freeze the sim only), THEN grade the additive beam and fix whatever
+white-outs. That is a genuine renderer thread, not taste.**
