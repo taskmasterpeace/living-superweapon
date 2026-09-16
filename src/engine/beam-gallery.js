@@ -18,10 +18,13 @@ export class BeamGallery {
         if (a && a.type === 'beam') this.list.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
       }
     }
-    this.i = 0;
+    const p = game.player;
+    // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
+    // else the first beam in the roster.
+    const ownIdx = p && p.def ? this.list.findIndex(x => x.heroId === p.def.id) : -1;
+    this.i = ownIdx >= 0 ? ownIdx : 0;
     this.modeIdx = -1;                       // -1 = the beam's own mode; 0..n = force BEAM_MODES[idx]
     this.beam = null;
-    const p = game.player;
     this.caster = p;
     // ⚠ energyInfinite is the ONE thing that guarantees emission: the beam pays ki inside
     // projectiles.update, which runs BEFORE this mode-tick tops the pool, so a finite bar starves
@@ -74,12 +77,12 @@ export class BeamGallery {
     const { def } = this._current();
     const beam = g.spawnBeamFor(c, def, def.charge ? (def.chargePower || 1.6) : 1);   // charge beams show at full width
     if (beam) {
+      // ⚠ LEAVE IT IN projectiles.list so the manager runs every beam's real pre-passes (clash,
+      // axial support, launch-resolve) — some beams (VEGA's spiral/siphon) throw without them.
+      // poseLaunch:false lets it emit without the launch animation, and the caster's energyInfinite
+      // (set in update) means spendKi always passes regardless of tick order — no starved shaft.
       beam._poseLaunch = false; beam._launchReady = true; beam.sustaining = true;
-      // ⚠ OWN THE BEAM. Pulled OUT of projectiles.list so the manager's per-frame pre-passes
-      // (clipForContacts / _beamClash / dt=0 launch-resolve) can't starve its emission — that was
-      // the frozen-shaft bug. It still renders (its group is in the scene) and the gallery ticks it
-      // directly each frame. No damage/contacts needed: the target is invulnerable, it's a stand.
-      const j = g.projectiles.list.indexOf(beam); if (j >= 0) g.projectiles.list.splice(j, 1);
+      const j = g.projectiles.list.indexOf(beam); if (j >= 0) g.projectiles.list.splice(j, 1);   // gallery owns the tick
       this.beam = beam;
     }
     this._updateChip();
@@ -88,37 +91,57 @@ export class BeamGallery {
   step(d) { this.i = (this.i + d + this.list.length) % this.list.length; this.spawn(); }
   cycleMode() { this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
 
-  update(dt = 1 / 60) {
+  update() {
     const c = this.caster; if (!c) return;
     c.ki = c.maxKi; c.drainedT = 0; c.noPowers = true; c.energyInfinite = true;
     this._aim();
     if (!this.beam || this.beam.dead) { this.spawn(); return; }
-    this.beam.sustaining = true;
-    try { this.beam.update(dt, this.g); } catch { this._drop(); }   // gallery owns the tick
+    const b = this.beam, pr = this.g.projectiles;
+    b.sustaining = true;
+    // run the manager's per-beam prep the beam's own update expects (VEGA's spiral/siphon throws
+    // without axial support), THEN tick it directly — the gallery owns the beam so nothing else does.
+    try {
+      pr._directionBatch = (pr._directionBatch || 0) + 1;
+      if (b._findAxialSupport) b._stepChest = b._findAxialSupport();
+      b._directionBatch = pr._directionBatch;
+      if (b._stepDirection && b.dir) b._stepDirection.copy(b.dir);
+      if (b.clipForContacts) b.clipForContacts(this.g);
+      b.update(1 / 60, this.g);
+    } catch (e) { this._lastErr = e.message; this._drop(); }
   }
 
   _buildChip() {
     if (typeof document === 'undefined') return;
-    let el = document.getElementById('beamGalleryChip');
-    if (!el) {
-      el = document.createElement('div'); el.id = 'beamGalleryChip';
-      el.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:40;'
-        + 'font-family:Cascadia Code,Consolas,monospace;font-size:12px;letter-spacing:.04em;color:#f5e6c8;'
-        + 'background:rgba(12,10,16,.82);border:1px solid #6b5824;border-radius:8px;padding:7px 12px;'
-        + 'text-align:center;pointer-events:none;text-shadow:0 1px 2px #000;white-space:nowrap;';
-      document.body.appendChild(el);
-    }
-    this.chip = el;
+    document.getElementById('beamGalleryChip')?.remove();
+    const el = document.createElement('div'); el.id = 'beamGalleryChip';
+    el.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:40;'
+      + 'font-family:Cascadia Code,Consolas,monospace;font-size:12px;letter-spacing:.04em;color:#f5e6c8;'
+      + 'background:rgba(12,10,16,.9);border:1px solid #6b5824;border-radius:10px;padding:6px 8px;'
+      + 'display:flex;align-items:center;gap:8px;pointer-events:auto;text-shadow:0 1px 2px #000;white-space:nowrap;user-select:none;';
+    const mkBtn = (label, title, fn) => {
+      const b = document.createElement('button'); b.textContent = label; b.title = title;
+      b.style.cssText = 'font:700 15px Cascadia Code,monospace;color:#20180a;background:#f5b21a;border:0;'
+        + 'border-radius:7px;padding:5px 11px;cursor:pointer;line-height:1;';
+      b.onmouseenter = () => b.style.background = '#ffca4a'; b.onmouseleave = () => b.style.background = '#f5b21a';
+      b.onclick = (e) => { e.stopPropagation(); fn(); };
+      return b;
+    };
+    const prev = mkBtn('◀', 'Previous beam ( , )', () => this.step(-1));
+    const next = mkBtn('▶', 'Next beam ( . )', () => this.step(1));
+    const modeBtn = mkBtn('MODE ▸', 'Cycle behaviour mode ( / )', () => this.cycleMode());
+    const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
+    el.append(prev, text, next, modeBtn);
+    document.body.appendChild(el);
+    this.chip = el; this._chipText = text;
   }
   _updateChip() {
-    if (!this.chip) return;
+    if (!this._chipText) return;
     const { item, def } = this._current();
     const build = beamBuildOf(def), temper = beamTemperOf(def), mode = beamModeOf(def);
-    const forced = this.modeIdx >= 0 ? ' · MODE LOCKED' : '';
-    this.chip.innerHTML = `<b style="color:#f5b21a">◈ BEAM GALLERY</b> &nbsp; ${this.i + 1}/${this.list.length} &nbsp;·&nbsp; `
-      + `<b>${item.heroName}</b> — ${item.name} &nbsp;·&nbsp; `
-      + `<span style="color:#9fd4ff">${build.toUpperCase()} · ${temper} · ${mode}${forced}</span>`
-      + `<br><span style="opacity:.6;font-size:10px">, . cycle beam &nbsp; / cycle mode</span>`;
+    const forced = this.modeIdx >= 0 ? ' · LOCKED' : '';
+    this._chipText.innerHTML = `<b style="color:#f5b21a">◈ BEAM GALLERY</b> &nbsp; ${this.i + 1}/${this.list.length}<br>`
+      + `<b style="font-size:13px">${item.heroName}</b> — ${item.name}<br>`
+      + `<span style="color:#9fd4ff">${build.toUpperCase()} · ${temper} · ${mode}${forced}</span>`;
   }
 
   dispose() {

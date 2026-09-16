@@ -52,6 +52,14 @@ requestAnimationFrame(async()=>{
     const {launchHighwall}=await import('./engine/highwall.js');
     document.getElementById('warworld-boot-loading')?.remove();
     await launchHighwall(PW.game,new URLSearchParams(location.search).get('scenario')||'corridor');
+  }else if(destination==='gallery'){
+    // DEEP LINK to the Beam Gallery — powerworld.html?destination=gallery[&hero=vega]. Boots straight
+    // into the proving stand (every beam x mode, no fight); the title button does the same enter().
+    door?.close();PW.hud.hideSelect?.();
+    const hero=new URLSearchParams(location.search).get('hero')||'sol';
+    try{ PW.enter({mode:'powerworld',p1:hero,encounter:'gallery',cameraPreset:'character',daylight:'day',weatherPreset:'clear'}); }
+    catch(error){console.error('Beam gallery failed',error);}
+    document.getElementById('warworld-boot-loading')?.remove();
   }else if(['desert','vehicle-sim','training'].includes(destination)){
     door?.close();PW.hud.hideSelect?.();
     const loading=document.getElementById('warworld-boot-loading');
