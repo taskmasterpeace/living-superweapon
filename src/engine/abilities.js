@@ -66,7 +66,8 @@ function chargeOrb(c, st, color) {
     let coreMat;
     if (spherical) {
       const fx = fxOf(visOf(st.def), st.def, c.def);
-      const kind = fx.f.charge.style === 'crystal' ? 'crystal' : fx.f.charge.style === 'sigil' ? 'rune' : fx.f.charge.style === 'droplet' ? 'fluid' : 'plasma';
+      const cs = fx.f.charge.style;
+      const kind = cs === 'crystal' ? 'crystal' : cs === 'sigil' ? 'rune' : cs === 'droplet' ? 'fluid' : cs === 'bubble' ? 'toxic' : 'plasma';   // toxic gets its OWN boiling orb (not water's fluid swirl); bubble particles too
       st._orbTime = { value: 0 };
       coreMat = chargeOrbCore(fx.f.palette.glow, fx.f.palette.core, st._orbTime, kind);
     }

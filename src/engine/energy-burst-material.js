@@ -11,8 +11,9 @@ export function chargeOrbCore(glowColor, coreColor, time, kind='plasma'){
     shader.uniforms.orbTime=time;shader.uniforms.orbHot={value:0};material.userData.orbHot=shader.uniforms.orbHot;
     shader.uniforms.orbCore={value:new THREE.Color(coreColor)};
     // 'crystal' snaps cells hard (ice/facets); 'plasma' churns smoothly; 'rune' bands slowly
-    // (magic); 'fluid' swirls with a settling drip (water/toxic — a gathering ball of liquid).
-    const churn=kind==='crystal'?'floor(n*4.0)/4.0':kind==='rune'?'sin(n*6.28+orbTime*1.5)*.5+.5':kind==='fluid'?'.5+.5*sin(n*6.28+vOrbP.y*4.0-orbTime*3.5)':'n';
+    // (magic); 'fluid' swirls with a settling drip (water — a gathering ball of liquid); 'toxic' BOILS
+    // — smaller, faster, rising cells (a bubbling corrosive brew, so toxic stops reading as green water).
+    const churn=kind==='crystal'?'floor(n*4.0)/4.0':kind==='rune'?'sin(n*6.28+orbTime*1.5)*.5+.5':kind==='fluid'?'.5+.5*sin(n*6.28+vOrbP.y*4.0-orbTime*3.5)':kind==='toxic'?'(.5+.5*sin(n*7.0+vOrbP.y*6.0-orbTime*4.5))*(.6+.4*sin(vOrbP.y*3.0-orbTime*2.2))':'n';
     shader.vertexShader='varying vec3 vOrbN,vOrbP;'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 vOrbN=normalize(normal);vOrbP=position;`);
     shader.fragmentShader=`uniform float orbTime,orbHot;uniform vec3 orbCore;varying vec3 vOrbN,vOrbP;

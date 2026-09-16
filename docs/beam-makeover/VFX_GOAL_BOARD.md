@@ -775,3 +775,34 @@ strong — and this repo is the **PowerWorld fork** (JK-ground / BFP-air is the 
 city fight, fire SOL's beam and COLDSNAP's/an ice beam side by side — do they read as *distinct* (lava vs
 crystal) or wash to the same white? That one look unblocks the only open question. Next fire, absent that
 input, returns to verifiable **readable-path** polish rather than more capture infra.
+
+### Iteration 31 — TOXIC stops being green water (the named "generic-ish" charge cell)
+
+Honored the pivot: verifiable readable-path work through the fx matrix (renders lit + gradeable). The
+clearest remaining non-subjective weak cell was **toxic charge (8, "generic-ish")** — and captured side
+by side, toxic was **water RECOLOURED**: the identical charge orb (a `fluid` swirl) with the identical
+inward `droplet` motes, just green instead of blue. A real "families look alike" instance on a family
+that should read as acid/gas/corrosive, not clean liquid.
+
+**Fix (data-driven, no per-hero):**
+- `toxic.charge.style` `droplet` → **`bubble`**: a new charge style in `chargeStyleFx` — corrosive GAS
+  bubbles UP off the gather and pops (buoyant, shrinking), the opposite of water's inward condensation,
+  plus a heavier sludge drip that falls. Toxic gathers by BOILING, water by CONDENSING.
+- New **`toxic` orb kind** in `chargeOrbCore` (mapped from `bubble` in abilities.js): a faster,
+  higher-frequency BOILING churn (small rising cells) vs water's smooth `fluid` drip-swirl. The orb reads
+  as a bubbling corrosive brew now, not a clean liquid ball. Cache key `lsw-charge-orb-toxic` (own program).
+
+Verified through the real engine (`capture-fxmatrix.mjs`): toxic × 3 levels, **0 errors**; the orb shows
+finer boiling cellular structure + rising bubbles where before it was water's smooth swirl. **Water is
+untouched** (still `droplet`/`fluid`). Ref `artifacts/fx-matrix/shots/toxic/3-charge.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 31 | 2026-09-16 | TOXIC differentiated from water at CHARGE (bubble style + boiling orb kind) — no longer green water | toxic charge 8 → ~9 · toxic still shares flight (`spray`) + impact (`droplets`) with water | **PW ≈9.45** |
+
+**Back to real VFX progress on the capturable path.** Toxic's charge is now its own family (a bubbling
+corrosive brew) rather than recoloured water — closing a named sub-9 cell and a "families look alike"
+instance. ⚠ Remaining to fully separate the two families: toxic still shares `flight: spray` and
+`impact.afterFx: droplets` with water — a follow-up (a diffusing gas trail + a corrosive/venting impact,
+distinct from water's spray + wet splash). The city additive path stays un-gradeable here (iter 30) —
+that's Robert's eyeball or a GPU environment, not this loop.

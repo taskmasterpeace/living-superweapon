@@ -99,7 +99,7 @@ const F = {
   toxic: {
     label: 'TOXIC',   // gas/acid kits already exist — they deserve a family, not a fallback
     palette: { core: '#eaffd8', glow: '#9adf3a', deep: '#20330d', smoke: ['#2a3a18', '#202c12'], debris: ['#3a5020', '#4c682c'], mist: '#c0f070' },
-    charge: { style: 'droplet', motes: '#c0f070' },
+    charge: { style: 'bubble', motes: '#c0f070' },   // NOT water's droplet — corrosive gas bubbles UP
     launch: { style: 'spray', flash: '#f0ffd0', ring: '#9adf3a' },
     flight: { style: 'spray', trail: ['#9adf3a', '#eaffd8'], wake: '#7ab82a' },
     impact: { kernel: '#eaffd8', afterFx: 'droplets', cloudRise: 2, cloudDur: 3.4 },

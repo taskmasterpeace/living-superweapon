@@ -3811,6 +3811,12 @@ export class Game {
         P.spawn({ x: pos.x + Math.cos(a2) * r2, y: pos.y + rand(-1, 2), z: pos.z + Math.sin(a2) * r2, vx: -Math.cos(a2) * 11, vy: rand(-1, 1), vz: -Math.sin(a2) * 11, life: 0.38, size: 1.4, color: [pal.glow, pal.core], drag: 0.4 });
         break;
       }
+      case 'bubble': {    // TOXIC is NOT water — corrosive GAS bubbles UP off the gather and pops (buoyant,
+                          // shrinking), the opposite of water's inward condensation; a heavier sludge drip falls
+        P.spawn({ x: pos.x + rand(-3, 3), y: pos.y + rand(-2.5, 0.5), z: pos.z + rand(-3, 3), vx: rand(-0.6, 0.6), vy: rand(1, 2.6), vz: rand(-0.6, 0.6), life: 0.55, size: 1.2 + k * 1.4, color: [pal.glow, pal.mist], grav: -1.4, drag: 1.6, shrink: true });
+        if (Math.random() < 0.3) P.spawn({ x: pos.x + rand(-2, 2), y: pos.y + rand(-0.5, 1.5), z: pos.z + rand(-2, 2), vx: 0, vy: rand(-1, 0), vz: 0, life: 0.45, size: 1.1, color: [pal.core, pal.deep], grav: 9, drag: 0.6 });
+        break;
+      }
       case 'none': break;
       default:            // plasma — the core cannot decide how bright it is (white flicker)
         if (Math.random() < 0.22 + k * 0.3) P.spawn({ x: pos.x + rand(-1, 1), y: pos.y + rand(-1, 1), z: pos.z + rand(-1, 1), vx: 0, vy: 0, vz: 0, life: 0.1, size: 1.8 + k * 1.5, color: '#ffffff', drag: 0 });
