@@ -269,6 +269,21 @@ export class VFX {
           }
           break;
         }
+        case 'venting': {   // TOXIC vents corrosive GAS — a rising plume + a lingering pool that keeps
+                            // hissing gas off it, where WATER (droplets) just splashes wet. Gas RISES
+                            // and hangs; wet FALLS. Same family colours, opposite behaviour.
+          this.smokePuffs({ x: pos.x, y: pos.y + 1, z: pos.z }, { count: Math.round(7 * AN), colors: [pal.mist, pal.glow], rise: 7, dur: 2.6, size: 3.6, spread: radius * 0.5, opacity: 0.34 });
+          this.P.burst(pos.x, pos.y + 1.5, pos.z, { count: Math.round(9 * AN), speed: 11, life: 0.7, size: 1.3, color: [pal.core, pal.deep], up: 6, grav: 40, drag: 0.7 });   // heavier corrosive splatter (acid, not water)
+          if (pos.y < 5) {
+            const gy = Math.max(0.35, pos.y * 0.12 + 0.35);
+            let vt = 0, vn = 0; const vfires = Math.round(4 * AN);
+            this._add({
+              update: (dt) => { vt += dt; if (vt > 0.5 * (vn + 1) && vn < vfires) { vn++; this.smokePuffs({ x: pos.x + rand(-radius, radius) * 0.35, y: gy + 0.4, z: pos.z + rand(-radius, radius) * 0.35 }, { count: 2, colors: [pal.mist, pal.glow], rise: 6, dur: 1.9, size: 2.6, spread: 1, opacity: 0.3 }); } return vn >= vfires; },
+              dispose: () => {},
+            });
+          }
+          break;
+        }
         case 'glyphs':
           this.P.burst(pos.x, pos.y + 1.5, pos.z, { count: Math.round(10 * AN), speed: 2, life: 1.8, size: 2.4, color: [pal.glow, pal.core], up: 4, grav: -1.5, drag: 2.4 });
           this.ring(pos, { color: pal.glow, r0: radius * 0.2, r1: radius * 1.1, life: 0.8, flat: true, opacity: 0.4 });

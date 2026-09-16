@@ -806,3 +806,36 @@ instance. ⚠ Remaining to fully separate the two families: toxic still shares `
 `impact.afterFx: droplets` with water — a follow-up (a diffusing gas trail + a corrosive/venting impact,
 distinct from water's spray + wet splash). The city additive path stays un-gradeable here (iter 30) —
 that's Robert's eyeball or a GPU environment, not this loop.
+
+### Iteration 32 — TOXIC finishes leaving water behind (FLIGHT + IMPACT, evidence: toxic,water re-capture)
+
+Closed the follow-up iter-31 flagged in writing. Captured side by side, toxic still shared its FLIGHT
+trail (`spray`) and its IMPACT aftereffect (`droplets`) with water — the same falling-wet physics in a
+different colour. Two data-driven changes, no per-hero, water untouched:
+- `toxic.flight.style` `spray` → **`gas`**: a new flight style in `projectiles.js`. Water slings dense
+  bright droplets that FALL (`grav 16`, tight white row); toxic now leaves a lingering diffusing CLOUD —
+  soft `pal.mist`/`pal.glow` puffs that barely rise and hang (`grav -0.6`, `drag 2.3`, `life ×2.3`), with
+  the odd heavier corrosive drip falling off it. Gas spreads and lingers; wet condenses and falls.
+- `toxic.impact.afterFx` `droplets` → **`venting`**: a new impact case in `vfx.js`. Water's `droplets`
+  throws a wet burst up + a whiter steam puff. `venting` is a rising corrosive-gas PLUME (buoyant pale-
+  green `smokePuffs`, `rise 7`) + a heavier acid splatter that falls + a **lingering pool that keeps
+  hissing gas** off the ground for ~2.5s (4 staggered vents via `_add`). Gas RISES and hangs where wet
+  FALLS. `venting` is NOT in the `combusts` list, so it inherits the pale-vapour cloud treatment for free.
+
+Verified through the real engine (`capture-fxmatrix.mjs --family toxic,water`): **6 cells, 0 errors,
+0 pageErrors**. Toxic flight now reads as scattered green gas puffs vs water's bright white droplet
+stream; toxic impact reads as a green venting plume vs water's whiter steam splash. Refs
+`artifacts/fx-matrix/shots/toxic/3-flight.png`, `.../toxic/3-impact.png` (vs the `water/` pair).
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 32 | 2026-09-16 | TOXIC differentiated from water at FLIGHT (`gas` cloud) + IMPACT (`venting` plume) — no longer water's falling wet | toxic flight/impact 8 → ~9 · only `launch` (spray) still shared, defensible for two liquid launches | **PW ≈9.5** |
+
+**The water/toxic "families look alike" gap is closed across three of four phases.** Toxic now has its
+own charge (boiling brew, iter 31), flight (hanging gas cloud), and impact (venting plume + corrosive
+pool) — behaviour that is the OPPOSITE of water's condense/fall/splash, not a recolour. The single
+remaining shared phase is `launch` (both `spray`), which reads honestly for two liquid-family launches;
+separating it further is low-value versus the other sub-9 cells. As a tough critic: at the frozen +7
+impact beat the two clouds are close in shape (the venting POOL is a moving-viewer read), so impact
+grades ~9 not 10 — the colour + tint separation is real, the behavioural separation is stronger in
+motion. City additive path still un-gradeable here (iter 30).

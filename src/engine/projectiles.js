@@ -598,8 +598,13 @@ class Projectile {
           case 'motes':   // magic sheds slow rising motes — deliberate, unhurried, wrong-physics
             P.spawn({ x: p.x + rand(-1.5, 1.5), y: p.y + rand(-1, 1), z: p.z + rand(-1.5, 1.5), vx: rand(-1, 1), vy: rand(1, 3), vz: rand(-1, 1), life: lf * 1.7, size: sz * 0.7, color: [pal.glow, pal.core], grav: -3, drag: 1.5, shrink: true });
             break;
-          case 'spray':   // water/toxic slings droplets that FALL — real weight, real wet
+          case 'spray':   // water slings droplets that FALL — real weight, real wet
             P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-4, 4), vy: rand(2, 6), vz: rand(-4, 4), life: lf, size: sz * 0.6, color: [pal.glow, pal.core], grav: 16, drag: 0.8 });
+            break;
+          case 'gas':     // TOXIC leaves a lingering CLOUD (not water's falling wet) — puffs that hang,
+                          // spread and barely rise, plus the odd heavier corrosive drip that falls off it
+            P.spawn({ x: p.x + rand(-1, 1), y: p.y + rand(-1, 1), z: p.z + rand(-1, 1), vx: rand(-1.5, 1.5), vy: rand(0, 1.4), vz: rand(-1.5, 1.5), life: lf * 2.3, size: sz * 1.15, color: [pal.mist, pal.glow], grav: -0.6, drag: 2.3 });
+            if (Math.random() < 0.22) P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-2, 2), vy: rand(-1, 0.5), vz: rand(-2, 2), life: lf, size: sz * 0.4, color: [pal.core, pal.deep], grav: 6, drag: 0.8 });
             break;
           case 'iridescent': {  // ALIEN: a wobbling twin trail shifting orange<->green (unearthly)
             const ph = game.time * 9 + p.x * 0.3, ox = Math.sin(ph) * 1.6, oz = Math.cos(ph) * 1.6, alt = this._fx.f.flight.trail[1];
