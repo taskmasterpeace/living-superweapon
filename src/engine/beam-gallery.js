@@ -1,5 +1,5 @@
 import { ROSTER } from '../data/characters.js';
-import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES } from '../data/visual.js';
+import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES, visOf } from '../data/visual.js';
 import { LIBRARY_BEAMS } from '../data/beams.js';
 
 // THE BEAM GALLERY — Robert: "flip through every beam×mode in third person, no fight. Best way for me
@@ -22,6 +22,18 @@ export class BeamGallery {
     // THE LIBRARY ROWS (data/beams.js) — beams that belong to NOBODY, on the same wheel as the
     // roster's. That is the unassociation made visible: the stand's caster fires them fine.
     for (const b of LIBRARY_BEAMS) this.list.push({ heroId: null, heroName: 'LIBRARY', slot: '—', ab: b, name: b.name });
+    // THE SHOTS WHEEL — Robert: "I need to be able to see these missiles, bro... show the rockets."
+    // Every projectile-type ability the roster carries, fired on a cadence at the stand's target.
+    this.shots = [];
+    for (const d of ROSTER) {
+      if (!d.abilities) continue;
+      for (const k of ['lmb', 'rmb', 'q', 'e', 'f', 'r']) {
+        const a = d.abilities[k];
+        if (a && a.type === 'projectile') this.shots.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
+      }
+    }
+    this.kind = 'beam';                      // 'beam' | 'shot' — which wheel the stand is on
+    this.shotI = 0; this._shotT = 0;
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
@@ -115,8 +127,36 @@ export class BeamGallery {
     this._updateChip();
   }
 
-  step(d) { this.i = (this.i + d + this.list.length) % this.list.length; this.spawn(); }
-  cycleMode() { this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
+  step(d) {
+    if (this.kind === 'shot') { this.shotI = (this.shotI + d + this.shots.length) % this.shots.length; this._shotT = 0; this._updateChip(); return; }
+    this.i = (this.i + d + this.list.length) % this.list.length; this.spawn();
+  }
+  cycleMode() { if (this.kind !== 'beam') return; this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
+  toggleKind() {
+    this.kind = this.kind === 'beam' ? 'shot' : 'beam';
+    if (this.kind === 'shot') { this._drop(); this._shotT = 0; this._updateChip(); }
+    else this.spawn();
+  }
+
+  // FIRE ONE SHOT through the real spawnProjectile door. ⚠ The field mapping mirrors the
+  // `projectile` ability body (abilities.js) — the stand's caster is noPowers, so it cannot go
+  // through runSlot; if a new projectile flag lands there, add it here too (a missing field shows
+  // up as a stand-only visual gap, never a combat one).
+  _fireShot(def) {
+    const g = this.g, c = this.caster; if (!c) return;
+    const vel = def.grav ? c.aim.clone().setY(.5) : c.aim3.clone();
+    g.projectiles.spawnProjectile(c, { vis: visOf(def),
+      pos: c.muzzle ? c.muzzle(new (c.pos.constructor)(), 3.6, 5.8) : c.pos.clone(),
+      vel: vel.setLength(def.speed || 70),
+      radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
+      homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
+      arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
+      card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
+      blade: def.blade, canister: def.canister, missile: def.missile, pierce: def.pierce,
+      dtype: def.dtype,
+    });
+    if (g.muzzleFlash) g.muzzleFlash(c, def.color, 1);
+  }
   setSpeed(d) {
     this.speed = Math.min(6, Math.max(0.25, Math.round((this.speed + d * 0.25) * 100) / 100));
     if (this.beam) this.beam.animSpeed = this.speed;
@@ -137,6 +177,11 @@ export class BeamGallery {
     if (this.g.input) this.g.input.pointerLock = false;               // free cursor — a viewer isn't mouse-look
     if (this._home) { c.pos.copy(this._home); if (c.vel) c.vel.set(0, 0, 0); }   // caster stands still
     this._aim();                                                       // beam + view stay locked on the target, never drift
+    if (this.kind === 'shot') {                                        // the SHOTS wheel: refire on a cadence; the manager ticks them
+      this._shotT -= 1 / 60;
+      if (this._shotT <= 0 && this.shots.length) { this._fireShot(this.shots[this.shotI].ab); this._shotT = 0.6; }   // ~0.55s flight to the stand target — keep one in the air
+      return;
+    }
     if (!this.beam || this.beam.dead) { this.spawn(); return; }
     const b = this.beam, pr = this.g.projectiles;
     b.sustaining = true;
@@ -175,13 +220,24 @@ export class BeamGallery {
     const faster = mkBtn('+', 'Faster look ( = )', () => this.setSpeed(1));
     const fireBtn = mkBtn('🔥', 'Set the target on fire (the real ignite path)', () => this.igniteTarget());
     const chartBtn = mkBtn('CHART', 'Open the beam chart — the whole language, every beam', () => window.open('./beam-chart.html', '_blank'));
+    const kindBtn = mkBtn('⇄ SHOTS', 'Switch the stand between BEAMS and PROJECTILES', () => { this.toggleKind(); kindBtn.textContent = this.kind === 'beam' ? '⇄ SHOTS' : '⇄ BEAMS'; });
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
-    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn);
+    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn);
     document.body.appendChild(el);
     this.chip = el; this._chipText = text;
   }
   _updateChip() {
     if (!this._chipText) return;
+    if (this.kind === 'shot') {
+      const it = this.shots[this.shotI]; if (!it) return;
+      const a = it.ab;
+      const flags = [a.missile && 'MISSILE', a.pierce && 'AP', a.homing && 'HOMING ' + a.homing, a.canister && 'CANISTER',
+        a.blade && 'BLADE', a.card && 'CARD', a.disc && 'DISC', a.grav && 'ARC', a.bounces && 'RICOCHET',
+        a.boomerang && 'BOOMERANG', a.payload && ('PAYLOAD ' + a.payload).toUpperCase()].filter(Boolean).join(' · ') || 'PLAIN BOLT';
+      this._chipText.innerHTML = `<b style="color:#f5b21a">➶ SHOT STAND</b> &nbsp; ${this.shotI + 1}/${this.shots.length}<br>`
+        + `<b style="font-size:13px">${it.heroName}</b> — ${it.name}<br><span style="color:#9fd4ff">${flags}</span>`;
+      return;
+    }
     const { item, def } = this._current();
     const build = beamBuildOf(def), temper = beamTemperOf(def), mode = beamModeOf(def);
     const forced = this.modeIdx >= 0 ? ' · LOCKED' : '';
