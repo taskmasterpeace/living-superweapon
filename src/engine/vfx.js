@@ -115,8 +115,13 @@ export class VFX {
     if (!okPos(pos, 'explode')) return;
     if(opt.energyShell && opt.radius===0)return; // authored point burst: no fabricated visual radius
     const color = opt.color || '#ffd15a', color2 = opt.color2 || '#ff5a2a';
-    const radius = opt.radius || 12, power = opt.power || 1;
-    this.flash(pos, '#ffffff', radius * 0.3, 0.14);
+    // THE FX RECIPE (data/powerfx.js, Refs #42): opt.fx = { family, level, f, L } makes this ONE
+    // explosion speak its element at its level — palette, smoke, debris, cloud, afterFx, all from
+    // the table. With no fx every caller renders exactly what it always rendered.
+    const fx = opt.fx || null, pal = fx && fx.f.palette, imp = fx && fx.f.impact, LV = fx && fx.L;
+    const S = LV ? LV.scale : 1, CN = LV ? LV.count : 1;
+    const radius = (opt.radius || 12) * S, power = (opt.power || 1) * (LV ? 0.7 + 0.3 * S : 1);
+    this.flash(pos, imp ? imp.kernel : '#ffffff', radius * 0.3, 0.14);
     // fireball shell
     const shell = new THREE.Mesh(this._sphere, opt.energyShell?energyShellMaterial(color,.8):addMat(color, 0.8));
     shell.position.copy(pos); shell.scale.setScalar(radius * 0.3); this.scene.add(shell);
@@ -140,7 +145,7 @@ export class VFX {
     // entirely when the eye is inside `kernelNear × radius` — a solid white sphere the camera is
     // sitting inside is a full-frame white flash, not a detonation; else cap it to 0.292 of frame.
     if (!(this._close && this.world.camera.position.distanceTo(pos) < radius * PW_FX.kernelNear)) {
-      const core = new THREE.Mesh(this._sphere, addMat('#ffffff', 0.95));
+      const core = new THREE.Mesh(this._sphere, addMat(imp ? imp.kernel : '#ffffff', 0.95));
       core.position.copy(pos); core.scale.setScalar(radius * 0.12); this.scene.add(core);
       const coreMax = this._cap(pos, Infinity, PW_FX.blastCore);
       let ct = 0; const clife = 0.14;
@@ -153,12 +158,71 @@ export class VFX {
     this.ring(pos, { color, r0: radius * 0.25, r1: this._cap(pos, radius * 1.7, PW_FX.pressureRing), life: 0.32, flat: true, opacity: 0.7 });
     // sparks + embers + smoke + tumbling DEBRIS with real gravity. ⚠ §7: in the close frame each
     // spark draws up to 9× its authored area (the perspective divide finally bites), so cap the count.
-    const sparkN = this._close ? Math.min(PW_FX.sparkCount, 26 + power * 14) : 26 + power * 14;
-    this.P.burst(pos.x, pos.y, pos.z, { count: sparkN, speed: 20 + power * 10, life: 0.6, size: 2.6, color: ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
-    this.P.burst(pos.x, pos.y, pos.z, { count: 6 + power * 5, speed: 26 + power * 8, life: 1.0, size: 1.6, color: ['#3a352c', '#57504a', color2], up: 14, grav: 60, drag: 0.6 });
-    this.P.burst(pos.x, pos.y, pos.z, { count: 10, speed: 7, life: 1.1, size: 4.5, color: ['#20222c', '#15161d'], up: 6, grav: -3, drag: 1.1 });
-    if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, color2);
-    this.world.shake(0.6 + power * 0.7);
+    const sparkN = (this._close ? Math.min(PW_FX.sparkCount, 26 + power * 14) : 26 + power * 14) * CN;
+    this.P.burst(pos.x, pos.y, pos.z, { count: sparkN, speed: 20 + power * 10, life: 0.6, size: 2.6, color: pal ? [imp.kernel, pal.glow, pal.core] : ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
+    this.P.burst(pos.x, pos.y, pos.z, { count: (6 + power * 5) * CN, speed: 26 + power * 8, life: 1.0, size: 1.6, color: pal ? [...pal.debris, pal.deep] : ['#3a352c', '#57504a', color2], up: 14, grav: 60, drag: 0.6 });
+    this.P.burst(pos.x, pos.y, pos.z, { count: 10 * CN, speed: 7, life: 1.1, size: 4.5, color: pal ? pal.smoke : ['#20222c', '#15161d'], up: 6, grav: -3, drag: 1.1 });
+
+    // THE CLOUD (level-gated): the aftermath COLUMN — buoyant smoke that keeps rising after the
+    // flash is gone, which is what separates "an effect went off" from "something blew up here".
+    // Level I has none, II a plume, III a real column with straggler puffs on a short timer.
+    if (LV && LV.cloud > 0) {
+      const rise = imp.cloudRise, dur = imp.cloudDur;
+      const puffs = Math.round((7 + power * 5) * LV.cloud);
+      this.P.burst(pos.x, pos.y + 1, pos.z, { count: puffs, speed: 4 + power * 2, life: dur, size: 6.5, color: pal ? pal.smoke : ['#20222c', '#15161d'], up: rise, grav: -rise * 0.35, drag: 1.5 });
+      let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 3;
+      if (stragglers > 0) this._add({
+        update: (dt) => {
+          ct += dt;
+          if (ct > 0.22 * (fired + 1) && fired < stragglers) {
+            fired++;
+            this.P.burst(pos.x + rand(-radius, radius) * 0.25, pos.y + 2 + fired * 2, pos.z + rand(-radius, radius) * 0.25,
+              { count: 3, speed: 2.5, life: dur * 0.8, size: 5.5, color: pal ? pal.smoke : ['#20222c'], up: rise * 0.8, grav: -rise * 0.3, drag: 1.6 });
+          }
+          return fired >= stragglers;
+        },
+        dispose: () => {},
+      });
+    }
+
+    // THE AFTEREFFECT (family vocabulary, data/powerfx.js): what LINGERS says what it WAS —
+    // embers gutter, frost hangs, arcs re-strike, water falls back, glyphs fade upward, steel rains.
+    if (imp) {
+      const AN = (LV ? LV.after : 1);
+      switch (imp.afterFx) {
+        case 'embers':
+          this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(14 * AN), speed: 5, life: 2.2, size: 1.4, color: [pal.glow, pal.mist], up: 6, grav: 2.5, drag: 1.8 });
+          break;
+        case 'frostmist':
+          this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(12 * AN), speed: 2.5, life: 3.0, size: 6, color: [pal.mist, pal.smoke[0]], up: 1.2, grav: -0.4, drag: 2.2 });
+          this.P.burst(pos.x, pos.y + 0.5, pos.z, { count: Math.round(10 * AN), speed: 16, life: 0.8, size: 1.2, color: [pal.core, pal.glow], up: 8, grav: 40, drag: 0.8 });   // shard glitter
+          break;
+        case 'arcs': {
+          let at = 0, an = 0; const strikes = Math.max(1, Math.round(2 * AN));
+          this._add({
+            update: (dt) => { at += dt; if (at > 0.16 * (an + 1) && an < strikes) { an++; this.lightning(pos, { color: pal.glow, count: 2, radius: radius * 0.5, height: 8 }); } return an >= strikes; },
+            dispose: () => {},
+          });
+          break;
+        }
+        case 'droplets':
+          this.P.burst(pos.x, pos.y + 3, pos.z, { count: Math.round(18 * AN), speed: 14, life: 0.9, size: 1.6, color: [pal.glow, pal.core], up: 12, grav: 70, drag: 0.6 });
+          break;
+        case 'glyphs':
+          this.P.burst(pos.x, pos.y + 1.5, pos.z, { count: Math.round(10 * AN), speed: 2, life: 1.8, size: 2.4, color: [pal.glow, pal.core], up: 4, grav: -1.5, drag: 2.4 });
+          this.ring(pos, { color: pal.glow, r0: radius * 0.2, r1: radius * 1.1, life: 0.8, flat: true, opacity: 0.4 });
+          break;
+        case 'shrapnel':
+          this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(16 * AN), speed: 34, life: 0.7, size: 1.3, color: pal.debris, up: 10, grav: 90, drag: 0.4 });
+          break;
+        case 'sparks':
+        default:
+          this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(12 * AN), speed: 24, life: 0.9, size: 1.6, color: [imp.kernel, pal.glow], up: 8, grav: 30, drag: 1.0 });
+      }
+    }
+
+    if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, pal ? pal.deep : color2);
+    this.world.shake((0.6 + power * 0.7) * (LV ? 0.7 + 0.3 * LV.kb : 1));
   }
 
   // Ground shockwave: expanding flat ring + energy dome + dust + lightning skirt.

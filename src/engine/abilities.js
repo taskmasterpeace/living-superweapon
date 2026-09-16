@@ -6,6 +6,7 @@ import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consume
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
 import { sfxOf } from '../data/sfx.js';
+import { fxOf } from '../data/powerfx.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
 import { ChargeGather } from './charge-gather.js';
@@ -1046,13 +1047,14 @@ export const TYPES = {
           g.vfx.shockwave(c.pos.clone().setY(gy), { color: '#c9bfa9', radius: radius * 1.5, power: 1.4 + k });
           g.particles.burst(c.pos.x, 1.2, c.pos.z, { count: 26 + Math.round(k * 22), speed: 22 + k * 18, life: 0.8, size: 3.6, color: ['#6a655a', '#8a8577', '#3a3f47'], up: 14 + k * 10, grav: 26, drag: 1.3 });
         } else {
-          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, scorch: c.pos.y < 4 });
+          const nfx = fxOf(visOf(def), def, c.def, 1 + k);   // SUPERNOVA speaks its element at its fed level
+          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, fx: nfx, scorch: c.pos.y < 4 });
           g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
           g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
         }
         // BLADE CYCLONE (brief T2.11) rides the same nova: slash class + a lingering cut, and
         // the halo is serrated metal spiralling inward rather than an energy sphere.
-        g.areaDamage(c, p, radius, dmg, 1.6 + k, { dtype: def.dtype, freeze: def.freeze, dot: def.dot, dmgClass: def.dmgClass });   // FROST NOVA: the ring ENCASES (manual §19)
+        g.areaDamage(c, p, radius, dmg, 1.6 + k, { dtype: def.dtype, freeze: def.freeze, dot: def.dot, dmgClass: def.dmgClass, kbMul: fxOf(visOf(def), def, c.def, 1 + k).L.kb });   // FROST NOVA: the ring ENCASES (manual §19); level scales the shove
         if (def.cyclone) {
           for (const f of g.entities) {
             if (!f.alive || f === c || !g.isFoe(c, f)) continue;

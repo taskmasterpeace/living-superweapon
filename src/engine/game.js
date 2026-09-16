@@ -2724,9 +2724,10 @@ export class Game {
       const d = Math.hypot(dx, dz, dy);
       if (d > radius + f.radius) continue;
       const fall = 1 - clamp(d / (radius + f.radius), 0, 1) * 0.6;
-      const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall);
+      const kbMul = o.kbMul || 1;   // explosion LEVELS shove harder (powerfx.js FX_LEVELS.kb)
+      const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall * kbMul);
       // src attribution: explosions now CREDIT the blaster (artillery kills used to score nobody)
-      const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall, hitstop: 0.05, dtype: o.dtype });
+      const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall * kbMul, hitstop: 0.05, dtype: o.dtype });
       if (o.dot && dealt > 0) f.addDot({ ...o.dot, src: caster });   // caustic/incendiary payloads ride the blast
       if (o.freeze && dealt > 0 && f.addFrost) f.addFrost(o.freeze, caster);   // ice-slick traps ENCASE (brief Tier1 #9)
       if (ff && dealt >= 3 && this.hud && (this._ffFeedT || 0) <= this.time - 2.5) {

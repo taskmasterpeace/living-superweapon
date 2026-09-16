@@ -8,6 +8,7 @@ import {hasCivilians} from '../data/modes.js';
 import {resolveThrowRelease} from './throwable-action.js';
 import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
 import { sfxOfVis } from '../data/sfx.js';
+import { fxOf } from '../data/powerfx.js';
 import {createBeamMaterials,createBeamSourceMaterial,beamVisualFamily} from './beam-surface.js';
 import { BeamCurve } from './beam-curve.js';
 import { beamPathsTouch, pinBeamContact } from './beam-contact.js';
@@ -175,6 +176,8 @@ class Projectile {
     // recedes. Derived from the vis every kit spawn already carries; ballistics stay silent in
     // flight by rule (a slug's voice is its crack). Stopped in _dispose — the one exit.
     this._sfxV = o.sfx ?? (o.vis ? sfxOfVis(o.vis, o, caster && caster.def) : null);
+    // the element look, resolved ONCE from the same vis (family palette + intensity level)
+    this._fx = fxOf(o.vis || 'energy', o, caster && caster.def);
     this._voiceLoop = (this._sfxV && !o.bullet && !o.ballistic && (o.life ?? 3) > 0.45 && game.audio.cast)
       ? game.audio.cast(this._sfxV, 'travel', this.pos) : null;
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
@@ -762,10 +765,11 @@ class Projectile {
       this._dispose(game);
       return false;
     }
-    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
+    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, fx: this._fx, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
     // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
-    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype});
+    // LEVEL-SCALED KNOCKBACK (Robert: "the explosion should have knockback") — a level-III blast SHOVES
+    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype, kbMul: this._fx ? this._fx.L.kb : 1});
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
     if (this.face) {   // the Marletta goes off — a grief-shaped crater
       game.vfx.shockwave(p.clone().setY((game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });
