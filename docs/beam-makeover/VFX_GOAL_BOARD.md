@@ -152,3 +152,25 @@ charge orb geometry per family.**
 **Iteration 7 orders: ray core intensity + level-III shimmer edge · ice-spike impact
 silhouette (particle shape shader) · water/toxic beam surfaces · per-family charge-orb
 geometry · full 12-family sweep + regrade.**
+
+### Iteration 7 — shards, fluid beams, ray punch, vapor-vs-soot (full sweep regraded)
+
+| what shipped | the critic |
+|---|---|
+| SHARD particle silhouette (round/flame/shard, one branch, no new draw) → ICE SPIKES burst + fall on impact | ice impact/aftereffect up; the reusable 'solid fragment' the set lacked |
+| FLUID BEAM (water + toxic): turbulent surging jet, bright spine, churning skin — distinct from ice's rigid plates and ki's smooth lance | **water/toxic beam 7.5** |
+| RAY core widened + brightened to white-hot with colored shimmer rim | **ray 7 → 8** |
+| VAPOR-vs-SOOT: combustion families billow a dark soot stop, cold/water/gas billow PALE — ice smoke read as a fire before | ice aftereffect **5.5 → 7.5** |
+
+**Category scores (full sweep):** charging **6.5** · launching **6** · flight **6.5** ·
+impact **7** · aftereffect **7**. Beam surfaces: fire 8.5 · ice 8 · ki 8 · electric 8 ·
+ray 8 · fluid 7.5 · magic 7.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 7 | 2026-09-16 | shard silhouette · ice spikes · fluid beam · ray punch · vapor/soot smoke split | launch first-meters streak · charge orb geometry · magic beam depth · level-III camera punch | **≈7.4** |
+
+**Iteration 8 orders (closing on 8): launch first-meters streak + level-III screen punch ·
+per-family charge-orb geometry (crystal/plasma/rune) · magic beam depth · impact dome final
+restructure · full sweep + regrade. The floor is now ~6; the work turns to pushing every
+cell from "good" to "AAA freeze-frame".**

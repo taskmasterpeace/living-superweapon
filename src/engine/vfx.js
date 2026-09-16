@@ -173,7 +173,10 @@ export class VFX {
       // REAL SMOKE — normal-blend billboard puffs (the additive system cannot render soot; goal
       // board iter 2 root cause). Column now, stragglers climbing behind it at level III.
       const puffs = Math.round((5 + power * 3) * LV.cloud);
-      this.smokePuffs(pos, { count: puffs, colors: pal ? [...pal.smoke, '#191a1e'] : undefined, warm: imp && imp.afterFx === 'embers' ? pal.glow : null, rise, dur, size: 4.5 + power * 2, spread: radius * 0.3, opacity: 0.55 });
+      // COMBUSTION families billow SOOT (a guaranteed dark stop); VAPOR families (frost, water,
+      // gas) billow PALE — a dark anchor on ice reads as a fire, not a freeze (critic, iter 7).
+      const combusts = imp && ['embers', 'sparks', 'shrapnel', 'arcs'].includes(imp.afterFx);
+      this.smokePuffs(pos, { count: puffs, colors: pal ? (combusts ? [...pal.smoke, '#191a1e'] : [...pal.smoke, pal.mist]) : undefined, warm: imp && imp.afterFx === 'embers' ? pal.glow : null, rise, dur, size: 4.5 + power * 2, spread: radius * 0.3, opacity: combusts ? 0.55 : 0.4 });
       let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 2;
       if (stragglers > 0) this._add({
         update: (dt) => {
