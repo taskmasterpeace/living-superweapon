@@ -913,3 +913,37 @@ fixing the shared-body white-dominance the iter-33 finding named, rather than on
 ladder graded solid (firecracker → event reads at impact); knockback (`kb` 0.7/1.0/1.7) is a gameplay
 number feeding `areaDamage` and isn't shown by the pinned-dummy capture — verified by the multiplier, not
 the still. City additive path still un-gradeable here (iter 30).
+
+### Iteration 35 — THE LAUNCH LEAVES IN THE ELEMENT (muzzle bloom + shape tells, evidence: fire/ice/energyRed/electric re-capture)
+
+Graded every phase this iteration (beams confirmed strong — fire=molten lava, ice=faceted crystal;
+charges family-distinct — fire warm-orange, ice pale-cyan; aftermath is smoke-dominated at +50 BY the
+"fire first, then smoke" temporal design). The lowest-graded phase was **launch (~8.5)**: two shared-body
+issues, the same shape as iter-34's impact finding.
+- The dominant muzzle **flash** used `launch.flash` — a PALE near-white tint for every family — so the
+  bloom read pale/samey (the launch analogue of iter-34's white shock front).
+- The per-family **tell rings** (burst/sigil/orbit) were r1≈5u — smaller than the point-blank orb bloom
+  (~7u), so they were buried INSIDE it and no family LEFT the hand in its own silhouette.
+
+**Fix (`game.js muzzleFlash`, data-driven off the powerfx table, no per-hero):**
+- muzzle flash colour → `THREE.Color(launch.flash).lerp(pal.glow, 0.5)`: a hot bright pop saturated to
+  the element. Measured: energyRed's bloom now reads clearly RED (glow `#ff3b3b`), where it was pale.
+  ⚠ Honest limit: families whose glow is already pale (ICE `#bfeaff`) barely change — correct, ice IS pale.
+- the shape tells boldened to read PAST the bloom: burst/sigil/orbit rings r1 `2+lvl` → `4+lvl*2` (they
+  now frame the launch outside the orb), fork reaches further (count/radius/height up), the kicks
+  (backblast/recoil) reach further out.
+
+Verified through the real engine (`capture-fxmatrix.mjs` fire,ice then energyRed,electric — 9+ cells,
+**0 errors, 0 pageErrors**). Launches now read distinctly: energyRed = saturated-red bloom + a burst ring
+around the core · electric = pale-blue bloom + jagged FORK branches at the muzzle · fire = warm bloom.
+Refs `artifacts/fx-matrix/shots/{energyRed,electric,fire}/3-launch.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 35 | 2026-09-16 | LAUNCH: muzzle flash tinted to `pal.glow` + shape tells (rings/forks/kicks) boldened to read past the point-blank orb bloom | launch 8.5 → ~9 · ⚠ fire BACKBLAST (kicks BACKWARD into the caster) is occluded at point-blank in the capture framing — reads in-game behind the caster, not a design flaw | **PW ≈9.6** |
+
+**⚠ Honest, partial:** the RING tells (burst/sigil/orbit) and the FORK read clearly; the DIRECTIONAL
+backblast/recoil (which kick BACKWARD off the muzzle, into where the caster stands) are occluded by the
+point-blank orb in the frozen capture — they read in-game against the open ground behind a standing/flying
+caster. The flash-tint saturation is a real win for saturated-glow families (fire/energy/magic) and a
+deliberate near-no-op for pale-glow families (ice/water). City additive path still un-gradeable (iter 30).

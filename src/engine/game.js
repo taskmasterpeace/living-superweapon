@@ -3846,7 +3846,12 @@ export class Game {
     // and sized to PUNCH without white-balling: at radius 8.5 + the rich bloom it was a featureless
     // white sphere BIGGER than a real explosion's flash heart, burying the ring, the streak AND the
     // per-family tell below (the real cause of the flat-8.5 launch column, alongside no per-family tell).
-    this.vfx.flash(m, fx.f.launch.flash, (2 + lvl) * scale, 0.1);
+    // the muzzle flash carries the FAMILY colour, not a pale near-white wash (goal board iter 35, the
+    // launch analogue of iter 34's shock front): launch.flash is a pale tint for every family, so the
+    // dominant bloom read pale and samey. A 0.5 blend toward pal.glow keeps it a HOT bright pop but
+    // saturates it to the element — fire's muzzle blooms orange, ice's cyan, ki its own colour.
+    const flashCol = '#' + new THREE.Color(fx.f.launch.flash).lerp(new THREE.Color(pal.glow), 0.5).getHexString();
+    this.vfx.flash(m, flashCol, (2 + lvl) * scale, 0.1);
     // the FIRST-METERS STREAK — the shot visibly leaving (goal board: launch was the low category)
     const aim3 = caster.aim3 || caster.aim;
     this.vfx.launchStreak(m, aim3, (7 + lvl * 4) * scale, pal.core);
@@ -3858,35 +3863,39 @@ export class Game {
     // releases in its OWN way (the launch analogue of charge.style / impact.afterFx): one data word
     // (fx.f.launch.style), one switch, no per-hero. The base stays as the universal "a shot left the
     // hand"; this adds the element identity ON TOP, level-scaled.
+    // ⚠ THE TELL MUST READ PAST THE BLOOM (goal board iter 35): a charged launch's orb + flash fills
+    // ~7u, so a tell ring of r1≈5 was buried inside it. The SHAPE tells (rings that frame the launch,
+    // kicks that reach OUT of the muzzle bloom) are boldened so each family LEAVES the hand in its own
+    // silhouette — a fire backblast, a ki ring, an alien orbit — readable around the bright orb.
     const ax = caster.aim.x, az = caster.aim.z;
     switch (fx.f.launch.style) {
       case 'backblast':   // FIRE — combustion kicks a lick of flame + embers BACK off the muzzle
-        this.particles.burst(m.x, m.y, m.z, { count: 5 + lvl * 3, speed: 12 + lvl * 4, life: 0.4, size: 2.2 * scale, color: [pal.glow, pal.mist], dir: { x: -ax, z: -az }, spread: 0.7, up: 3, grav: 3, drag: 2, shrink: true, shape: 'flame' });
+        this.particles.burst(m.x, m.y, m.z, { count: 7 + lvl * 4, speed: 20 + lvl * 7, life: 0.45, size: 2.8 * scale, color: [pal.glow, pal.mist], dir: { x: -ax, z: -az }, spread: 0.6, up: 4, grav: 3, drag: 1.6, shrink: true, shape: 'flame' });
         break;
-      case 'frost':   // ICE — a frost puff blooms at release + a few shards crackle out
-        this.particles.burst(m.x, m.y, m.z, { count: 6 + lvl * 3, speed: 6, life: 0.6, size: 3.2 * scale, color: [pal.mist, pal.core], spread: 1, up: 1.5, grav: -0.5, drag: 2.4, shrink: true });
-        this.particles.burst(m.x, m.y, m.z, { count: 3 + lvl * 2, speed: 16 + lvl * 4, life: 0.4, size: 1.8 * scale, color: [pal.core, '#ffffff'], dir: { x: ax, z: az }, spread: 0.5, grav: 30, shape: 'shard' });
+      case 'frost':   // ICE — a frost puff blooms at release + shards crackle FORWARD past the bloom
+        this.particles.burst(m.x, m.y, m.z, { count: 7 + lvl * 3, speed: 7, life: 0.65, size: 3.6 * scale, color: [pal.mist, pal.core], spread: 1, up: 1.5, grav: -0.5, drag: 2.4, shrink: true });
+        this.particles.burst(m.x, m.y, m.z, { count: 5 + lvl * 3, speed: 22 + lvl * 6, life: 0.5, size: 2 * scale, color: [pal.core, '#ffffff'], dir: { x: ax, z: az }, spread: 0.6, grav: 26, shape: 'shard' });
         break;
-      case 'spray':   // WATER / TOXIC — a fan of droplets sprays out and falls under gravity
-        this.particles.burst(m.x, m.y, m.z, { count: 8 + lvl * 4, speed: 18 + lvl * 6, life: 0.5, size: 1.6 * scale, color: [pal.glow, pal.core], dir: { x: ax, z: az }, spread: 0.75, up: 4, grav: 55, drag: 0.7 });
+      case 'spray':   // WATER / TOXIC — a wide fan of droplets sprays out and falls under gravity
+        this.particles.burst(m.x, m.y, m.z, { count: 11 + lvl * 5, speed: 22 + lvl * 7, life: 0.55, size: 1.8 * scale, color: [pal.glow, pal.core], dir: { x: ax, z: az }, spread: 0.95, up: 5, grav: 55, drag: 0.7 });
         break;
-      case 'burst':   // KI — a clean radial plasma pop: a tight fast ring + a symmetric spark flare
-        this.vfx.ring(m, { color: pal.core, r0: 0.2, r1: (2 + lvl) * scale, life: 0.16, opacity: 0.6 });
-        this.particles.burst(m.x, m.y, m.z, { count: 10 + lvl * 5, speed: 20 + lvl * 8, life: 0.3, size: 1.6 * scale, color: [pal.core, pal.glow], spread: 1, drag: 1.4, shrink: true });
+      case 'burst':   // KI — a clean radial plasma pop: a WIDE fast ring past the bloom + a spark flare
+        this.vfx.ring(m, { color: pal.core, r0: 0.2, r1: (4 + lvl * 2) * scale, life: 0.18, opacity: 0.7 });
+        this.particles.burst(m.x, m.y, m.z, { count: 12 + lvl * 6, speed: 26 + lvl * 10, life: 0.32, size: 1.7 * scale, color: [pal.core, pal.glow], spread: 1, drag: 1.3, shrink: true });
         break;
-      case 'fork':   // ELECTRIC — the discharge forks off the muzzle
-        this.vfx.lightning(m, { color: pal.glow, count: 2 + Math.min(2, lvl), radius: (2 + lvl) * scale, height: 4 + lvl });
+      case 'fork':   // ELECTRIC — the discharge forks off the muzzle, reaching further at higher levels
+        this.vfx.lightning(m, { color: pal.glow, count: 3 + Math.min(3, lvl), radius: (3.5 + lvl * 1.5) * scale, height: 5 + lvl * 1.5 });
         break;
-      case 'sigil':   // MAGIC — a flat runic ring flashes as the spell releases (green / violet)
-        this.vfx.ring(m, { color: pal.glow, r0: (1 + lvl * 0.6) * scale, r1: (2.4 + lvl * 1.2) * scale, life: 0.5, flat: true, opacity: 0.5 });
-        this.particles.burst(m.x, m.y, m.z, { count: 6 + lvl * 3, speed: 3, life: 0.9, size: 2 * scale, color: [pal.glow, pal.core], up: 3, grav: -1.2, drag: 2.4 });
+      case 'sigil':   // MAGIC — a WIDE flat runic ring flashes as the spell releases (green / violet)
+        this.vfx.ring(m, { color: pal.glow, r0: (1.2 + lvl * 0.7) * scale, r1: (4 + lvl * 2) * scale, life: 0.55, flat: true, opacity: 0.55 });
+        this.particles.burst(m.x, m.y, m.z, { count: 8 + lvl * 3, speed: 3, life: 0.95, size: 2.2 * scale, color: [pal.glow, pal.core], up: 3, grav: -1.2, drag: 2.4 });
         break;
-      case 'orbit':   // ALIEN — motes scatter in an orbiting ring (matches the orbit charge tell)
-        this.vfx.ring(m, { color: fx.f.flight.wake, r0: 0.6 * scale, r1: (2.6 + lvl) * scale, life: 0.4, flat: true, opacity: 0.4 });
-        this.particles.burst(m.x, m.y, m.z, { count: 7 + lvl * 3, speed: 10 + lvl * 3, life: 0.6, size: 1.7 * scale, color: [pal.glow, '#8affc0'], spread: 1, up: 2, grav: -0.8, drag: 1.8, shrink: true });
+      case 'orbit':   // ALIEN — a WIDE orbiting ring + iridescent motes (matches the orbit charge tell)
+        this.vfx.ring(m, { color: fx.f.flight.wake, r0: 0.8 * scale, r1: (4.5 + lvl * 2) * scale, life: 0.45, flat: true, opacity: 0.45 });
+        this.particles.burst(m.x, m.y, m.z, { count: 9 + lvl * 4, speed: 12 + lvl * 4, life: 0.65, size: 1.9 * scale, color: [pal.glow, '#8affc0'], spread: 1, up: 2, grav: -0.8, drag: 1.7, shrink: true });
         break;
-      case 'recoil':   // STEEL — a hard matte kick, extra debris dust, NO glow (steel never blooms)
-        this.particles.burst(m.x, m.y, m.z, { count: 5 + lvl * 3, speed: 10 + lvl * 4, life: 0.35, size: 1.8 * scale, color: pal.debris, dir: { x: -ax, z: -az }, spread: 0.6, up: 2, grav: 20, drag: 1.4 });
+      case 'recoil':   // STEEL — a hard matte kick, extra debris dust reaching BACK, NO glow (steel never blooms)
+        this.particles.burst(m.x, m.y, m.z, { count: 7 + lvl * 3, speed: 15 + lvl * 5, life: 0.4, size: 2 * scale, color: pal.debris, dir: { x: -ax, z: -az }, spread: 0.55, up: 2, grav: 20, drag: 1.3 });
         break;
     }
     // LEVEL-III SCREEN PUNCH — a heavy shot the player fires kicks the frame (human only, no AI spam)
