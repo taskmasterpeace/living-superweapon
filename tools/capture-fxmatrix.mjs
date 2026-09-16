@@ -88,6 +88,18 @@ try {
       },
       stage(dist) {
         this.g.vfx.clearScorches?.();   // one cell's burn must not stain the next cell's floor
+        // ⚠ WIPE THE PREVIOUS CELL'S LINGERING VISUALS (goal board iter 38): a cell is captured every ~50
+        // frames, but smoke puffs live ~3.2s and rings/discs linger — so L1/L2's SMOKE bled into L3's
+        // aftermath as a dark blob (a single-shot probe showed 0 puffs at +50, but the sequential capture
+        // showed a cloud = leftover from earlier cells). clearScorches only cleared ground decals. Dispose
+        // every active vfx effect, hide the smoke sprite pool, zero the particle pool, and flatten the
+        // terrain (every IMPACT craters `_gh`, a heightfield dent no mesh-clear touches). Each cell now
+        // shows ONLY its own event — the honest read the grade needs.
+        for (const e of [...(this.g.vfx.fx || [])]) { try { e.dispose?.(); } catch {} }
+        if (this.g.vfx.fx) this.g.vfx.fx.length = 0;
+        for (const s of (this.g.vfx._smokePool || [])) { try { s._live = false; s.visible = false; if (s.material) s.material.opacity = 0; } catch {} }
+        try { this.g.particles.n = 0; } catch {}
+        this.g.world.resetTerrain?.();
         const p = this.g.player;
         p.pos.x = -18; p.pos.z = 0; p.pos.y = 0; p.vel?.set?.(0, 0, 0);
         p.ki = p.maxKi; p.hp = p.maxHp; p.staggerT = 0;

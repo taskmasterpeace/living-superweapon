@@ -2746,7 +2746,7 @@ export class Game {
         if(distance<=radius)c.onConstructHit(damage*caster.powerBuff*(1-.6*clamp(distance/radius,0,1)),{src:caster,pos:at,lane:'splash'});
       }
     }
-    this.worldImpact(pos, radius, power, caster);   // crater the ground + damage cover + street life
+    this.worldImpact(pos, radius, power, caster, o.residue);   // crater the ground + damage cover + street life (residue tints/gates the scorch)
   }
 
   // A splash: ripple rings on the surface + spray. Fired by blasts over water and by ragdolls
@@ -2766,11 +2766,15 @@ export class Game {
 
   // ---------- destructible environment ----------
   // A blast on the world: crater the ground (big hits only) and damage nearby cover.
-  worldImpact(pos, radius, power = 1, src = null) {
+  worldImpact(pos, radius, power = 1, src = null, residue = null) {
     const groundY=this.world.heightAt?.(pos.x,pos.z)??0;
     if (Math.abs(pos.y-groundY) < 6.5 && (power >= 1.25 || radius >= 14)) {
       this.world.crater(pos.x, pos.z, Math.min(radius * 0.45, 22), Math.min(power * 1.3, 5));
-      this.vfx.scorch(new THREE.Vector3(pos.x, groundY+.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorch resolves the crater's new floor
+      // ⚠ THE CRATER SCORCH IS A BURN — only for combustion/energy families (goal board iter 38). A
+      // near-black scorch on an ICE/WATER/TOXIC blast read as soot on a freeze; those families skip it
+      // (their pale afterglow disc + family residue own the ground). A crater is still cut regardless.
+      if (!residue || residue === 'scorch' || residue === 'crater' || residue === 'debris')
+        this.vfx.scorch(new THREE.Vector3(pos.x, groundY+.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorch resolves the crater's new floor
       this.cityStats.craters++;
     }
     // over WATER a blast reads as water — ripple rings, spray, and the right sound

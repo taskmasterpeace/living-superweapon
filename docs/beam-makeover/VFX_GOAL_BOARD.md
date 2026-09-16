@@ -1024,3 +1024,45 @@ bold burst ring). All other iterations touched vfx.js/powerfx.js/projectiles.js,
 throughout (the iter-32→34 changes were visible in their captures). City additive path still un-gradeable
 (iter 30). The `.vite` trap and the `--force` fix are the reusable lesson: **verify the served code, never
 assume the dev server reflects the disk.**
+
+### Iteration 38 — VAPOR STOPS SCORCHING THE EARTH (the aftermath's dark ground mark, evidence: ice/fire re-capture)
+
+Graded the four un-examined families clean, then hunted the last genuinely-weak cell: the **aftermath on
+vapor families** (ice/water/toxic) carried a dark soot mark — "a dark anchor on ice reads as a fire, not a
+freeze" (the board's own iter-7 law). Took a long chain of probes (smoke pool, scorches, craters, effects)
+to isolate; the honest lesson is that the FROZEN capture beats hid several overlapping causes at once, and
+each probe only ruled one out. Two ROOT causes found:
+- **`residueOf` (visual.js) fell through to `blast>=10 → scorch`** for any power whose MATERIAL wasn't
+  ice/toxic — and the fx family is decoupled from material, so an `fxFamily:'ice'` power with no `dtype`
+  got a SCORCH residue. It burned the earth on a freeze.
+- **`worldImpact`'s crater scorch (`#161a22`) was UNGATED** — a near-black decal stamped on every blast
+  regardless of element (the dominant dark blob, confirmed by a scene probe: a black CircleGeometry at the
+  impact centre).
+
+**Fix (data-driven, no per-hero):**
+- `residueOf` now maps `fxFamily → residue` FIRST (ice/water→frost, toxic→sludge, fire/energy/electric→
+  scorch, magic/alien→none, steel→debris) — the element decides the ground mark, never the blast size.
+- `residue()` skips the pale kinds (frost/cloud/wet) — routing them through `scorch()` darkened them ×0.2
+  to a dirty blue-gray; their ground mark is the pale afterglow disc explode() already draws.
+- `worldImpact(pos,r,power,src,residue)` gates its scorch — only combustion/energy/debris families burn
+  the crater floor; vapor skips it (crater still cut). `residue` threads projectile → areaDamage → here.
+- Smoke texture: the density blotches were baked BLACK (`rgba(0,0,0,·)`), and a normal-blend puff renders
+  `texture.rgb × colour`, so black × pale = black — pale smoke had dark spots. Now `destination-out` carves
+  ALPHA (density) leaving RGB pure white, so `white × colour = colour` and vapor smoke billows pale.
+- Capture tool: per-cell reset of terrain/smoke/particles/effects (craters + smoke were ACCUMULATING
+  across L1/L2/L3 into a dark blob — a capture artifact, not the game).
+
+Verified (`capture-fxmatrix --family ice,fire`, force-fresh serve): **0 errors, validateFx 12/0**. Ice's
+aftermath GROUND is now a clean PALE disc (the black scorch is gone); fire still lays its dark soot +
+embers (combustion unchanged). Refs `artifacts/fx-matrix/shots/{ice,fire}/3-aftermath.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 38 | 2026-09-16 | VAPOR families stop scorching the earth: `residueOf` fxFamily-first · pale residues skip the ×0.2 burn · `worldImpact` scorch gated by family · smoke texture black→alpha. Capture: per-cell terrain/smoke reset | vapor aftermath GROUND 7 → ~9 · ⚠ a small SHARED upper smoke smudge remains (fire=correct soot; on ice it's faint + non-differentiating) — probed extensively, unpinned, left as a minor open item | **PW ≈9.6** |
+
+⚠ **Honest open item:** after all four fixes a small dark smoke smudge still sits high in the aftermath for
+every family (correct soot for fire/energy; a faint incongruity on ice). A single-shot probe found 0 smoke
+puffs at +50, yet the sequential capture shows it — so it is either the dark dummy engulfed in pale smoke
+or a residual I could not pin in the frozen beat. It does NOT block family differentiation (all families
+share it) and sits out of the main impact read. Flagged for a future targeted pass rather than sinking
+more of this loop. City additive path still un-gradeable (iter 30).

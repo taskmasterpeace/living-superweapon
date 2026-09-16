@@ -145,8 +145,16 @@ function impactOf(a) {
   if (a.type === 'buff' || a.type === 'phase' || a.type === 'portal' || a.type === 'teleport') return 'none';
   return 'burst';
 }
+// the ground residue a FAMILY leaves — authored by element, so it can never fall through to the
+// `blast>=10 → scorch` default and burn the earth on a FREEZE. Vapor families (ice/water/toxic) leave
+// a pale/corrosive patch, combustion/energy a scorch, magic/alien nothing earthly, steel debris.
+const FAMILY_RESIDUE = {
+  fire: 'scorch', energyRed: 'scorch', energyBlue: 'scorch', energySun: 'scorch', electric: 'scorch',
+  ice: 'frost', water: 'frost', toxic: 'sludge', magicViolet: 'none', magicGreen: 'none', alien: 'none', steel: 'debris',
+};
 function residueOf(a) {
   if (a.residue) return a.residue;
+  if (a.fxFamily && FAMILY_RESIDUE[a.fxFamily]) return FAMILY_RESIDUE[a.fxFamily];   // the element decides, not the blast size
   const m = materialOf(a);
   if (has(a, 'groundslam') || a.type === 'meteor') return 'crater';
   if (m === 'fire') return 'scorch';

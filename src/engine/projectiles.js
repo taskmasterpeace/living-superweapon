@@ -862,7 +862,7 @@ class Projectile {
     // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
     // LEVEL-SCALED KNOCKBACK (Robert: "the explosion should have knockback") — a level-III blast SHOVES
-    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype, kbMul: this._fx ? this._fx.L.kb : 1});
+    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype, kbMul: this._fx ? this._fx.L.kb : 1, residue: this.vis?.residue});
     // LEVEL-III IMPACT CAMERA AUTHORITY (goal board iter 18): a heavy blast owns the frame — a punch
     // + slowmo when the human caster's own big shot lands, so a III impact carries weight, not just size.
     if (this._fx && this._fx.level >= 3) { game.world.punch(0.4); if (game.isHuman?.(this.caster)) { game.world.shake(0.7); game.slowmo?.(0.08, 0.5); } }

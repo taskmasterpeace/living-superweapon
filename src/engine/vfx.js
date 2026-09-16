@@ -406,14 +406,22 @@ export class VFX {
     const g = x.createRadialGradient(64, 64, 6, 64, 64, 62);
     g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(0.55, 'rgba(255,255,255,0.42)'); g.addColorStop(1, 'rgba(255,255,255,0)');
     x.fillStyle = g; x.fillRect(0, 0, 128, 128);
-    // a few dimmer blotches so a rotating puff reads as VAPOR, not a disc
+    // a few dimmer blotches so a rotating puff reads as VAPOR, not a disc. ⚠ THE TEXTURE STAYS PURE
+    // WHITE (goal board iter 38): a normal-blend puff renders `texture.rgb × material.color`, so a
+    // BLACK blotch (the old `rgba(0,0,0,·)`) rendered BLACK for EVERY colour — and layered pale puffs
+    // (ice/water/toxic) compounded those spots into a DARK CLOUD, reading as soot on a freeze. The
+    // density variation must come from ALPHA, not RGB: `destination-out` ERASES alpha in each blotch,
+    // carving wispy low-density patches while leaving the RGB white, so `white × colour = colour` and
+    // vapor billows PALE (combustion is dark by its colour, unchanged).
+    x.globalCompositeOperation = 'destination-out';
     for (let i = 0; i < 7; i++) {
       const a = Math.random() * TAU, r = 18 + Math.random() * 26;
       const bx = 64 + Math.cos(a) * r, by = 64 + Math.sin(a) * r;
       const b = x.createRadialGradient(bx, by, 2, bx, by, 16 + Math.random() * 10);
-      b.addColorStop(0, 'rgba(0,0,0,0.22)'); b.addColorStop(1, 'rgba(0,0,0,0)');
+      b.addColorStop(0, 'rgba(0,0,0,0.30)'); b.addColorStop(1, 'rgba(0,0,0,0)');   // alpha here CARVES density
       x.fillStyle = b; x.beginPath(); x.arc(bx, by, 30, 0, TAU); x.fill();
     }
+    x.globalCompositeOperation = 'source-over';
     this._smokeT = new THREE.CanvasTexture(c);
     return this._smokeT;
   }
@@ -631,9 +639,13 @@ export class VFX {
   // RESIDUE (visual contract): what the world KEEPS after an effect. The decal tint is the
   // ability's own material, not a global black — an ice burst leaves frost, acid leaves sludge.
   residue(pos, kind = 'scorch', radius = 8) {
-    if (!okPos(pos, 'residue')) return;
-    if (kind === 'none') return;
-    const TINT = { scorch: '#0b0906', frost: '#cfeaff', sludge: '#7f8f28', debris: '#4a443c', crater: '#0b0906', cloud: '#2a2a2e' };
+    if (!okPos(pos, 'residue') || kind === 'none') return;
+    // ⚠ VAPOR LEAVES A PALE PATCH, NOT A BURN (goal board iter 38). Routing frost/cloud/wet through
+    // scorch() darkened them ×0.2 to a dirty blue-gray — a freeze that scorched the earth. Those
+    // families' ground mark is the pale afterglow disc explode() already draws; skip the dark decal
+    // here. Only true burns/corrosion/debris take the scorch.
+    if (kind === 'frost' || kind === 'cloud' || kind === 'wet') return;
+    const TINT = { scorch: '#0b0906', sludge: '#7f8f28', debris: '#4a443c', crater: '#0b0906' };
     this.scorch(pos, radius, TINT[kind] || '#0b0906');
   }
   beamGroundScorch(pos,radius=2) {
