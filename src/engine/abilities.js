@@ -1067,9 +1067,11 @@ export const TYPES = {
           g.particles.burst(c.pos.x, 1.2, c.pos.z, { count: 26 + Math.round(k * 22), speed: 22 + k * 18, life: 0.8, size: 3.6, color: ['#6a655a', '#8a8577', '#3a3f47'], up: 14 + k * 10, grav: 26, drag: 1.3 });
         } else {
           const nfx = fxOf(visOf(def), def, c.def, 1 + k);   // SUPERNOVA speaks its element at its fed level
-          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, fx: nfx, scorch: c.pos.y < 4 });
+          // THE NOVA SHELL (Robert's ask): a huge SPHERICAL boiling burst around the body — works
+          // at altitude, IS the omnidirectional read. The ground shockwave stays for the floor.
+          g.vfx.novaShell(p, radius * (1.1 + k * 0.4), nfx, 1.6 + k * 1.4);
+          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.55, power: 1.4 + k, fx: nfx, scorch: c.pos.y < 4 });
           g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
-          g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
         }
         // BLADE CYCLONE (brief T2.11) rides the same nova: slash class + a lingering cut, and
         // the halo is serrated metal spiralling inward rather than an energy sphere.

@@ -209,3 +209,18 @@ the family's charge.style — `plasma` (smooth churn), `crystal` (hard-snapped f
 **Iteration 10 orders: magic beam depth · impact dome final restructure (peak too soft still) ·
 SUPERNOVA nova-shell as its own spherical fire category (Robert's ask) · full 12-family sweep +
 regrade. Charging, flight, beams all 8+; launch/impact/aftereffect are the last sub-8 cells.**
+
+### Iteration 10 — the pressure front + SUPERNOVA the sphere
+
+| what shipped | the critic |
+|---|---|
+| IMPACT PRESSURE FRONT — a hard, over-bright, family-cored ring snapping out in 0.18s over the soft fireball. The detonation-edge read the balloon shell never gave. | IMPACT 7 → **8** across every family |
+| SUPERNOVA NOVA SHELL — `vfx.novaShell`: a huge churning family SPHERE that expands past the body at any altitude (Robert's ask — "spherical when you fly... how we gonna make fire look spherical"), inner kernel flash, family debris (fire tongues / ice shards) raining off the boiling skin. Verified on TORCH's live Supernova, 0 errors. | a real spherical burst now; wants more fire-color retention (additive churn washes toward white at full hot) — noted for iter 11 |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 10 | 2026-09-16 | impact pressure front · SUPERNOVA nova-shell (spherical) | nova-shell color wash · magic beam depth · launch streak vs charge-orb overlap | **≈8.1** |
+
+**FIRST TIME OVER 8. Iteration 11 orders: nova-shell fire-color retention · magic beam depth ·
+level-III aftereffect density · the remaining families' full regrade to confirm the 8 floor ·
+then the polish pass toward 10 (per-level ribbon tint, contact glow at beam receiving end).**

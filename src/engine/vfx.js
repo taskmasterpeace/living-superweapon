@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { rand, TAU, lerp, GROUND_LAYER, PW_FX } from '../core/util.js';
 import { FlightWake } from './flight-wake.js';
 import {FlightSurfaceWake} from './flight-surface-wake.js';
-import {energyShellMaterial} from './energy-burst-material.js';
+import {energyShellMaterial, chargeOrbCore} from './energy-burst-material.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
 const _vfxV = new THREE.Vector3(), _vfxV2 = new THREE.Vector3();   // launch-streak scratch (not held across frames)
@@ -159,6 +159,19 @@ export class VFX {
     }
     // the pressure ring, tilted flat — the blast telling the world how wide it reached
     this.ring(pos, { color, r0: radius * 0.25, r1: this._cap(pos, radius * 1.7, PW_FX.pressureRing), life: 0.32, flat: true, opacity: 0.7 });
+    // THE PRESSURE FRONT (goal board iter 10): a HARD, FAST second ring — thin, over-bright, gone
+    // in 0.18s. This is the shock edge the eye reads as a detonation instead of an inflating ball;
+    // it is the piece the soft fireball shell was never going to give. Family-cored, level-scaled.
+    if (fx) {
+      const front = new THREE.Mesh(this._ring, addMat(imp.kernel, 0.95));
+      front.rotation.x = -Math.PI / 2; front.position.set(pos.x, (pos.y < 4 ? 0.4 : pos.y), pos.z); front.scale.setScalar(radius * 0.3);
+      this.scene.add(front);
+      let ft = 0; const fl = 0.18;
+      this._add({
+        update: (dt) => { ft += dt; const k = ft / fl, e = 1 - (1 - k) * (1 - k); front.scale.setScalar(radius * (0.3 + e * (1.4 + LV.ring * 0.5))); front.material.opacity = 0.95 * (1 - k); return k >= 1; },
+        dispose: () => { this.scene.remove(front); front.material.dispose(); },
+      });
+    }
     // sparks + embers + smoke + tumbling DEBRIS with real gravity. ⚠ §7: in the close frame each
     // spark draws up to 9× its authored area (the perspective divide finally bites), so cap the count.
     const sparkN = (this._close ? Math.min(PW_FX.sparkCount, 26 + power * 14) : 26 + power * 14) * CN;
@@ -325,6 +338,38 @@ export class VFX {
         dispose: () => { p._live = false; p.visible = false; p.material.opacity = 0; },
       });
     }
+  }
+
+  // THE NOVA SHELL (Robert's SUPERNOVA ask — a huge SPHERICAL burst AROUND the body, big and
+  // boiling, at any altitude). Not a ground shockwave: a churning family sphere that expands past
+  // the caster and dissipates, with an inner kernel flash and a rain of family debris off its skin.
+  novaShell(pos, radius, fx, power = 1.6) {
+    if (!okPos(pos, 'novaShell')) return;
+    const pal = fx ? fx.f.palette : { core: '#fff', glow: '#ffd15a', debris: ['#57402a'] };
+    const imp = fx ? fx.f.impact : { kernel: '#fff' };
+    const t0 = { value: 0 };
+    const mat = chargeOrbCore(pal.glow, pal.core, t0, fx && fx.f.charge.style === 'crystal' ? 'crystal' : 'plasma');
+    mat.blending = THREE.AdditiveBlending; mat.side = THREE.DoubleSide; mat.opacity = 0.9;
+    const shell = new THREE.Mesh(this._sphere, mat);
+    shell.position.copy(pos); shell.scale.setScalar(radius * 0.2); this.scene.add(shell);
+    const l = this.borrowLight(pal.glow, 14 * power, radius * 3); l.position.copy(pos);
+    let t = 0; const life = 0.55 + power * 0.12;
+    this.flash(pos, imp.kernel, radius * 0.5, 0.16);
+    this._add({
+      update: (dt) => {
+        t += dt; const k = t / life, e = 1 - Math.pow(1 - k, 2.4);
+        t0.value += dt;
+        if (mat.userData.orbHot) mat.userData.orbHot.value = 1;    // fully lit (uniform exists once compiled)
+        shell.scale.setScalar(radius * (0.2 + e * 1.05));
+        shell.material.opacity = 0.9 * (1 - k) * (1 - k);
+        l.intensity = Math.max(0, 14 * power * (1 - k));
+        return k >= 1;
+      },
+      dispose: () => { this.scene.remove(shell); shell.material.dispose(); this.returnLight(l); },
+    });
+    // debris raining off the boiling skin — flame tongues for fire, shards for ice, else sparks
+    const dshape = imp.afterFx === 'frostmist' ? 'shard' : imp.afterFx === 'embers' ? 'flame' : null;
+    this.P.burst(pos.x, pos.y, pos.z, { count: 26, speed: radius * 2.4, life: 0.6, size: 3.4, color: [pal.core, pal.glow], up: 6, grav: 12, drag: 1.2, shrink: true, shape: dshape });
   }
 
   // THE LAUNCH STREAK (goal board iter 8): a bright stretched flash down the first meters of the
