@@ -229,7 +229,11 @@ export const BEAM_TEMPERS = ['steady', 'helix', 'kink', 'roil', 'crystal', 'sinu
 // THE THIRD AXIS — BEHAVIOR MODE (Robert's anatomy poster, 2026-09-16: "pulse, spiral, waveform,
 // convergent — I like this stuff"). BUILD is how much beam there is, TEMPER is what the detail
 // layer does INSIDE it; MODE is what the TUBE ITSELF does — the geometry, not the surface.
-export const BEAM_MODES = ['straight', 'pulsed', 'spiral', 'waveform', 'converging', 'diverging'];
+export const BEAM_MODES = ['straight', 'pulsed', 'spiral', 'waveform', 'converging', 'diverging',
+  // the outside-the-box set (Robert, 2026-09-16, "what else can we get"):
+  'lance',    // needle-thin the WHOLE length — the piercing beam he asked for by name
+  'beaded',   // a string of energy beads — the particle-beam cross-section, discrete not continuous
+  'whip'];    // a lateral lash whose swing GROWS toward the tip — the tail cracks
 
 export const BUILD_MEANING = {
   ray:     'thin and hard-edged, almost no sheath — a cutting instrument',
@@ -312,6 +316,11 @@ export const MODE_LOOK = {
   waveform:   { kind: 'waveform',   k: 0.34, speed: 12, amp: 1.35 },
   converging: { kind: 'converging', wide: 1.45, tight: 0.42 },
   diverging:  { kind: 'diverging',  wide: 0.62, spread: 1.50 },
+  // outside-the-box additions. lance/beaded reshape the RADIUS; whip is lateral like waveform but
+  // its amplitude scales with arc so the far end lashes. `min`/`sharp` cut the beads deep and hard.
+  lance:      { kind: 'lance',      tight: 0.40 },
+  beaded:     { kind: 'beaded',     k: 1.15, speed: 24, min: 0.12, sharp: 2.6 },
+  whip:       { kind: 'whip',       k: 0.50, speed: 16, amp: 1.40 },
 };
 
 export function visOf(a) {

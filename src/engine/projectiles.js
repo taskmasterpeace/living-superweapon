@@ -1224,13 +1224,16 @@ class BeamHose {
       if(M.kind!=='straight'){
         const mt=this.game.time;
         if(M.kind==='pulsed'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=1-M.depth*.5+M.depth*p*p*p; }
+        else if(M.kind==='beaded'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=M.min+(1-M.min)*Math.pow(p,M.sharp); }
+        else if(M.kind==='lance') rad*=M.tight;
         else if(M.kind==='converging') rad*=M.wide+(M.tight-M.wide)*t;
         else if(M.kind==='diverging') rad*=M.wide+(M.spread-M.wide)*t;
-        else {
+        else {   // lateral modes: spiral (corkscrew), waveform (S-wave), whip (lash growing to the tip)
           const ramp=Math.min(1,arc/(baseR*5))*(receiver?clamp((length-arc)/Math.max(1,baseR*4),0,1):1);
-          const A=baseR*M.amp*ramp;
-          if(M.kind==='spiral'){ const th=arc*M.k-mt*M.speed; const c=Math.cos(th)*A,s=Math.sin(th)*A; mox=ex*c+fx*s;moy=ey*c+fy*s;moz=ez*c+fz*s; }
-          else { const s=Math.sin(arc*M.k-mt*M.speed)*A; mox=ex*s;moy=ey*s;moz=ez*s; }
+          let A=baseR*M.amp*ramp; if(M.kind==='whip') A*=t;
+          const th=arc*M.k-mt*M.speed;
+          if(M.kind==='spiral'){ const c=Math.cos(th)*A,s=Math.sin(th)*A; mox=ex*c+fx*s;moy=ey*c+fy*s;moz=ez*c+fz*s; }
+          else { const s=Math.sin(th)*A; mox=ex*s;moy=ey*s;moz=ez*s; }
         }
       }
       for (let r = 0; r < R; r++) {

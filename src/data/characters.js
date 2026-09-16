@@ -86,7 +86,7 @@ export const ROSTER = [
     blurb: 'Rains stars from orbit. A precision Star Lance, a swelling Nova Core, and a sky-wide Meteor Storm.',
     sig: ['LMB Star Lance (beam)', 'RMB Nova Core (charge)', 'E Solar Wind (push)', 'R Meteor Storm'],
     abilities: {
-      lmb: { type: 'beam', material: 'light', name: 'Star Lance', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 907, maxLen: 150, dps: 60, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
+      lmb: { type: 'beam', material: 'light', mode: 'lance', name: 'Star Lance', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 907, maxLen: 150, dps: 60, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
       rmb: { type: 'charge', name: 'Nova Core', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.4, maxR: 5.8, dmgMin: 22, dmgMax: 76, maxBlast: 30, speedMin: 42, speedMax: 74, chargePower: 2.8, color: '#ff8a3d', color2: '#ffe08a' },
       q: { type: 'projectile', name: 'Plasma Orb', cost: 8, cd: 0.5, damage: 20, speed: 60, radius: 1.8, blast: 10, grav: 10, shock: true, color: '#ff8a3d', color2: '#ffd24a' },
       e: { type: 'cone', name: 'Solar Wind', kiPerSec: 16, range: 34, arc: 1.0, dps: 18, push: 46, lift: 4, color: '#ffd24a', dtype: 'fire' },
@@ -551,7 +551,7 @@ export const ROSTER = [
       lmb: { type: 'projectile', name: 'Crimson Bands', cost: 6, cd: 0.35, damage: 13, speed: 96, radius: 1, blast: 4.5, homing: 2.6, dtype: 'magic', color: '#9a4ae0', color2: '#e8d0ff' },
       rmb: { type: 'construct', name: 'Seraphim Shield', cost: 12, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#b06aff' },
       q: { type: 'teleport', name: 'Fold Space', cost: 11, cd: 1.3, range: 54, color: '#b06aff' },
-      e: { type: 'beam', material: 'arcane', name: 'Eldritch Whip', cost: 4, cd: 0.3, radius: 1, tipSpeed: 950, maxLen: 140, dps: 56, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 1.1, color: '#b06aff', color2: '#e8d0ff' },
+      e: { type: 'beam', material: 'arcane', mode: 'whip', name: 'Eldritch Whip', cost: 4, cd: 0.3, radius: 1, tipSpeed: 950, maxLen: 140, dps: 56, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 1.1, color: '#b06aff', color2: '#e8d0ff' },
       f: { type: 'buff', name: 'Vishanti Ward', cost: 22, cd: 18, mult: 1.4, dur: 9, invuln: 1, color: '#b06aff', color2: '#e8d0ff' },
       shift: { type: 'dash', name: 'Cloak Drift', cost: 5, cd: 0.55, power: 96, iframes: 0.28, color: '#b06aff' },
       r: { type: 'meteor', name: 'Sigil Rain', cost: 32, cd: 18, count: 12, interval: 0.18, spread: 26, radius: 3, damage: 32, blast: 17, color: '#b06aff', color2: '#e8d0ff' },
@@ -662,7 +662,7 @@ export const ROSTER = [
     ai: { style: 'trickster', range: 34, aggro: 0.7, fly: 0.5 }, evade: { kind: 'phase', name: 'Ghost Drift' },
     blurb: 'Walks through walls, reads the room literally, hits like a freight train from a world that no longer exists.',
     abilities: {
-      lmb: { type: 'beam', material: 'arcane', name: 'Alien Vision', cost: 4, cd: 0.3, radius: 1, tipSpeed: 1015, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 0.7, color: '#ff4a4a', color2: '#ffd24a' },
+      lmb: { type: 'beam', material: 'arcane', mode: 'beaded', name: 'Alien Vision', cost: 4, cd: 0.3, radius: 1, tipSpeed: 1015, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 0.7, color: '#ff4a4a', color2: '#ffd24a' },
       rmb: { type: 'melee', name: 'Density Hammer', cost: 13, cd: 1, damage: 30, range: 12, arc: 0.75, lunge: 46, knock: 58, launch: 18, color: '#7fd4ff' },
       q: { type: 'phase', name: 'Ghost Body', kiPerSec: 17, color: '#7fd4ff' },
       e: { type: 'teleport', name: 'Mind Skip', cost: 12, cd: 1.4, range: 52, color: '#7fd4ff' },

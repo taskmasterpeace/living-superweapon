@@ -1140,3 +1140,33 @@ which is fine now that Robert eyeballs it live.
 
 **In-game to look at (chase cam):** TORCH Flame Jet should splay to a cone · KANO/CIRCUIT Wave Cannon
 should pulse down the shaft · VEGA Violet Lance corkscrews · MAJESTY Photon Stream narrows to a point.
+
+---
+
+## Iteration 41 (2026-09-16) — MORE beams (Robert loves the set) + the skill
+
+Robert saw the four modes in third person: *"I really really like the beams. I never want to lose these
+beams."* Committed + branch confirmed (`codex/beam-projectile-makeover`). Then: build more, capture a
+skill, lay out projectiles.
+
+**Three new MODE entries (outside-the-box axis):**
+- `lance` — needle-thin the WHOLE length (his "narrow part the whole time" beam). NOVA Star Lance.
+- `beaded` — a string of discrete energy beads (the particle-beam cross-section). MARSHAL Alien Vision.
+- `whip` — lateral lash whose swing GROWS toward the tip (the tail cracks). MYSTWARD Eldritch Whip.
+
+All name-matched heroes derive their mode automatically (nova→lance, mystward→whip, marshal→beaded);
+`mode:` override still wins. **Verified by `_sweep` unit test on a synthetic path:** lance r
+0.07/0.08/0.11 muzzle/mid/tip (thin throughout vs straight 0.18/0.21/0.28) · beaded pinches to beads ·
+whip lat grows 0.10 mid → 0.19 tip (vs waveform uniform 0.20). Old six modes unchanged.
+
+**Skill written:** `~/.claude/skills/wwa-beams/SKILL.md` — the full BUILD×TEMPER×MODE×family system, how
+to author, third-person-only grading, the verify-by-geometry method, and every harness trap
+(wrong-checkout server, stale .vite, pose-gated emission, preserveDrawingBuffer, no-purple fence).
+
+**Fatness** = the `radius` field (documented). **Fire** flagged for an efficiency+look pass (base for a
+future non-metal burning-status system). **Projectile roadmap** recorded: AP bullets = red, spiral
+smoke-trail missiles, a beam gallery/explorer.
+
+**In-game (chase cam, worktree server /powerworld.html):** NOVA Star Lance = a thin needle · MARSHAL
+Alien Vision = beads · MYSTWARD Eldritch Whip (E) = a lashing tail · plus iter-40's TORCH cone / KANO
+pulse / VEGA corkscrew / MAJESTY focus.
