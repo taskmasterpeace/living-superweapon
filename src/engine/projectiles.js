@@ -300,8 +300,13 @@ class Projectile {
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
     } else {
-      const core = new THREE.Mesh(GEO_ORB, MAT_CORE);
-      const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7);
+      // LEVEL is a SILHOUETTE fact (goal board: "a III unmistakably heavier than a I"), and the
+      // core burns the family's own hot color, not flat white.
+      const _lvS = 1 + ((this._fx?.level || 1) - 1) * 0.4;
+      const core = new THREE.Mesh(GEO_ORB, this._fx ? new THREE.MeshBasicMaterial({ color: this._fx.f.palette.core }) : MAT_CORE);
+      if (this._fx) this._ownMats = [...(this._ownMats || []), core.material];
+      core.scale.setScalar(_lvS);
+      const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7 * _lvS);
       this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
       this._ownMats = [glow.material];
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
@@ -523,7 +528,39 @@ class Projectile {
       else if (this.blade) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.5, 1.5), vy: rand(-1, 1), vz: rand(-1.5, 1.5), life: 0.16, size: 0.9, color: ['#dfe6ee', '#9aa4b0'], drag: 4, shrink: true });
       else if (this.card) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(-1, 1), vz: rand(-1, 1), life: 0.2, size: 0.8, color: [this.color, '#ffdcdc'], drag: 4, shrink: true });   // narrow rose ribbon
       else if (this.disc) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.2, 1.2), vy: rand(-0.6, 0.6), vz: rand(-1.2, 1.2), life: 0.18, size: 0.9, color: ['#c9cfd9', '#eaf2ff'], drag: 4, shrink: true });   // metallic crescent
-      else game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
+      else if (this.arrow || !this._fx || this._fx.f.flight.style === 'none') game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
+      else {
+        // FAMILY FLIGHT STYLES (powerfx.js flight.style — the goal board's worst cell, 2/10):
+        // the trail is where a projectile LIVES, so the element must read here above anywhere.
+        const pal = this._fx.f.palette, lvl = this._fx.level;
+        const sz = this.radius * 2.2 * (0.8 + lvl * 0.45), lf = 0.38 + lvl * 0.09;
+        const P = game.particles, p = this.pos;
+        switch (this._fx.f.flight.style) {
+          case 'ember':   // fire droops burning droplets and spits sparks
+            P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-2, 2), vy: rand(0, 3), vz: rand(-2, 2), life: lf * 1.3, size: sz, color: [pal.glow, pal.core], grav: 7, drag: 2, shrink: true });
+            if (Math.random() < 0.35) P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-6, 6), vy: rand(-2, 5), vz: rand(-6, 6), life: 0.3, size: sz * 0.35, color: [pal.core, '#ffffff'], grav: 12, drag: 1 });
+            break;
+          case 'glint':   // ice: a cold ribbon plus hard crystalline sparkle
+            P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-1, 1), vy: rand(-1, 1), vz: rand(-1, 1), life: lf, size: sz * 0.9, color: [pal.glow, pal.mist], drag: 3, shrink: true });
+            P.spawn({ x: p.x + rand(-1, 1), y: p.y + rand(-1, 1), z: p.z + rand(-1, 1), vx: 0, vy: 0, vz: 0, life: 0.16, size: sz * 0.4, color: '#ffffff', drag: 0 });
+            break;
+          case 'jitter': { // electricity ARCS around the bolt — offset strobe, never a smooth line
+            const ox = rand(-1.6, 1.6), oz = rand(-1.6, 1.6);
+            P.spawn({ x: p.x + ox, y: p.y + rand(-1.2, 1.2), z: p.z + oz, vx: 0, vy: 0, vz: 0, life: 0.1, size: sz * 0.8, color: [pal.core, pal.glow], drag: 0 });
+            if (Math.random() < 0.25) for (let fi = 1; fi <= 3; fi++) P.spawn({ x: p.x + ox * fi * 0.8, y: p.y + rand(-2, 2), z: p.z + oz * fi * 0.8, vx: 0, vy: 0, vz: 0, life: 0.08, size: sz * 0.4, color: '#ffffff', drag: 0 });
+            break;
+          }
+          case 'motes':   // magic sheds slow rising motes — deliberate, unhurried, wrong-physics
+            P.spawn({ x: p.x + rand(-1.5, 1.5), y: p.y + rand(-1, 1), z: p.z + rand(-1.5, 1.5), vx: rand(-1, 1), vy: rand(1, 3), vz: rand(-1, 1), life: lf * 1.7, size: sz * 0.7, color: [pal.glow, pal.core], grav: -3, drag: 1.5, shrink: true });
+            break;
+          case 'spray':   // water/toxic slings droplets that FALL — real weight, real wet
+            P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-4, 4), vy: rand(2, 6), vz: rand(-4, 4), life: lf, size: sz * 0.6, color: [pal.glow, pal.core], grav: 16, drag: 0.8 });
+            break;
+          default:        // 'streak' — pure ki: the hot line, bigger and hotter than the old speck
+            P.spawn({ x: p.x, y: p.y, z: p.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: lf, size: sz * 1.15, color: [pal.glow, pal.core, '#ffffff'], drag: 3, shrink: true });
+            P.spawn({ x: p.x, y: p.y, z: p.z, vx: 0, vy: 0, vz: 0, life: 0.18, size: sz * 0.5, color: pal.core, drag: 0 });
+        }
+      }
     }
     // Pedestrians aren't entities (they're one instanced mesh), so nothing ever collided with
     // them. A bullet has to: that's the whole point of the ballistic scale — lethal to people.

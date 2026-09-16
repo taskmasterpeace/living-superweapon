@@ -169,7 +169,9 @@ export class VFX {
     if (LV && LV.cloud > 0) {
       const rise = imp.cloudRise, dur = imp.cloudDur;
       const puffs = Math.round((7 + power * 5) * LV.cloud);
-      this.P.burst(pos.x, pos.y + 1, pos.z, { count: puffs, speed: 4 + power * 2, life: dur, size: 6.5, color: pal ? pal.smoke : ['#20222c', '#15161d'], up: rise, grav: -rise * 0.35, drag: 1.5 });
+      // ⚠ soot needs DARKNESS whatever the family palette says — on a bright stage a pale cloud
+      // reads as a marshmallow, not smoke (goal board iter 1). One dark stop anchors every family.
+      this.P.burst(pos.x, pos.y + 1, pos.z, { count: puffs, speed: 4 + power * 2, life: dur, size: 6.5, color: pal ? [...pal.smoke, '#15161d'] : ['#20222c', '#15161d'], up: rise, grav: -rise * 0.35, drag: 1.5 });
       let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 3;
       if (stragglers > 0) this._add({
         update: (dt) => {
@@ -190,17 +192,36 @@ export class VFX {
     if (imp) {
       const AN = (LV ? LV.after : 1);
       switch (imp.afterFx) {
-        case 'embers':
+        case 'embers': {
           this.P.burst(pos.x, pos.y + 1, pos.z, { count: Math.round(14 * AN), speed: 5, life: 2.2, size: 1.4, color: [pal.glow, pal.mist], up: 6, grav: 2.5, drag: 1.8 });
+          // "fire first and then some smoke afterwards" (Robert's /goal, verbatim): flames LICK the
+          // ground where it landed, then a second, sootier wave takes over as they die.
+          const gy = Math.max(0.6, pos.y * 0.15);
+          this.P.burst(pos.x, gy, pos.z, { count: Math.round(8 * AN), speed: 3, life: 1.6, size: 2.6, color: [pal.glow, pal.core], up: 4, grav: -1.2, drag: 2.2, shrink: true });
+          let ft = 0, fw = 0;
+          this._add({
+            update: (dt) => {
+              ft += dt;
+              if (ft > 0.55 * (fw + 1) && fw < 2) {
+                fw++;
+                this.P.burst(pos.x + rand(-2, 2), gy, pos.z + rand(-2, 2), { count: Math.round(5 * AN), speed: 2.5, life: 1.4 - fw * 0.3, size: 2.2, color: fw === 1 ? [pal.glow, pal.smoke[0]] : pal.smoke, up: 3.5, grav: -1.4, drag: 2.2, shrink: true });
+              }
+              return fw >= 2;
+            },
+            dispose: () => {},
+          });
           break;
+        }
         case 'frostmist':
           this.P.burst(pos.x, pos.y, pos.z, { count: Math.round(12 * AN), speed: 2.5, life: 3.0, size: 6, color: [pal.mist, pal.smoke[0]], up: 1.2, grav: -0.4, drag: 2.2 });
           this.P.burst(pos.x, pos.y + 0.5, pos.z, { count: Math.round(10 * AN), speed: 16, life: 0.8, size: 1.2, color: [pal.core, pal.glow], up: 8, grav: 40, drag: 0.8 });   // shard glitter
           break;
         case 'arcs': {
-          let at = 0, an = 0; const strikes = Math.max(1, Math.round(2 * AN));
+          // re-strikes must OUTLIVE the flash — the aftermath frame is where electricity says
+          // "still live"; at 0.16s spacing they were dead before anyone looked (goal board iter 1)
+          let at = 0, an = 0; const strikes = Math.max(2, Math.round(3 * AN));
           this._add({
-            update: (dt) => { at += dt; if (at > 0.16 * (an + 1) && an < strikes) { an++; this.lightning(pos, { color: pal.glow, count: 2, radius: radius * 0.5, height: 8 }); } return an >= strikes; },
+            update: (dt) => { at += dt; if (at > 0.34 * (an + 1) && an < strikes) { an++; this.lightning(pos, { color: pal.glow, count: 2, radius: radius * 0.5, height: 8 }); } return an >= strikes; },
             dispose: () => {},
           });
           break;
@@ -221,7 +242,8 @@ export class VFX {
       }
     }
 
-    if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, pal ? pal.deep : color2);
+    // the stain is a TINT, not a hole — pal.deep rendered as harsh black ellipses (goal board iter 1)
+    if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, pal ? pal.glow : color2);
     this.world.shake((0.6 + power * 0.7) * (LV ? 0.7 + 0.3 * LV.kb : 1));
   }
 

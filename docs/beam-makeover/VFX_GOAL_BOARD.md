@@ -65,3 +65,17 @@ A cell scores 10 only when nothing in it would embarrass a AAA sizzle-reel freez
 **Iteration 2 orders (worst first): FLIGHT (level-scaled bolt bodies + family trail styles) ·
 LAUNCH (a real muzzle event) · matrix scorch hygiene. Then AFTEREFFECT (dark soot, lingering
 flames, softer scorch, longer arc re-strikes), then CHARGE styles, then IMPACT structure.**
+
+### Iteration 2 — shipped + regraded (evidence: fire/ice/electric re-capture)
+
+| category | was → now | what changed / what the critic still sees |
+|---|---|---|
+| LAUNCHING | 3 → **5.5** | A real departure event: family kernel pop, directional cone down the lane, muzzle ring, recoil dust, level-scaled. Reads as *leaving*. Still to earn 10: a streak connecting the first meters, camera-side punch on level III. |
+| FLIGHT | 2 → **3.5** | Family styles live (embers droop + spark, ice glints, electric strobe-jitters offset, magic motes rise, water falls) and bolts scale with level + burn family-core colors. Still a particle smudge, not a TRAIL — the 10/10 path is a real ribbon strip along recent positions (the mined RibbonGeometry/TrailMaterial recipe). Iteration 3's #1. |
+| AFTEREFFECT | 3 → **3.5** | Fire's ground licks + two-wave smoke shipped, arcs re-strike through the aftermath frame, scorch is a tinted stain not a black hole. **ROOT CAUSE FOUND: the particle system renders ADDITIVE — dark soot mathematically cannot appear.** Smoke needs a small normal-blend puff pool (billboard quads, depth-tested). Iteration 3's #2. |
+| CHARGING | 5 | untouched this pass (styles queue: iteration 3's #3) |
+| IMPACT | 5 → **5.5** | family kernel + fixed scorch; dome restructure still queued |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 2 | 2026-09-16 | launch event · flight family styles · fire-then-smoke · arc re-strikes · tinted scorch · matrix scorch hygiene | flight 3.5 · aftereffect 3.5 (additive-smoke root cause named) | **4.3** |

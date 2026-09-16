@@ -3772,10 +3772,21 @@ export class Game {
     }
   }
 
-  muzzleFlash(caster, color, scale = 1, off, at) {
+  muzzleFlash(caster, color, scale = 1, off, at, fx) {
     const m = at?at.clone():caster.muzzle(_v.clone()); if (off) m.add(off);
-    this.vfx.flash(m, color || '#fff', 4 * scale, 0.1);
-    this.particles.burst(m.x, m.y, m.z, { count: 5, speed: 14, life: 0.22, size: 2.2 * scale, color: [color, '#fff'], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.6 });
+    if (!fx) {   // legacy callers: byte-identical
+      this.vfx.flash(m, color || '#fff', 4 * scale, 0.1);
+      this.particles.burst(m.x, m.y, m.z, { count: 5, speed: 14, life: 0.22, size: 2.2 * scale, color: [color, '#fff'], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.6 });
+      return;
+    }
+    // THE LAUNCH EVENT (goal board: launching scored 3 — "the frame is just a bigger charge orb").
+    // Leaving must READ: a kernel pop, a directional cone down the first meters, a muzzle ring,
+    // recoil dust at the feet. All family-colored, all level-scaled.
+    const pal = fx.f.palette, lvl = fx.level;
+    this.vfx.flash(m, fx.f.impact.kernel, (4 + lvl * 1.5) * scale, 0.1);
+    this.particles.burst(m.x, m.y, m.z, { count: 8 + lvl * 5, speed: 34 + lvl * 12, life: 0.26, size: 2 * scale, color: [pal.core, pal.glow], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.32, drag: 1.6, shrink: true });
+    this.vfx.ring(m, { color: fx.f.launch.ring, r0: 0.4, r1: (3 + lvl * 1.4) * scale, life: 0.22, opacity: 0.75 });
+    if (caster.pos.y < 2.5) this.particles.burst(caster.pos.x, 0.4, caster.pos.z, { count: 4 + lvl * 2, speed: 9, life: 0.5, size: 3, color: ['#57504a', '#8b8577'], up: 3, grav: 8, drag: 1.8 });
   }
 
   trail(caster, color) {

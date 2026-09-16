@@ -273,7 +273,7 @@ export const TYPES = {
       if(throwMesh)return;
       if (g.audio.cast) g.audio.cast(sfxOf(def, c.def), 'release', c.pos, { gain: 0.55 });
       else if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
-      g.muzzleFlash(c, def.color);
+      g.muzzleFlash(c, def.color, 1, null, null, fxOf(visOf(def), def, c.def));
       };
       if(usesThrowAction(c,def)){
         if(beginThrowAction(c,st,launch))pay(c,def,st);
@@ -502,6 +502,7 @@ export const TYPES = {
           // charge scales the voice's MASS (sfx.js was built for exactly this fraction)
           if (g.audio.cast) g.audio.cast(sfxOf(def, c.def, 0.5 + c01 * 1.5), 'release', c.pos, { gain: 0.6 + c01 * 0.7 });
           else g.audio.kiRelease(0.5 + c01 * 1.1, c.pos);
+          g.muzzleFlash(c, def.color, 0.8 + c01, null, orbPos, fxOf(visOf(def), def, c.def, 0.5 + c01 * 1.5));
           g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);
         }
       }

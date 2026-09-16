@@ -58,6 +58,7 @@ try {
       step(n) { for (let i = 0; i < n; i++) this.realU(1 / 60); },
       shoot() { const w = this.g.world; try { w.renderer.setScissorTest(false); w.renderer.setViewport(0, 0, w.renderer.domElement.width, w.renderer.domElement.height); } catch {} this.realRender(); },
       stage(dist) {
+        this.g.vfx.clearScorches?.();   // one cell's burn must not stain the next cell's floor
         const p = this.g.player;
         p.pos.x = -18; p.pos.z = 0; p.pos.y = 0; p.vel?.set?.(0, 0, 0);
         p.ki = p.maxKi; p.hp = p.maxHp; p.staggerT = 0;
