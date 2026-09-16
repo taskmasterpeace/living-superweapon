@@ -50,3 +50,18 @@ A cell scores 10 only when nothing in it would embarrass a AAA sizzle-reel freez
 | iter | date | what changed | worst cells | overall |
 |---|---|---|---|---|
 | 0 | 2026-09-16 | baseline (power catalog) | everything ~3.5 by Robert's read: hairline beams, white-blob charges, one-look explosions, silent identical impacts | **3.5** |
+| 1 | 2026-09-16 | powerfx.js table (12 fams × 3 lvls), explode consumes family+level (clouds, afterFx vocab, kb×level), fx matrix harness (5 phases) | see per-category below | **3.6** |
+
+### Iteration 1 — the critic's category scores (evidence: artifacts/fx-matrix/sheets/)
+
+| category | score | the critic's notes |
+|---|---|---|
+| CHARGING | **5** | Palettes finally read (violet magic unmistakable; fire embers work). But ICE and ELECTRIC are twins — identical white orbs, color-only identity, grayscale FAIL. Charge STYLES (crystal orbit / arc jitter / sigil / droplet) not yet implemented. |
+| LAUNCHING | **3** | There is no launch EVENT — the frame is just a bigger charge orb still at the hand. No directional flash cone, no streak down the first meters, no recoil dust. Launch must read as *leaving*. |
+| FLIGHT | **2** | THE WORST CELL. Every family's bolt is the same white speck at combat zoom; trails are invisible. Family means nothing in the air — the one place a projectile lives. |
+| IMPACT | **5** | Family tint + pressure rings land (fire's red ring vs ice's white reads). But the shell is a washy balloon that eats the composition, and electric = ice again. |
+| AFTEREFFECT | **3** | The cloud reads as a pale marshmallow, not smoke — soot needs DARKNESS even for pale families (bright-stage law: his game is a bright desert). Fire's "fire first, then smoke" story is absent (no lingering ground flames). Scorch renders as harsh black holes (`pal.deep` too dark, and the scorch pool bleeds between matrix cells — harness hygiene too). Electric's re-strikes end before the aftermath frame. |
+
+**Iteration 2 orders (worst first): FLIGHT (level-scaled bolt bodies + family trail styles) ·
+LAUNCH (a real muzzle event) · matrix scorch hygiene. Then AFTEREFFECT (dark soot, lingering
+flames, softer scorch, longer arc re-strikes), then CHARGE styles, then IMPACT structure.**
