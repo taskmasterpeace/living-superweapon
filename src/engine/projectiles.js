@@ -300,12 +300,16 @@ class Projectile {
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
     } else {
-      // LEVEL is a SILHOUETTE fact (goal board: "a III unmistakably heavier than a I"), and the
-      // core burns the family's own hot color, not flat white.
+      // LEVEL is a SILHOUETTE fact (goal board: "a III unmistakably heavier than a I") — carried by
+      // the GLOW, which is the visible orb. The core is a small HOT HEART, not the body: at 1x _lvS
+      // the near-white core sphere ran ~4.5u radius at level III and the rich bloom (iter 19) blew it
+      // into a featureless WHITE BALL that buried the family colour (goal board iter 25 — the same
+      // failure as the launch flash, iter 23). Shrunk to a hot heart so the family GLOW owns the orb
+      // (a coloured energy ball with a bright centre, the DBZ read); level still reads via the glow scale.
       const _lvS = 1 + ((this._fx?.level || 1) - 1) * 0.4;
       const core = new THREE.Mesh(GEO_ORB, this._fx ? new THREE.MeshBasicMaterial({ color: this._fx.f.palette.core }) : MAT_CORE);
       if (this._fx) this._ownMats = [...(this._ownMats || []), core.material];
-      core.scale.setScalar(_lvS);
+      core.scale.setScalar(0.55 * _lvS);
       const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7 * _lvS);
       // THE RIBBON TRAIL (goal board iter 3 #1): particles smudge — a TRAIL is a strip swept along
       // the last N positions, hot at the head, fading to nothing at the tail. One mesh, one draw,

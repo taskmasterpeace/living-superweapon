@@ -566,3 +566,36 @@ surface), so the 216-cell PowerWorld grade largely transfers; what the city adds
 background-contrast question (a bright additive beam over a bright daytime city), already
 spot-checked as no-washout in iter 21. Building the full synthetic-injection city harness is the
 honest remaining task when a renderer gap actually points there.**
+
+### Iteration 25 — the PROJECTILE head stops white-balling (the flight phase)
+
+Turned from the beam to the FLIGHT phase (the projectile in the air), which the recent passes had
+skipped. The level-III projectile head was a **white ball with a thin coloured halo** — a fire orb
+and an electric orb differed only by the halo tint. Root cause: the SAME rich-bloom white-out the
+launch flash had (iter 23). The head is a `pal.core` (near-white) sphere scaled `1x _lvS` — **~4.5u
+radius at level III** — inside a family glow; under the iter-19 bloom that big near-white core blew
+into a featureless white ball and buried the family colour.
+
+**The fix (`projectiles.js`, one line):** the core is a small HOT HEART now (`0.55x _lvS`), not the
+body, so the family GLOW owns the orb — a coloured energy ball with a bright centre (the DBZ read).
+The level silhouette still reads because the glow carries it (glow scale untouched). Family-agnostic
+and palette-keyed; every projectile-firing family gets it.
+
+Verified through the real engine (fire + electric × 3 levels, **0 errors, 0 pageErrors**): fire now
+reads as a WARM orange orb + hot heart, electric a COOL blue orb + hot heart — distinguished by the
+ORB itself, not a halo, and electric's jitter forks read better now the head isn't drowning them.
+Refs `artifacts/fx-matrix/shots/fire/3-flight.png`, `.../electric/3-flight.png`.
+
+**This completes the rich-bloom WHITE-BALL cleanup**: the launch flash (iter 23) and the projectile
+head (this iter) were both bright near-white cores blown out by the iter-19 bloom; both now let the
+family colour own the read with a hot centre. The only bright core that white-balls BY DESIGN is now
+the muzzle-flash heart, which is honest for a blast.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 25 | 2026-09-16 | projectile HEAD → hot heart in a family-colour orb (killed the level-III white ball) | flight head 8.5 → ~9 · city per-family beam grade still a confirmation gap | **≈9.4** |
+
+**Every phase — charge, launch, flight, impact/aftermath — now carries per-family character that
+READS at level III without white-balling, and all 8 beam surfaces are structured. The makeover is
+substantively at a strong, cohesive place; remaining work is the deferred city-path confirmation and
+motion-only taste.**
