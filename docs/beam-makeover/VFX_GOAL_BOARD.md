@@ -1229,3 +1229,16 @@ back, the entire beam is gone — all you see is the end point") root-caused and
   BFP chase boom, so the shaft crosses the frame side-on instead of foreshortening to a dot.
 - Verified live in-engine: gated ctor (pn 0/hidden) → 90 gallery ticks → pn 15, visible, resolved,
   voice up; camMode chase, lookYaw == beamYaw−0.52 exactly; pointer lock off.
+
+**48 · FIRE BODY + BLUE BLAZE + THE CHART** — his live notes, same session as the demo to Chris.
+- Fire "too translucent": the fire SHEATH is the flame body — base opacity .42→.8, tongue alpha
+  floor .28→.45, normal-blended; per-beam `density` multiplies it (Crayon 1.2, Blue Blaze 1.25 → 1.0
+  solid). Speed dial cap ×3→×6.
+- **BLUE BLAZE** (library #2, 26 beams): a blue-hued fire row flips the COOL RAMP in BOTH fire
+  shaders (blue lava cracks, azure tongues) — derived from the authored colour's hue, never a flag.
+  Mode beaded ("for the fire, beaded is definitely it").
+- **THE BEAM CHART** (`/beam-chart.html`, hub tile + CHART button on the gallery chip): every axis
+  named in plain language + all 26 beams, derived through the game's own chain — and the chain is
+  BOTH steps (`fxOf` → `beamVisualFamily`): one-step derivation called Heat Ray 'fire' while the
+  live beam renders 'ray', the exact drift the page exists to kill.
+- 🔥 IGNITE TARGET on the chip — the burning look grades through the real `game.ignite` path.

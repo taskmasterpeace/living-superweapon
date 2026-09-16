@@ -3763,6 +3763,7 @@ export class Game {
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
       dtype: def.dtype, siphon: def.siphon, spiral: def.spiral, faceOrigin: def.faceOrigin, chest: def.chest,
       edge: def.edge,   // per-beam silhouette override (FAMILY_EDGE is the family default)
+      density: def.density,   // per-beam body: multiplies the family's core/sheath opacity
       combinedHands:usesCombinedHands(caster,def),castHand:def.castHand,
       // Character abilities own an articulated emitter. Low-level environmental
       // streams may still be spawned without a fighter's animation channel.

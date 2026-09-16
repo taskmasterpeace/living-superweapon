@@ -118,9 +118,17 @@ export class BeamGallery {
   step(d) { this.i = (this.i + d + this.list.length) % this.list.length; this.spawn(); }
   cycleMode() { this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
   setSpeed(d) {
-    this.speed = Math.min(3, Math.max(0.25, Math.round((this.speed + d * 0.25) * 100) / 100));
+    this.speed = Math.min(6, Math.max(0.25, Math.round((this.speed + d * 0.25) * 100) / 100));
     if (this.beam) this.beam.animSpeed = this.speed;
     this._updateChip();
+  }
+
+  // "how something looks when it's on fire — we're gonna be able to set stuff on fire and we
+  // need to know how it looks." The stand's target burns through the REAL front door (ignite →
+  // burn DoT → the pool's flame shapes), so the grade is the shipping look, not a mock.
+  igniteTarget() {
+    const g = this.g, t = this.target; if (!g || !t) return;
+    if (g.ignite) g.ignite(t, { dps: 4, dur: 6, src: this.caster });
   }
 
   update() {
@@ -165,8 +173,10 @@ export class BeamGallery {
     const modeBtn = mkBtn('MODE ▸', 'Cycle behaviour mode ( / )', () => this.cycleMode());
     const slower = mkBtn('−', 'Slower look ( - )', () => this.setSpeed(-1));
     const faster = mkBtn('+', 'Faster look ( = )', () => this.setSpeed(1));
+    const fireBtn = mkBtn('🔥', 'Set the target on fire (the real ignite path)', () => this.igniteTarget());
+    const chartBtn = mkBtn('CHART', 'Open the beam chart — the whole language, every beam', () => window.open('./beam-chart.html', '_blank'));
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
-    el.append(prev, text, next, modeBtn, slower, faster);
+    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn);
     document.body.appendChild(el);
     this.chip = el; this._chipText = text;
   }

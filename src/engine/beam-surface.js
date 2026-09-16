@@ -56,10 +56,17 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   // and then fire above that." The CORE is the crust (dark rock, scrolling molten cracks); the
   // SHEATH carries the tongues. The 8-radial tube already gives the octagonal silhouette.
   time={value:0};
-  shadeLavaCore(core,time);
+  // THE COOL RAMP — an authored BLUE flame ("make another fire that's blue... has like a blue
+  // core", 2026-09-16) flips BOTH fire shaders to the hotter-than-orange blue set. Derived from
+  // the sheath colour's own hue, never a flag, so the row that says blue burns blue.
+  const hsl={h:0,s:0,l:0};new THREE.Color(color).getHSL(hsl);
+  const cool={value:hsl.h>=.5&&hsl.h<=.72&&hsl.s>.3?1:0};
+  shadeLavaCore(core,time,cool);
   core.blending=THREE.NormalBlending;core.side=THREE.DoubleSide;core.opacity=1;
-  shadeFireSurface(glow,time,false);
-  tip.color.set('#ffbf45');if(detail)detail.color.set('#ffc34a').multiplyScalar(1.2);
+  shadeFireSurface(glow,time,false,cool);
+  glow.opacity=.8;   // fire's sheath IS the flame body — at .42 the tongues read as tissue ("too translucent")
+  if(cool.value){tip.color.set('#9fd4ff');if(detail)detail.color.set('#bfe6ff');}
+  else{tip.color.set('#ffbf45');if(detail)detail.color.set('#ffc34a').multiplyScalar(1.2);}
  } else if(family==='ice'){
   time={value:0};
   shadeIceCore(core,time);
@@ -252,13 +259,13 @@ diffuseColor.a*=(.3+.85*max(glyph,spine*.7))*smoothstep(0.0,1.2,magicArc);`);
 // THE LAVA CRUST — dark rock quantized into the octagon's facets, molten cracks scrolling along
 // the traveled arc (never world space: the pattern must RIDE the beam — anisotropy law, mined
 // from AvatarCastingAbilitiesThreeJS (MIT), docs/beam-makeover/AVATAR_CASTING_TECHNIQUES.md).
-function shadeLavaCore(material,time){
+function shadeLavaCore(material,time,cool={value:0}){
  material.forceSinglePass=true;
  material.onBeforeCompile=shader=>{
-  shader.uniforms.lavaTime=time;
+  shader.uniforms.lavaTime=time;shader.uniforms.lavaCool=cool;
   shader.vertexShader='attribute float beamArc;varying float lavaArc;varying vec3 lavaField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 lavaArc=beamArc;lavaField=normal;`);
-  shader.fragmentShader='uniform float lavaTime;varying float lavaArc;varying vec3 lavaField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+  shader.fragmentShader='uniform float lavaTime;uniform float lavaCool;varying float lavaArc;varying vec3 lavaField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
 vec3 fld=normalize(lavaField);
 float flow=lavaArc*0.22-lavaTime*5.5;
 float n1=sin(dot(fld,vec3(3.7,5.1,2.3))+flow);
@@ -267,12 +274,14 @@ float crust=.5+.5*(n1*.62+n2*.38);
 float crack=smoothstep(.5,.82,1.0-abs(crust*2.0-1.0));
 float facet=.88+.12*fract(sin(dot(floor(fld*2.6),vec3(12.9898,78.233,37.719)))*43758.5453);
 vec3 rock=vec3(.045,.028,.018)*facet;
-vec3 lava=mix(vec3(.62,.06,.004),vec3(1.35,.34,.02),crack);
-lava=mix(lava,vec3(1.6,1.12,.45),pow(crack,3.0)*.75);
+vec3 lavaA=mix(vec3(.62,.06,.004),vec3(.008,.10,.62),lavaCool);
+vec3 lavaB=mix(vec3(1.35,.34,.02),vec3(.10,.55,1.55),lavaCool);
+vec3 lava=mix(lavaA,lavaB,crack);
+lava=mix(lava,mix(vec3(1.6,1.12,.45),vec3(.55,1.15,1.7),lavaCool),pow(crack,3.0)*.75);
 diffuseColor.rgb=mix(rock,lava,crack);
 diffuseColor.a=smoothstep(0.0,1.4,lavaArc);`);
  };
- material.customProgramCacheKey=()=> 'beam-lava-v1';
+ material.customProgramCacheKey=()=> 'beam-lava-v2';
 }
 
 // THE CRYSTAL CORE — ice is RIGID: the plate structure never scrolls (arc-only), only the seams
@@ -303,14 +312,14 @@ diffuseColor.a=smoothstep(0.0,1.4,iceArc)*.96;`);
 
 // Flame has broken, advecting tongues and a soot envelope. This shades the
 // existing traveled tube only: no new emission, hit radius or contact source.
-function shadeFireSurface(material,time,smoke=false){
+function shadeFireSurface(material,time,smoke=false,cool={value:0}){
  material.side=THREE.DoubleSide;material.forceSinglePass=true;
  material.onBeforeCompile=shader=>{
-  shader.uniforms.flameTime=time;
+  shader.uniforms.flameTime=time;shader.uniforms.flameCool=cool;
   shader.vertexShader='attribute float beamArc;varying float flameArc;varying vec3 flameNormal,flameEye,flameField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 flameArc=beamArc;flameNormal=normalize(normalMatrix*normal);
 flameField=normal;flameEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
-  shader.fragmentShader='uniform float flameTime;varying float flameArc;varying vec3 flameNormal,flameEye,flameField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+  shader.fragmentShader='uniform float flameTime;uniform float flameCool;varying float flameArc;varying vec3 flameNormal,flameEye,flameField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
 vec3 field=normalize(flameField);
 float flow=flameArc*.19-flameTime*11.0;
 float curl=sin(dot(field,vec3(4.1,6.3,2.7))+flow*.41);
@@ -320,16 +329,19 @@ float facing=abs(dot(normalize(flameNormal),normalize(flameEye)));
 float density=smoothstep(.14,.78,tongues*.72+breakup*.28);
 ${smoke?`diffuseColor.rgb=vec3(.09,.065,.045);
 diffuseColor.a*=.3*(1.0-density)*smoothstep(3.0,15.0,flameArc)*smoothstep(.02,.7,facing);`:`
-vec3 ember=vec3(.55,.02,.002),orange=vec3(1.25,.22,.01),yellow=vec3(1.7,.95,.2),white=vec3(2.3,1.75,1.0);
+vec3 ember=mix(vec3(.55,.02,.002),vec3(.012,.06,.5),flameCool);
+vec3 orange=mix(vec3(1.25,.22,.01),vec3(.06,.42,1.4),flameCool);
+vec3 yellow=mix(vec3(1.7,.95,.2),vec3(.5,1.15,1.8),flameCool);
+vec3 white=vec3(2.3,1.75,1.0);
 diffuseColor.rgb=mix(ember,orange,density);
 diffuseColor.rgb=mix(diffuseColor.rgb,yellow,pow(density,3.0)*.85);
 diffuseColor.rgb=mix(diffuseColor.rgb,white,pow(density,7.0)*.6);   // white-hot heart, so fire has tonal range not a red haze
-diffuseColor.a*=smoothstep(.12,.54,tongues)*(.28+.72*breakup);
+diffuseColor.a*=smoothstep(.06,.42,tongues)*(.45+.55*breakup);   // filled tongues — .28-floor read as tissue ("too translucent")
 diffuseColor.a*=smoothstep(.03,.55,facing)+.2;
 `}
 diffuseColor.a*=smoothstep(0.0,1.4,flameArc);`);
  };
- material.customProgramCacheKey=()=>smoke?'beam-fire-soot-v1':'beam-fire-tongues-v1';
+ material.customProgramCacheKey=()=>smoke?'beam-fire-soot-v2':'beam-fire-tongues-v2';
 }
 
 // A translucent energy envelope is not an opaque pipe: a rear camera looks

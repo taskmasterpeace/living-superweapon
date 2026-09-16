@@ -12,6 +12,14 @@ export const LIBRARY_BEAMS = [
   // faster flicker than roster fire.
   { id: 'crayonfire', type: 'beam', name: 'Crayon Fire', material: 'fire', dtype: 'fire',
     mode: 'zigzag', cost: 6, cd: 0.4, radius: 1.7, tipSpeed: 420, maxLen: 130, dps: 52,
-    kiPerSec: 18, steer: 10, color: '#ff7a1a', color2: '#ffe08a',
+    kiPerSec: 18, steer: 10, color: '#ff7a1a', color2: '#ffe08a', density: 1.2,
     edge: { amp: 0.8, teeth: 4, step: 10, drift: 1.4 } },
+  // "keep this and maybe make another fire that's blue... that has like a blue core" + "for the
+  // fire, BEADED is definitely it" (both his, grading the gallery live). The blue hue flips the
+  // fire shaders' COOL RAMP — blue lava cracks, azure tongues, hotter-than-orange — and the
+  // authored density gives it the solid body he asked for.
+  { id: 'blueblaze', type: 'beam', name: 'Blue Blaze', material: 'fire', dtype: 'fire',
+    mode: 'beaded', cost: 6, cd: 0.4, radius: 1.6, tipSpeed: 460, maxLen: 135, dps: 56,
+    kiPerSec: 19, steer: 10, color: '#2a7bff', color2: '#dff2ff', density: 1.25,
+    edge: { amp: 0.66, teeth: 5, step: 12, drift: 1.1 } },
 ];

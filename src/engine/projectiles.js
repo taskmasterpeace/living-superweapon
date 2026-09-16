@@ -1092,6 +1092,8 @@ class BeamHose {
     // meshes: outer glow + bright core + tip. The two bodies are TUBES swept along the path now,
     // not cylinders — a cylinder cannot be bent.
     const materials=createBeamMaterials(this.color,this.color2,this._combatReadability,this.temper.n>0,this.visualFamily);
+    // per-beam DENSITY (data): a library row may ask for more body than its family default gives
+    if(o.density)for(const m of [materials.core,materials.glow])if(m&&m.opacity<1)m.opacity=Math.min(1,m.opacity*o.density);
     this.RADIAL = 8;
     this._glowGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL);
     this._coreGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL, true);
