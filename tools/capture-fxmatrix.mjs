@@ -56,7 +56,29 @@ try {
     window.__fx = {
       g, L, realU, realRender, tpl,
       step(n) { for (let i = 0; i < n; i++) this.realU(1 / 60); },
-      shoot() { const w = this.g.world; try { w.renderer.setScissorTest(false); w.renderer.setViewport(0, 0, w.renderer.domElement.width, w.renderer.domElement.height); } catch {} this.realRender(); },
+      shoot() {
+        const w = this.g.world;
+        // ⚠ THE "GOLD CURL" top-centre of every cell is a decorative gold TORUS in the TRAINING-HALL set
+        // dressing (`white-threat-room`, at y125/z220) — the capture boots `destination=training`, so the
+        // hall's props sit behind the stage, and that ring seen at the mapCam angle reads as a curl +
+        // ellipse. Hide the gold toruses (targeted, so the floor/walls stay). Also hide the aim/UI helpers
+        // (reticle/throw-arc/player-mark) for good measure. shoot() is the ONE place a frame is rendered.
+        try {
+          for (const o of [this.g.reticle, this.g.throwArc, this.g.playerMark]) if (o) o.visible = false;
+          // the gold rings photobombing every cell are TRAINING-LAB set dressing behind the
+          // `destination=training` powerworld stage — the `white-threat-room` dome hoops (gold torus at
+          // y125/z220) and the `threat-lab-deployment` target rings (gold torus at y11/z160, the ellipse
+          // a y>18 filter missed). Hide only the RING geometries in those two groups (the hoops + target
+          // decals) and KEEP the floor plane — the dark floor gives pale VFX (ice, blast cloud) the
+          // contrast they need to grade. Every frame (the update re-shows them between levels).
+          for (const nm of ['white-threat-room', 'threat-lab-deployment']) {
+            const grp = this.g.scene.getObjectByName?.(nm);
+            if (grp) grp.traverse((o) => { const t = o.geometry?.type; if (t === 'TorusGeometry' || t === 'RingGeometry' || t === 'CircleGeometry') o.visible = false; });
+          }
+        } catch {}
+        try { w.renderer.setScissorTest(false); w.renderer.setViewport(0, 0, w.renderer.domElement.width, w.renderer.domElement.height); } catch {}
+        this.realRender();
+      },
       stage(dist) {
         this.g.vfx.clearScorches?.();   // one cell's burn must not stain the next cell's floor
         const p = this.g.player;

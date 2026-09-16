@@ -947,3 +947,34 @@ backblast/recoil (which kick BACKWARD off the muzzle, into where the caster stan
 point-blank orb in the frozen capture — they read in-game against the open ground behind a standing/flying
 caster. The flash-tint saturation is a real win for saturated-glow families (fire/energy/magic) and a
 deliberate near-no-op for pale-glow families (ice/water). City additive path still un-gradeable (iter 30).
+
+### Iteration 36 — THE GRADING GAUGE STOPS LYING (capture methodology, evidence: fire/ice clean re-capture + sheet)
+
+Not a renderer change — a GAUGE fix, and those matter (the flicker pass, §THE FLICKER: "a fix verified
+against a broken gauge is a coin toss"). Every capture cell for the last dozen iterations carried a gold
+"curl + ellipse" top-centre that I'd been dismissing as a harmless staging artifact. It is on every SHEET
+Robert reviews, and grading VFX past a photobomb is grading blind. Traced it properly this time with a
+scene probe: it is **training-lab set dressing** behind the `destination=training` powerworld stage — a
+`white-threat-room` dome of hoops (gold `#ffd24a` torus at y125/z220) + a `threat-lab-deployment` target
+ring (gold torus at **y11**/z160 — the ellipse a y>18 filter kept missing). NOT a game VFX bug; the
+capture just composes the VFX stage over the training hall.
+
+**Fix (`tools/capture-fxmatrix.mjs shoot()` — the ONE place a captured frame is rendered, so it can never
+be missed):** hide the RING geometries (Torus/Ring/Circle) inside those two named groups every frame, and
+KEEP the floor plane. ⚠ Hiding the whole groups also removed the dark floor, washing pale VFX (ice cloud)
+into a pale background — so the targeted ring-hide is deliberate: the floor's contrast is what lets pale
+families grade. Also belt-and-braces hides the reticle/throw-arc/player-mark aim helpers.
+
+Verified: fire + ice re-captured, **0 errors, 0 pageErrors** — every cell (charge/launch/flight/impact/
+aftermath/beam × L1/L2/L3) is now clean, floor + contrast intact, VFX unobstructed. The clean re-grade
+confirms fire/ice read as before (iter-34 family-coloured shock fronts, level progression) with nothing
+now masking them. Ref `artifacts/fx-matrix/sheets/fire.jpg` (clean).
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 36 | 2026-09-16 | GAUGE fix: removed the training-lab gold-ring photobomb from every capture cell (targeted ring-hide, floor kept) — grading is honest now, sheets are clean | none newly failing — this makes all prior/future grades trustworthy rather than read past an artifact | **PW ≈9.6** |
+
+**Why a gauge iteration counts:** four straight iterations (32–35) graded family×phase cells past this
+artifact; a clean gauge is the precondition for trusting any of those grades sit where I logged them. The
+probe method (`scene.traverse` → geometry/color/world-pos dump) is the reusable way to identify any future
+capture photobomb. No VFX renderer changed; no regression. City additive path still un-gradeable (iter 30).
