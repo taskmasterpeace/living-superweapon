@@ -125,7 +125,7 @@ export const ROSTER = [
     sig: ['LMB Lightning Flurry', 'RMB Arc Beam', 'SHIFT Blink', 'R Overclock'],
     abilities: {
       lmb: { type: 'rush', material: 'shock', name: 'Lightning Flurry', cost: 10, cd: 1.1, range: 60, hits: 12, interval: 0.05, damage: 6, finisher: 30, color: '#eaffff' },
-      rmb: { type: 'beam', material: 'shock', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 1080, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' },
+      rmb: { type: 'beam', material: 'shock', mode: 'zigzag', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 1080, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' },
       q: { type: 'projectile', material: 'shock', name: 'Chain Bolt', shockDuration:1.1, cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' },
       e: { type: 'cone', material: 'shock', name: 'Static Field', shockDuration:.8, kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
       f: { type: 'teleport', name: 'Zap Step', cost: 8, cd: 0.8, range: 44, color: '#eaffff' },
@@ -286,7 +286,7 @@ export const ROSTER = [
     blurb: 'Opens doors in the world itself. Orange in, blue out — fighters, fireballs, everything goes through. Geometry is a suggestion.',
     sig: ['RMB Dimensional Door (place orange, then blue)', 'LMB Rift Ray', 'E Step Through (blink)', 'R Event Horizon'],
     abilities: {
-      lmb: { type: 'beam', material: 'arcane', name: 'Rift Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 950, maxLen: 145, dps: 56, kiPerSec: 16, steer: 13, color: '#ff8a2a', color2: '#ffd9b0' },
+      lmb: { type: 'beam', material: 'shadow', name: 'Rift Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 950, maxLen: 145, dps: 56, kiPerSec: 16, steer: 13, color: '#ff8a2a', color2: '#ffd9b0' },
       rmb: { type: 'portal', name: 'Dimensional Door', cost: 14, cd: 1.2, range: 85, dur: 14, colorA: '#ff8a2a', colorB: '#37c7ff' },
       q: { type: 'projectile', name: 'Fracture Bolt', cost: 7, cd: 0.4, damage: 17, speed: 88, radius: 1.3, blast: 6, color: '#ff8a2a', color2: '#fff' },
       e: { type: 'teleport', name: 'Step Through', cost: 11, cd: 1.3, range: 52, color: '#37c7ff' },
@@ -304,7 +304,7 @@ export const ROSTER = [
     blurb: 'Not a man — a machine of war. Battery-fed twin cannons, a pulse rifle, thruster exhaust, and armor that showers sparks instead of blood.',
     sig: ['LMB Twin Cannon (wide beam)', 'RMB Pulse Rifle (auto)', 'Q Reactor Burst (charge)', 'Metal: armored, sparks when hit'],
     abilities: {
-      lmb: { type: 'beam', material: 'energy', name: 'Twin Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 562, maxLen: 150, dps: 82, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 8, color: '#ff9a2a', color2: '#ffe0b0' },
+      lmb: { type: 'beam', material: 'energy', mode: 'throb', name: 'Twin Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 562, maxLen: 150, dps: 82, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 8, color: '#ff9a2a', color2: '#ffe0b0' },
       rmb: { type: 'rifle', name: 'Pulse Rifle', cost: 2, interval: 0.09, damage: 7, speed: 175, radius: 0.55, blast: 2.4, spread: 0.04, recoil: 1.2, color: '#ffd97a', color2: '#fff' },
       q: { type: 'charge', name: 'Reactor Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.4, dmgMin: 24, dmgMax: 80, maxBlast: 33, speedMin: 110, speedMax: 150, chargePower: 3, chest: true, color: '#ffd97a', color2: '#ffffff' },   // brief Tier1 #7: chest aperture, beam-speed orb, white core in a gold shell
       e: { type: 'cone', name: 'Vent Blast', kiPerSec: 16, range: 30, arc: 1.2, dps: 18, push: 50, lift: 4, color: '#c9cfd9' },
@@ -451,7 +451,7 @@ export const ROSTER = [
     blurb: 'A genius in a furnace-gold shell. Repulsors, a chest unibeam, and enough thrust to argue with gravity.',
     abilities: {
       lmb: { type: 'rifle', name: 'Repulsor Bolts', cost: 2, interval: 0.11, damage: 7, speed: 170, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1, color: '#ffd97a', color2: '#fff' },
-      rmb: { type: 'beam', material: 'energy', name: 'Unibeam', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 583, maxLen: 150, dps: 78, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#ffd97a', color2: '#fff' },
+      rmb: { type: 'beam', material: 'energy', mode: 'taper', name: 'Unibeam', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 583, maxLen: 150, dps: 78, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#ffd97a', color2: '#fff' },
       q: { type: 'projectile', name: 'Micro-Missiles', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 7, homing: 3, color: '#ff7a2a', color2: '#ffd97a' },
       e: { type: 'cone', name: 'Flare Vent', kiPerSec: 16, range: 28, arc: 1.2, dps: 18, push: 44, color: '#ffd97a' },
       f: { type: 'buff', name: 'Overpower', cost: 24, cd: 18, mult: 1.55, dur: 10, color: '#ffd97a', color2: '#fff' },

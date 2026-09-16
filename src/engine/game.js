@@ -80,6 +80,7 @@ import {equipmentPolicy,selectedGadget} from './equipment-policy.js';
 import {inventoryAdmission,captureHeldWeapon,storeWeaponSnapshot,storedWeapon,consumeStoredWeapon,restoreWeaponState} from './inventory-model.js';
 import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
+import {BeamGallery} from './beam-gallery.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf, beamModeOf, visOf } from '../data/visual.js';
 import { sfxOf } from '../data/sfx.js';
@@ -313,6 +314,8 @@ const MODE_IMPL = {
         // An explicit menu choice, not an invulnerability/debug override.
         // Normal resources, physics and controls; B can add a rival on demand.
         g.ms.practice=true;
+      } else if(o.encounter === 'gallery' && !o.twoPlayer){
+        g.ms.gallery = new BeamGallery(g);       // a proving stand: every beam×mode, no fight
       } else g.ms.enemy = o && o.twoPlayer ? hs[1]
         : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
       if(o.squad&&!o.twoPlayer){
@@ -350,6 +353,7 @@ const MODE_IMPL = {
       g.ms.convoyOperation?.update(dt);
       if(g.ms.threatLab?.state==='field')g.ms.fieldResearch??=new FieldResearch(g);
       g.ms.fieldResearch?.update(dt);
+      g.ms.gallery?.update(dt);
       g.pwStage?.transport?.update(dt);
       for(const f of g.entities)if(f._threatScan)updateThreatScan(g,f,dt);
       if(!g.player?._threatScan)clearScannerPanel(g);
@@ -1972,6 +1976,7 @@ export class Game {
     this.ms?.frontline?.dispose();
     this.ms?.zombies?.dispose();
     this.ms?.desertLaw?.dispose();
+    this.ms?.gallery?.dispose();
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
     // ⚠ THE FRAME CLAIM goes home too (Wave 3 VIEW rider) — a camera claim that survives a reset is

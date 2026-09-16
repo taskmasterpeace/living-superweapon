@@ -239,6 +239,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         <button id="pwCampaign">Campaign records</button>
         <button id="pwHighwall">HIGHWALL proving ground</button>
         <button id="pwRank">📊 Rankings</button>
+        <button id="pwGallery" title="Flip through every beam and mode in third person, no fight">◈ Beam Gallery</button>
         <button id="pwOpt">⚙ Options</button>
         <button id="pwHow">❓ How to Play</button>
       </div>
@@ -382,6 +383,7 @@ body.phone #pwTitle h1{ font-size:34px; }
     el.querySelector('#pwNewsroom').onclick = () => ctx.openNewsroom?.({heroId:selYou.id});
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
     el.querySelector('#pwRank').onclick = () => hud.showRankings();
+    el.querySelector('#pwGallery').onclick = () => { save(); ctx.enter({ mode: 'powerworld', p1: selYou.id, encounter: 'gallery', cameraPreset: 'character', daylight, weatherPreset }); };
     el.querySelector('#pwGo').onclick = () => {
       save();
       // ⚠ `p2` is what every mode calls the opponent — powerworld's setup reads `o.enemy || o.p2`.

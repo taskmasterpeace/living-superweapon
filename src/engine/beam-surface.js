@@ -30,6 +30,9 @@ export function beamVisualFamily(options={}){
  if(fam==='ice'||options.dtype==='cold')return 'ice';
  if(fam==='water'||fam==='toxic')return 'fluid';
  if(fam==='electric')return 'shock';
+ // THE DARK / VOID BEAM (Robert liked it on the poster: "the light beam and a dark void beam… I like
+ // this stuff"). Dark energy that ABSORBS — near-black body, a bright unstable rim, smoky distortion.
+ if(fam==='void'||options.material==='shadow'||options.material==='void')return 'void';
  if(fam==='magicViolet'||fam==='magicGreen')return 'magic';
  if(fam==='alien')return 'alien';
  if(fam==='energyRed'||fam==='energyBlue'||fam==='energySun')return 'ki';
@@ -70,6 +73,9 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   time={value:0};core.color.set(color);shadeKiCore(core,time);core.side=THREE.DoubleSide;
  } else if(family==='magic'){
   time={value:0};shadeSigilCore(core,time);core.side=THREE.DoubleSide;
+ } else if(family==='void'){
+  time={value:0};shadeVoidCore(core,time);core.blending=THREE.NormalBlending;core.side=THREE.DoubleSide;core.opacity=1;
+  glow.color.set(color);   // the halo is the only bright thing — the void's escaping edge
  } else if(family==='ray'){
   time={value:0};shadeRayCore(core,time);core.side=THREE.DoubleSide;
   glow.opacity*= .45;   // a ray is nearly all core — the halo stays a whisper
@@ -79,6 +85,29 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   time={value:0};shadeAlienCore(core,time);core.side=THREE.DoubleSide;
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE VOID CORE (dark energy): near-black body that reads as ABSORBING, with the authored colour
+// surviving only as a bright, unstable rim (fresnel) and smoky gravitational distortion crawling the
+// shaft. Normal-blended so the dark actually darkens against the bright desert — the anti-additive beam.
+function shadeVoidCore(material,time){
+ material.forceSinglePass=true;material.side=THREE.DoubleSide;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.voidTime=time;
+  shader.vertexShader='attribute float beamArc;varying float voidArc;varying vec3 voidNormal,voidEye,voidField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+voidArc=beamArc;voidNormal=normalize(normalMatrix*normal);voidField=normal;voidEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
+  shader.fragmentShader='uniform float voidTime;varying float voidArc;varying vec3 voidNormal,voidEye,voidField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(voidField);
+float facing=abs(dot(normalize(voidNormal),normalize(voidEye)));      // 1 at the silhouette-facing centre
+float flow=voidArc*.3-voidTime*7.0;
+float smoke=.5+.5*sin(dot(fld,vec3(5.3,2.7,4.1))+flow)+.35*sin(dot(fld,vec3(2.1,6.3,3.7))*1.7-flow*1.3);
+vec3 rimCol=diffuseColor.rgb*1.9+vec3(.05);                            // the authored colour, escaping
+float rim=pow(1.0-facing,2.4);                                        // bright only at the edge
+vec3 dark=vec3(.015,.012,.022)*(0.7+0.3*smoke);                      // near-black, faintly churning
+diffuseColor.rgb=mix(dark,rimCol,rim);
+diffuseColor.a=(.55+.45*rim)*smoothstep(0.0,1.2,voidArc);            // opaque enough to occlude = absorbs`);
+ };
+ material.customProgramCacheKey=()=> 'beam-void-v1';
 }
 
 // THE UNEARTHLY BEAM (alien): the ki stream, but the hue SHIFTS along the shaft (orange↔green) and

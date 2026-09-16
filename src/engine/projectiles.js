@@ -1226,13 +1226,16 @@ class BeamHose {
         if(M.kind==='pulsed'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=1-M.depth*.5+M.depth*p*p*p; }
         else if(M.kind==='beaded'){ const p=.5+.5*Math.sin(arc*M.k-mt*M.speed); rad*=M.min+(1-M.min)*Math.pow(p,M.sharp); }
         else if(M.kind==='lance') rad*=M.tight;
+        else if(M.kind==='taper') rad*=M.wide+(M.tip-M.wide)*t;         // fat hand -> fine tip
+        else if(M.kind==='throb') rad*=1+M.depth*Math.sin(mt*M.speed);  // the whole beam breathes together
         else if(M.kind==='converging') rad*=M.wide+(M.tight-M.wide)*t;
         else if(M.kind==='diverging') rad*=M.wide+(M.spread-M.wide)*t;
-        else {   // lateral modes: spiral (corkscrew), waveform (S-wave), whip (lash growing to the tip)
+        else {   // lateral modes: spiral (corkscrew), waveform (S), whip (grows to tip), zigzag (angular)
           const ramp=Math.min(1,arc/(baseR*5))*(receiver?clamp((length-arc)/Math.max(1,baseR*4),0,1):1);
           let A=baseR*M.amp*ramp; if(M.kind==='whip') A*=t;
           const th=arc*M.k-mt*M.speed;
           if(M.kind==='spiral'){ const c=Math.cos(th)*A,s=Math.sin(th)*A; mox=ex*c+fx*s;moy=ey*c+fy*s;moz=ez*c+fz*s; }
+          else if(M.kind==='zigzag'){ const tri=2*Math.abs(2*(th/(2*Math.PI)-Math.floor(th/(2*Math.PI)+.5)))-1; const s=tri*A; mox=ex*s;moy=ey*s;moz=ez*s; }
           else { const s=Math.sin(th)*A; mox=ex*s;moy=ey*s;moz=ez*s; }
         }
       }
