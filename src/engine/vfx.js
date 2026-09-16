@@ -168,18 +168,18 @@ export class VFX {
     // Level I has none, II a plume, III a real column with straggler puffs on a short timer.
     if (LV && LV.cloud > 0) {
       const rise = imp.cloudRise, dur = imp.cloudDur;
-      const puffs = Math.round((7 + power * 5) * LV.cloud);
-      // ⚠ soot needs DARKNESS whatever the family palette says — on a bright stage a pale cloud
-      // reads as a marshmallow, not smoke (goal board iter 1). One dark stop anchors every family.
-      this.P.burst(pos.x, pos.y + 1, pos.z, { count: puffs, speed: 4 + power * 2, life: dur, size: 6.5, color: pal ? [...pal.smoke, '#15161d'] : ['#20222c', '#15161d'], up: rise, grav: -rise * 0.35, drag: 1.5 });
-      let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 3;
+      // REAL SMOKE — normal-blend billboard puffs (the additive system cannot render soot; goal
+      // board iter 2 root cause). Column now, stragglers climbing behind it at level III.
+      const puffs = Math.round((5 + power * 3) * LV.cloud);
+      this.smokePuffs(pos, { count: puffs, colors: pal ? [...pal.smoke, '#191a1e'] : undefined, rise, dur, size: 4.5 + power * 2, spread: radius * 0.3, opacity: 0.55 });
+      let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 2;
       if (stragglers > 0) this._add({
         update: (dt) => {
           ct += dt;
-          if (ct > 0.22 * (fired + 1) && fired < stragglers) {
+          if (ct > 0.3 * (fired + 1) && fired < stragglers) {
             fired++;
-            this.P.burst(pos.x + rand(-radius, radius) * 0.25, pos.y + 2 + fired * 2, pos.z + rand(-radius, radius) * 0.25,
-              { count: 3, speed: 2.5, life: dur * 0.8, size: 5.5, color: pal ? pal.smoke : ['#20222c'], up: rise * 0.8, grav: -rise * 0.3, drag: 1.6 });
+            this.smokePuffs({ x: pos.x + rand(-radius, radius) * 0.2, y: pos.y + 1 + fired * 2.5, z: pos.z + rand(-radius, radius) * 0.2 },
+              { count: 2, colors: pal ? pal.smoke : undefined, rise: rise * 0.8, dur: dur * 0.85, size: 4 + power * 1.5, spread: 1.5, opacity: 0.45 });
           }
           return fired >= stragglers;
         },
@@ -204,7 +204,9 @@ export class VFX {
               ft += dt;
               if (ft > 0.55 * (fw + 1) && fw < 2) {
                 fw++;
-                this.P.burst(pos.x + rand(-2, 2), gy, pos.z + rand(-2, 2), { count: Math.round(5 * AN), speed: 2.5, life: 1.4 - fw * 0.3, size: 2.2, color: fw === 1 ? [pal.glow, pal.smoke[0]] : pal.smoke, up: 3.5, grav: -1.4, drag: 2.2, shrink: true });
+                // the soot waves are REAL smoke now — normal-blend puffs the additive system can't fake
+                this.smokePuffs({ x: pos.x + rand(-2, 2), y: gy + 1, z: pos.z + rand(-2, 2) },
+                  { count: Math.round(3 * AN), colors: fw === 1 ? [pal.smoke[0], '#241c14'] : [...pal.smoke, '#191a1e'], rise: 5, dur: 1.9, size: 3.4, spread: 1.4, opacity: 0.5 });
               }
               return fw >= 2;
             },
@@ -245,6 +247,68 @@ export class VFX {
     // the stain is a TINT, not a hole — pal.deep rendered as harsh black ellipses (goal board iter 1)
     if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, pal ? pal.glow : color2);
     this.world.shake((0.6 + power * 0.7) * (LV ? 0.7 + 0.3 * LV.kb : 1));
+  }
+
+  // ---- REAL SMOKE (goal board iter 3 #2) --------------------------------------------------------
+  // The particle system is ADDITIVE, so dark soot mathematically cannot render on it — a pale
+  // marshmallow was the ceiling. Smoke is its own small pool of NORMAL-blend billboards: soft
+  // canvas blob, ramps in, rises, grows, dies. ≤48 sprites, borrowed and returned, budget honest.
+  _smokeTexture() {
+    if (this._smokeT) return this._smokeT;
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+    g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(0.55, 'rgba(255,255,255,0.42)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    // a few dimmer blotches so a rotating puff reads as VAPOR, not a disc
+    for (let i = 0; i < 7; i++) {
+      const a = Math.random() * TAU, r = 18 + Math.random() * 26;
+      const bx = 64 + Math.cos(a) * r, by = 64 + Math.sin(a) * r;
+      const b = x.createRadialGradient(bx, by, 2, bx, by, 16 + Math.random() * 10);
+      b.addColorStop(0, 'rgba(0,0,0,0.22)'); b.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = b; x.beginPath(); x.arc(bx, by, 30, 0, TAU); x.fill();
+    }
+    this._smokeT = new THREE.CanvasTexture(c);
+    return this._smokeT;
+  }
+  _puff() {
+    this._smokePool = this._smokePool || [];
+    let p = this._smokePool.find(s => !s._live);
+    if (!p) {
+      if (this._smokePool.length >= 48) return null;   // budget spent — a missing puff beats a spike
+      p = new THREE.Sprite(new THREE.SpriteMaterial({ map: this._smokeTexture(), transparent: true, depthWrite: false, opacity: 0 }));
+      this.scene.add(p); this._smokePool.push(p);
+    }
+    p._live = true; p.visible = true;
+    return p;
+  }
+  smokePuffs(pos, o = {}) {
+    const n = Math.max(1, Math.round(o.count ?? 6)), colors = o.colors || ['#20222c', '#15161d'];
+    const rise = o.rise ?? 8, dur = o.dur ?? 2.2, size = o.size ?? 6, spread = o.spread ?? 3, op = o.opacity ?? 0.5;
+    for (let i = 0; i < n; i++) {
+      const p = this._puff(); if (!p) return;
+      p.material.color.set(colors[(Math.random() * colors.length) | 0]);
+      p.material.rotation = Math.random() * TAU;
+      const rot = rand(-0.6, 0.6), drx = rand(-1.4, 1.4), drz = rand(-1.4, 1.4);
+      const px = pos.x + rand(-spread, spread), pz = pos.z + rand(-spread, spread);
+      let py = pos.y + rand(0, spread * 0.6);
+      const s0 = size * rand(0.6, 1);
+      const life = dur * rand(0.75, 1.15);
+      let t = 0;
+      p.position.set(px, py, pz); p.scale.setScalar(s0 * 0.6);
+      this._add({
+        update: (dt) => {
+          t += dt; const k = Math.min(1, t / life);
+          py += rise * dt * (1 - k * 0.55);
+          p.position.set(p.position.x + drx * dt, py, p.position.z + drz * dt);
+          p.scale.setScalar(s0 * (0.65 + k * 1.5));
+          p.material.rotation += rot * dt;
+          p.material.opacity = op * Math.min(1, t * 5) * Math.pow(1 - k, 1.25);
+          return k >= 1;
+        },
+        dispose: () => { p._live = false; p.visible = false; p.material.opacity = 0; },
+      });
+    }
   }
 
   // Ground shockwave: expanding flat ring + energy dome + dust + lightning skirt.

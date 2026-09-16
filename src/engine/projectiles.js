@@ -307,6 +307,33 @@ class Projectile {
       if (this._fx) this._ownMats = [...(this._ownMats || []), core.material];
       core.scale.setScalar(_lvS);
       const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7 * _lvS);
+      // THE RIBBON TRAIL (goal board iter 3 #1): particles smudge — a TRAIL is a strip swept along
+      // the last N positions, hot at the head, fading to nothing at the tail. One mesh, one draw,
+      // vertices rewritten in place each frame, camera-faced per segment. Energy-class bolts only.
+      if (this._fx && this._fx.f.flight.style !== 'none') {
+        const N = this._ribN = 14;
+        this._ribPos = new Float32Array(N * 3);
+        this._ribCount = 0;
+        const rg = new THREE.BufferGeometry();
+        rg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        const cols = new Float32Array(N * 2 * 3);
+        const gc = new THREE.Color(this._fx.f.palette.glow), cc = new THREE.Color(this._fx.f.palette.core);
+        for (let i = 0; i < N; i++) {
+          const t = i / (N - 1);
+          const c = cc.clone().lerp(gc, Math.min(1, t * 2)).multiplyScalar(1 - t * t);   // hot head, brightness IS the fade (additive)
+          cols.set([c.r, c.g, c.b], i * 6); cols.set([c.r, c.g, c.b], i * 6 + 3);
+        }
+        rg.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+        const idx = [];
+        for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+        rg.setIndex(idx);
+        this._ribMat = new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide });
+        this._ribbon = new THREE.Mesh(rg, this._ribMat);
+        this._ribbon.frustumCulled = false;
+        game.scene.add(this._ribbon);
+        this._ownGeos = [...(this._ownGeos || []), rg];
+        this._ownMats = [...(this._ownMats || []), this._ribMat];
+      }
       this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
       this._ownMats = [glow.material];
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
@@ -324,6 +351,7 @@ class Projectile {
 
   update(dt, game, substep=false) {
     if (this._voiceLoop && !substep) this._voiceLoop.set(0.55, this.pos, game.audio.dopplerMul ? game.audio.dopplerMul(this.pos, this.vel) : 1);
+    if (this._ribbon && !substep) this._updateRibbon(game);
     if(this.webControl&&!this._webControlInterrupted){
       const source=this.caster;
       if(!source?.alive||source._formDisposed||source._webControlEpoch!==this._webControlSourceEpoch||source.staggerT>0||source.stunT>0||source.frozenT>0||source.grabbedBy)this._webControlInterrupted=true;
@@ -854,8 +882,36 @@ class Projectile {
     game.particles.burst(this.pos.x,this.pos.y,this.pos.z,{count:count*2,speed:16,life:.2,size:this.radius*.6,color:[this.color,'#fff'],drag:3});
     return false;
   }
+  // Rewrite the strip in place: shift the node history, push the live head, and width each pair
+  // of verts perpendicular to BOTH the segment and the eye (pure number math — zero allocations).
+  _updateRibbon(game) {
+    const P = this._ribPos, N = this._ribN, v = this._ribbon.geometry.attributes.position.array;
+    for (let i = N - 1; i > 0; i--) { P[i * 3] = P[(i - 1) * 3]; P[i * 3 + 1] = P[(i - 1) * 3 + 1]; P[i * 3 + 2] = P[(i - 1) * 3 + 2]; }
+    P[0] = this.pos.x; P[1] = this.pos.y; P[2] = this.pos.z;
+    this._ribCount = Math.min(this._ribCount + 1, N);
+    const cam = game.world.camera.position;
+    const w0 = this.radius * (1.1 + ((this._fx?.level || 1) - 1) * 0.5);
+    for (let i = 0; i < N; i++) {
+      const j = Math.min(i, this._ribCount - 1), j2 = Math.min(j + 1, this._ribCount - 1);
+      const x = P[j * 3], y = P[j * 3 + 1], z = P[j * 3 + 2];
+      let dx = P[j * 3] - P[j2 * 3], dy = P[j * 3 + 1] - P[j2 * 3 + 1], dz = P[j * 3 + 2] - P[j2 * 3 + 2];
+      let dl = Math.hypot(dx, dy, dz);
+      if (dl < 1e-4) { dx = this.vel.x; dy = this.vel.y; dz = this.vel.z; dl = Math.hypot(dx, dy, dz) || 1; }
+      dx /= dl; dy /= dl; dz /= dl;
+      const ex = x - cam.x, ey = y - cam.y, ez = z - cam.z;
+      let wx = dy * ez - dz * ey, wy = dz * ex - dx * ez, wz = dx * ey - dy * ex;
+      const wl = Math.hypot(wx, wy, wz) || 1;
+      const w = w0 * (1 - (i / (N - 1)) * 0.85);
+      wx = wx / wl * w; wy = wy / wl * w; wz = wz / wl * w;
+      v[i * 6] = x + wx; v[i * 6 + 1] = y + wy; v[i * 6 + 2] = z + wz;
+      v[i * 6 + 3] = x - wx; v[i * 6 + 4] = y - wy; v[i * 6 + 5] = z - wz;
+    }
+    this._ribbon.geometry.attributes.position.needsUpdate = true;
+  }
+
   _dispose(game) {
     if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
+    if (this._ribbon) { game.scene.remove(this._ribbon); this._ribbon = null; }   // geo/mat die via _ownGeos/_ownMats
     if (this._voiceLoop) { this._voiceLoop.stop(); this._voiceLoop = null; }   // travel voice dies with the shot
     // every mesh branch declares its per-projectile materials in _ownMats — shared module
     // materials (steel, brass, tracer) must NEVER be disposed here (index-guessing children[1]

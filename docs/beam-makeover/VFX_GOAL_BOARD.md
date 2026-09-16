@@ -79,3 +79,18 @@ flames, softer scorch, longer arc re-strikes), then CHARGE styles, then IMPACT s
 | iter | date | what changed | worst cells | overall |
 |---|---|---|---|---|
 | 2 | 2026-09-16 | launch event · flight family styles · fire-then-smoke · arc re-strikes · tinted scorch · matrix scorch hygiene | flight 3.5 · aftereffect 3.5 (additive-smoke root cause named) | **4.3** |
+| 3 | 2026-09-16 | RIBBON TRAILS (real tapered strip along the path, one draw/bolt) · REAL SMOKE (normal-blend billboard pool — soot finally renders) · CHARGE STYLES (crystal orbit / arc bite / sigil ring / ember rise / droplet pull-in / plasma flicker) | charge sigil-ring sampling luck · impact dome still balloon · beams UNTOUCHED | **≈5.8** |
+
+### Iteration 3 — regraded (evidence: fire/ice/electric/magicViolet re-capture)
+
+| category | was → now | the critic |
+|---|---|---|
+| CHARGING | 5 → **5.5** | styles live; sigil ring can miss the sampled frame (spawn one immediately at hold-start) |
+| LAUNCHING | 5.5 → **6** | family plume + ring reads as departure at all three levels |
+| FLIGHT | 3.5 → **6** | THE RIBBON: white-hot head, family tail, tapers to nothing — a comet, not a smudge. To 8+: longer history (14→22 nodes), a head flare, per-style ribbon tint |
+| IMPACT | 5.5 → **6** | with smoke behind it the composition holds; dome peak opacity still too balloon; family debris silhouettes queued (ice SPIKES, fire tongues) |
+| AFTEREFFECT | 3.5 → **5.5** | REAL gray smoke hangs and rises; fire licks then soots. To 8+: smoke born warm and cooling to soot, denser at III, residue read on the ground |
+
+**Iteration 4 orders: beam families (the 24 beams are still stock — the lava octagon, SOL/VEGAS) ·
+ribbon length + head flare · warm-to-soot smoke gradient · guaranteed first sigil ring ·
+impact dome restructure + family debris silhouettes · full 12-family sweep + regrade.**

@@ -3764,6 +3764,45 @@ export class Game {
     });
   }
 
+  // CHARGE STYLES (goal board iter 3 #3, powerfx.js charge.style): the gather itself is generic —
+  // WHAT ORBITS/ARCS/RISES around it is the element's tell. Called per held frame; throttles inside.
+  chargeStyleFx(caster, fx, pos, k = 0.5, dt = 1 / 60) {
+    if (!fx || !pos) return;
+    const pal = fx.f.palette, P = this.particles;
+    caster._csAcc = (caster._csAcc || 0) + dt;
+    switch (fx.f.charge.style) {
+      case 'crystal': {   // hard shards on a tight orbit — ice is RIGID, nothing about it drifts
+        const a = this.time * 4;
+        for (const off of [0, Math.PI]) {
+          const r = 3.4 + k * 2;
+          P.spawn({ x: pos.x + Math.cos(a + off) * r, y: pos.y + Math.sin((a + off) * 1.7) * 1.6, z: pos.z + Math.sin(a + off) * r, vx: 0, vy: 0, vz: 0, life: 0.13, size: 1.6 + k, color: [pal.mist, '#ffffff'], drag: 0 });
+        }
+        break;
+      }
+      case 'arc':         // electricity cannot hold still — it BITES at the air around the gather
+        if (Math.random() < 0.12 + k * 0.18) this.vfx.lightning(pos, { color: pal.glow, count: 1, radius: 2.6 + k * 2.2, height: 3.5 });
+        break;
+      case 'sigil':       // magic draws a converging circle on the ground and sheds slow motes
+        if (caster._csAcc - (caster._csRing || 0) > 0.55) {
+          caster._csRing = caster._csAcc;
+          this.vfx.ring({ x: caster.pos.x, y: Math.max(0.4, caster.pos.y * 0.1 + 0.4), z: caster.pos.z }, { color: pal.glow, r0: 5 + k * 2.5, r1: 0.9, life: 0.5, flat: true, opacity: 0.5 });
+        }
+        if (Math.random() < 0.4) P.spawn({ x: pos.x + rand(-2.5, 2.5), y: pos.y + rand(-2, 1), z: pos.z + rand(-2.5, 2.5), vx: 0, vy: rand(1, 2.5), vz: 0, life: 0.6, size: 1.5, color: [pal.glow, pal.core], grav: -2, drag: 1.2 });
+        break;
+      case 'ember':       // fire breathes upward — loose, hot, hungry
+        P.spawn({ x: pos.x + rand(-2.5, 2.5), y: pos.y + rand(-2, 2), z: pos.z + rand(-2.5, 2.5), vx: rand(-1, 1), vy: rand(1.5, 3), vz: rand(-1, 1), life: 0.5, size: 1.5 + k, color: [pal.glow, pal.core], grav: -2.5, drag: 1.1, shrink: true });
+        break;
+      case 'droplet': {   // water is PULLED in from a ring — condensation, not combustion
+        const a2 = rand(0, TAU), r2 = 4.5 + k * 2;
+        P.spawn({ x: pos.x + Math.cos(a2) * r2, y: pos.y + rand(-1, 2), z: pos.z + Math.sin(a2) * r2, vx: -Math.cos(a2) * 11, vy: rand(-1, 1), vz: -Math.sin(a2) * 11, life: 0.38, size: 1.4, color: [pal.glow, pal.core], drag: 0.4 });
+        break;
+      }
+      case 'none': break;
+      default:            // plasma — the core cannot decide how bright it is (white flicker)
+        if (Math.random() < 0.22 + k * 0.3) P.spawn({ x: pos.x + rand(-1, 1), y: pos.y + rand(-1, 1), z: pos.z + rand(-1, 1), vx: 0, vy: 0, vz: 0, life: 0.1, size: 1.8 + k * 1.5, color: '#ffffff', drag: 0 });
+    }
+  }
+
   chargeGather(caster, color, pos, intensity = 1) {
     const n = Math.ceil(1 + intensity * 2);
     for (let i = 0; i < n; i++) {

@@ -337,6 +337,7 @@ export const TYPES = {
         orb.position.copy(m); orb.scale.setScalar(0.6 + st.chargeT * 1.6);
         if (st.sfx) st.sfx.ramp(st.chargeT / (def.maxCharge || 1.6));
         st.gather.update(st.chargeT,st.chargeT/(def.maxCharge||1.6));
+        g.chargeStyleFx?.(c, fxOf(visOf(def), def, c.def, 0.5 + st.chargeT), m, st.chargeT / (def.maxCharge || 1.6), inp.dt);
       } else if (inp.released || st.chargeT >= (def.maxCharge || 1.6) || dry) {
         // ran dry mid-charge → fire at whatever you paid for (never a frozen orb), with a clear cue
         if (dry) drained(c, g);
@@ -466,6 +467,7 @@ export const TYPES = {
         if (st.sfx) st.sfx.ramp(c01);
         st._chargeFx=c01; // consumed once, after the final pose and hit-reaction carrier
         st.gather?.update(st.chargeT,c01);
+        g.chargeStyleFx?.(c, fxOf(visOf(def), def, c.def, 0.5 + c01 * 1.5), m, c01, inp.dt);
         if (c01 > 0.6 && Math.random() < c01 * 0.4) g.world.shake(0.15 * c01);
       } else if (inp.released || (!inp.held) || dry) {
         // ⚠ `st.chargeT` is undefined if a release arrives without a charge ever having started
@@ -986,6 +988,7 @@ export const TYPES = {
         orb.position.copy(m); orb.scale.setScalar(1 + c01 * 2.6);
         if (st.sfx) st.sfx.ramp(c01);
         g.chargeGather(c, def.color || '#ffe8c0', m, 0.6 + c01 * 1.5);
+        g.chargeStyleFx?.(c, fxOf(visOf(def), def, c.def, 0.5 + c01 * 1.5), m, c01, inp.dt);
       } else if (inp.released || (!inp.held) || dry) {
         const c01 = st.chargeT / (def.maxCharge || 2.2);
         st.charging = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
@@ -1024,6 +1027,7 @@ export const TYPES = {
       c.vel.x *= 0.86; c.vel.z *= 0.86;
       g.chargeGather(c, def.color || '#ff6a1a', c.pos.clone().setY(c.pos.y + 5.5), 1 + st.fed * 0.02);
       if (st.sfx) st.sfx.ramp(Math.min(1, st.fed / (def.maxFeed || 120)));
+      g.chargeStyleFx?.(c, fxOf(visOf(def), def, c.def, 1 + st.fed / (def.maxFeed || 120)), c.pos.clone().setY(c.pos.y + 5.5), Math.min(1, st.fed / (def.maxFeed || 120)), inp.dt);
       if (Math.random() < 0.3) g.world.shake(0.12 + st.fed * 0.002);
       const done = c.ki <= 0.5 || st.fed >= (def.maxFeed || 120);
       if (inp.released || done) {
