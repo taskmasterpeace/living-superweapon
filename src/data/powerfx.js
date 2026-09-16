@@ -20,7 +20,7 @@ const F = {
     label: 'FIRE',
     palette: { core: '#fff3c8', glow: '#ff7a2a', deep: '#301006', smoke: ['#1c1a18', '#2a241e'], debris: ['#3a2c1c', '#57402a'], mist: '#ff9a3a' },
     charge: { style: 'ember', motes: '#ffb35a' },
-    launch: { flash: '#ffd9a0', ring: '#ff8a3d' },
+    launch: { style: 'backblast', flash: '#ffd9a0', ring: '#ff8a3d' },
     flight: { style: 'ember', trail: ['#ff7a2a', '#ffd24a'], wake: '#ff5a2a' },
     impact: { kernel: '#fff3c8', afterFx: 'embers', cloudRise: 14, cloudDur: 2.6 },
   },
@@ -28,7 +28,7 @@ const F = {
     label: 'ICE',
     palette: { core: '#ffffff', glow: '#bfeaff', deep: '#16344a', smoke: ['#cfe8f2', '#9fc4d6'], debris: ['#bfeaff', '#e8f8ff'], mist: '#d8f2ff' },
     charge: { style: 'crystal', motes: '#d8f2ff' },
-    launch: { flash: '#eaffff', ring: '#bfeaff' },
+    launch: { style: 'frost', flash: '#eaffff', ring: '#bfeaff' },
     flight: { style: 'glint', trail: ['#bfeaff', '#ffffff'], wake: '#9fd8f0' },
     impact: { kernel: '#eaffff', afterFx: 'frostmist', cloudRise: 3, cloudDur: 3.2 },
   },
@@ -36,7 +36,7 @@ const F = {
     label: 'WATER',
     palette: { core: '#eafcff', glow: '#3fa8d8', deep: '#0d2c40', smoke: ['#9fd0e0', '#7fb8cc'], debris: ['#3fa8d8', '#bfe8f4'], mist: '#bfe8f4' },
     charge: { style: 'droplet', motes: '#9fd8ea' },
-    launch: { flash: '#dff6ff', ring: '#3fa8d8' },
+    launch: { style: 'spray', flash: '#dff6ff', ring: '#3fa8d8' },
     flight: { style: 'spray', trail: ['#3fa8d8', '#eafcff'], wake: '#2f88b8' },
     impact: { kernel: '#eafcff', afterFx: 'droplets', cloudRise: 5, cloudDur: 1.8 },
   },
@@ -44,7 +44,7 @@ const F = {
     label: 'RED KI',
     palette: { core: '#fff0f0', glow: '#ff3b3b', deep: '#3a0d0d', smoke: ['#2a1416', '#1c1012'], debris: ['#5a2020', '#7a3030'], mist: '#ff6a5a' },
     charge: { style: 'plasma', motes: '#ff8a7a' },
-    launch: { flash: '#ffd9d0', ring: '#ff3b3b' },
+    launch: { style: 'burst', flash: '#ffd9d0', ring: '#ff3b3b' },
     flight: { style: 'streak', trail: ['#ff3b3b', '#fff0f0'], wake: '#e02a2a' },
     impact: { kernel: '#fff0f0', afterFx: 'sparks', cloudRise: 10, cloudDur: 2.0 },
   },
@@ -52,7 +52,7 @@ const F = {
     label: 'BLUE KI',
     palette: { core: '#f0f8ff', glow: '#3f8cff', deep: '#0d1c3a', smoke: ['#141a2a', '#101420'], debris: ['#20305a', '#30447a'], mist: '#5aa0ff' },
     charge: { style: 'plasma', motes: '#7ab0ff' },
-    launch: { flash: '#d0e4ff', ring: '#3f8cff' },
+    launch: { style: 'burst', flash: '#d0e4ff', ring: '#3f8cff' },
     flight: { style: 'streak', trail: ['#3f8cff', '#f0f8ff'], wake: '#2a6ae0' },
     impact: { kernel: '#f0f8ff', afterFx: 'sparks', cloudRise: 10, cloudDur: 2.0 },
   },
@@ -60,7 +60,7 @@ const F = {
     label: 'SOLAR KI',
     palette: { core: '#ffffff', glow: '#ffd24a', deep: '#3a2c0d', smoke: ['#2a2414', '#201c10'], debris: ['#5a4a20', '#7a6430'], mist: '#ffe89a' },
     charge: { style: 'plasma', motes: '#ffe89a' },
-    launch: { flash: '#fff8d0', ring: '#ffd24a' },
+    launch: { style: 'burst', flash: '#fff8d0', ring: '#ffd24a' },
     flight: { style: 'streak', trail: ['#ffd24a', '#ffffff'], wake: '#f0b830' },
     impact: { kernel: '#ffffff', afterFx: 'sparks', cloudRise: 10, cloudDur: 2.0 },
   },
@@ -68,7 +68,7 @@ const F = {
     label: 'ELECTRIC',
     palette: { core: '#ffffff', glow: '#8ad8ff', deep: '#10243a', smoke: ['#182430', '#101a24'], debris: ['#2a3c50', '#3a5068'], mist: '#baecff' },
     charge: { style: 'arc', motes: '#baecff' },
-    launch: { flash: '#eaffff', ring: '#8ad8ff' },
+    launch: { style: 'fork', flash: '#eaffff', ring: '#8ad8ff' },
     flight: { style: 'jitter', trail: ['#8ad8ff', '#ffffff'], wake: '#5ab8f0' },
     impact: { kernel: '#ffffff', afterFx: 'arcs', cloudRise: 6, cloudDur: 1.2 },
   },
@@ -76,7 +76,7 @@ const F = {
     label: 'VIOLET MAGIC',   // ⚠ the ONE purple family — Robert's explicit 2026-09-16 call
     palette: { core: '#f8f0ff', glow: '#a44df0', deep: '#26103a', smoke: ['#241830', '#1a1024'], debris: ['#3a2450', '#503468'], mist: '#c88af8' },
     charge: { style: 'sigil', motes: '#c88af8' },
-    launch: { flash: '#eedcff', ring: '#a44df0' },
+    launch: { style: 'sigil', flash: '#eedcff', ring: '#a44df0' },
     flight: { style: 'motes', trail: ['#a44df0', '#f8f0ff'], wake: '#8a3ad0' },
     impact: { kernel: '#f8f0ff', afterFx: 'glyphs', cloudRise: 4, cloudDur: 2.4 },
   },
@@ -84,7 +84,7 @@ const F = {
     label: 'GREEN MAGIC',
     palette: { core: '#f0fff0', glow: '#4fd86a', deep: '#0d3a1c', smoke: ['#142a18', '#102014'], debris: ['#205a30', '#307a44'], mist: '#8af8a4' },
     charge: { style: 'sigil', motes: '#8af8a4' },
-    launch: { flash: '#dcffdf', ring: '#4fd86a' },
+    launch: { style: 'sigil', flash: '#dcffdf', ring: '#4fd86a' },
     flight: { style: 'motes', trail: ['#4fd86a', '#f0fff0'], wake: '#3ab850' },
     impact: { kernel: '#f0fff0', afterFx: 'glyphs', cloudRise: 4, cloudDur: 2.4 },
   },
@@ -92,7 +92,7 @@ const F = {
     label: 'ALIEN',
     palette: { core: '#fff8e8', glow: '#ff9a2a', deep: '#33180a', smoke: ['#241a10', '#1a140c'], debris: ['#4a3018', '#684424'], mist: '#ffc07a' },
     charge: { style: 'orbit', motes: '#ffc07a' },   // alien energy ORBITS, doesn't rise — a tell of its own
-    launch: { flash: '#ffe8c8', ring: '#ff9a2a' },
+    launch: { style: 'orbit', flash: '#ffe8c8', ring: '#ff9a2a' },
     flight: { style: 'iridescent', trail: ['#ff9a2a', '#8affc0'], wake: '#e0801a' },   // shifting orange↔green
     impact: { kernel: '#fff8e8', afterFx: 'sparks', cloudRise: 8, cloudDur: 2.2 },
   },
@@ -100,7 +100,7 @@ const F = {
     label: 'TOXIC',   // gas/acid kits already exist — they deserve a family, not a fallback
     palette: { core: '#eaffd8', glow: '#9adf3a', deep: '#20330d', smoke: ['#2a3a18', '#202c12'], debris: ['#3a5020', '#4c682c'], mist: '#c0f070' },
     charge: { style: 'droplet', motes: '#c0f070' },
-    launch: { flash: '#f0ffd0', ring: '#9adf3a' },
+    launch: { style: 'spray', flash: '#f0ffd0', ring: '#9adf3a' },
     flight: { style: 'spray', trail: ['#9adf3a', '#eaffd8'], wake: '#7ab82a' },
     impact: { kernel: '#eaffd8', afterFx: 'droplets', cloudRise: 2, cloudDur: 3.4 },
   },
@@ -108,7 +108,7 @@ const F = {
     label: 'STEEL',   // thrown blades/canisters/ballistics — matte world, never glow
     palette: { core: '#f0f0f0', glow: '#c8c8c8', deep: '#2a2a2e', smoke: ['#3a3a3e', '#2a2a2e'], debris: ['#57504a', '#6a655a'], mist: '#b0b0b4' },
     charge: { style: 'none', motes: '#c8c8c8' },
-    launch: { flash: '#e8e8e8', ring: '#c8c8c8' },
+    launch: { style: 'recoil', flash: '#e8e8e8', ring: '#c8c8c8' },
     flight: { style: 'none', trail: ['#c8c8c8'], wake: '#a0a0a4' },
     impact: { kernel: '#f0f0f0', afterFx: 'shrapnel', cloudRise: 8, cloudDur: 2.0 },
   },
@@ -176,7 +176,7 @@ export function fxOf(visOrMaterial, a = {}, def = null, charge = 1) {
 // across every color in every other family's row; Robert's law, enforced mechanically).
 export function validateFx() {
   const problems = [];
-  const need = { palette: ['core', 'glow', 'deep', 'smoke', 'debris', 'mist'], charge: ['style', 'motes'], launch: ['flash', 'ring'], flight: ['trail', 'wake'], impact: ['kernel', 'afterFx', 'cloudRise', 'cloudDur'] };
+  const need = { palette: ['core', 'glow', 'deep', 'smoke', 'debris', 'mist'], charge: ['style', 'motes'], launch: ['style', 'flash', 'ring'], flight: ['trail', 'wake'], impact: ['kernel', 'afterFx', 'cloudRise', 'cloudDur'] };
   for (const [id, fam] of Object.entries(F)) {
     for (const [sec, keys] of Object.entries(need)) {
       if (!fam[sec]) { problems.push(`${id}: missing ${sec}`); continue; }

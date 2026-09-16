@@ -488,3 +488,47 @@ capture closing the city coverage gap — not a leap. We are deep in diminishing
 is 8.5+, and moving an individual cell 8.75→9 is increasingly a matter of motion-only reads and
 taste. Remaining sub-9, non-subjective: a properly-framed per-family CITY beam matrix (harness
 work, not a renderer gap).**
+
+### Iteration 23 — the LAUNCH column: a per-family tell + the flash that hid it
+
+The launch column was a flat **8.5 across all 12 families** on the 216-cell grade — the last
+uniformly-unimproved phase. Diagnosis found TWO causes, not one:
+
+1. **No per-family vocabulary.** `charge` has `charge.style` (ember/crystal/droplet/plasma/arc/
+   sigil/orbit) and `impact` has `impact.afterFx` (embers/frostmist/…) — but `launch` was only
+   `{ flash, ring }`, two COLOURS. So the muzzle event was ONE structure (flash + streak + cone +
+   ring + recoil) recoloured; every family left the hand identically.
+2. **The flash white-balled and buried everything.** The muzzle flash used `impact.kernel`
+   (near-white) at radius `4 + lvl*1.5` = **8.5 at level III — BIGGER than a real explosion's flash
+   heart** (`radius*0.3` ≈ 0.9–2 in `vfx.explode`). Under the iter-19 rich bloom that became a
+   featureless white sphere swallowing the ring, the streak AND any tell. And `launch.flash` — an
+   authored, family-tinted colour field — was going **completely unused**.
+
+**The fix (data + one renderer, no per-hero):**
+- Added **`launch.style`** to every family (`backblast` fire · `frost` ice · `spray` water/toxic ·
+  `burst` red/blue/sun ki · `fork` electric · `sigil` violet/green magic · `orbit` alien ·
+  `recoil` steel) + a `switch` in `muzzleFlash` — the launch analogue of `charge.style`/
+  `impact.afterFx`. Each family now RELEASES in its own way: fire kicks embers+flame BACK off the
+  muzzle, ice frost-puffs + sheds shards, water/toxic spray a droplet fan, ki pops a clean radial
+  ring, electric FORKS, magic flashes a flat runic ring, alien scatters an orbiting mote ring,
+  steel kicks matte dust (no glow). `validateFx` now requires the field.
+- **Tamed the flash**: family-tinted (`launch.flash`, the unused field) + sized `2 + lvl` (8.5 →
+  5 at III) so it PUNCHES without white-balling.
+
+Verified through the real engine (`capture-fxmatrix.mjs`): 5 families × 3 levels + a re-capture,
+**0 errors, 0 pageErrors**. At level III, **fire now launches WARM** (orange halo + orange
+backblast embers) and **electric COOL** (cyan halo + white forks) — distinguishable at a glance
+where before both were the same white ball. ⚠ The flash CORE stays white-hot (`vfx.flash` is a
+shared `addMat` at opacity 1 — honest for a muzzle blast; the HALO carries the family colour and
+the tell reads, which is the fix). Refs `artifacts/fx-matrix/shots/fire/3-launch.png`,
+`.../electric/3-launch.png`.
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 23 | 2026-09-16 | LAUNCH per-family style (8 tells) + family-tinted, right-sized flash (killed the white-ball that buried the phase) | launch 8.5 → ~9 (flash core still white-hot, by design) · city per-hero beam capture still flaky | **≈9.3** |
+
+**The launch column is no longer flat: every family LEAVES the hand in its own way, and the flash
+that made them all look identical is fixed. Three of four phases (charge/launch/impact) now carry a
+per-family behavioral vocabulary; flight already had per-family `style`. The remaining
+non-subjective gap stays the per-family CITY beam capture (harness). Everything else is motion-only
+reads and taste.**
