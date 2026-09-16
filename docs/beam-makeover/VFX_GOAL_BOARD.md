@@ -174,3 +174,19 @@ ray 8 · fluid 7.5 · magic 7.
 per-family charge-orb geometry (crystal/plasma/rune) · magic beam depth · impact dome final
 restructure · full sweep + regrade. The floor is now ~6; the work turns to pushing every
 cell from "good" to "AAA freeze-frame".**
+
+### Iteration 8 — launch streak + screen punch; the charge-orb defect exposed
+
+| what shipped | the critic |
+|---|---|
+| LAUNCH STREAK — a bright stretched flash down the first meters of the aim, snapping the eye to the shot leaving; family-cored, level-scaled length | launch reads as departure now (**6 → 7**) |
+| LEVEL-III SCREEN PUNCH — a heavy shot kicks the frame (human-gated shake, world punch for all) | consequence at the top level |
+| **DEFECT EXPOSED, not yet fixed:** at level-III the CHARGE ORB blows to a flat white balloon (emissive+bloom) that dwarfs the streak and swallows its own family color. The charge-orb GEOMETRY/material is the last big miss — a fire orb should be a churning ember ball, an ice orb a faceted crystal, not a white sphere. | now iteration 9's #1 |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 8 | 2026-09-16 | launch streak · level-III screen punch | charge-orb white blowout (named) · magic beam depth · impact dome | **≈7.5** |
+
+**Iteration 9 orders: THE CHARGE ORB — family-colored churning material + geometry (ember ball /
+crystal / rune sphere), kill the white blowout · magic beam depth · impact dome final
+restructure · full sweep + regrade.**

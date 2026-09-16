@@ -3828,9 +3828,14 @@ export class Game {
     // recoil dust at the feet. All family-colored, all level-scaled.
     const pal = fx.f.palette, lvl = fx.level;
     this.vfx.flash(m, fx.f.impact.kernel, (4 + lvl * 1.5) * scale, 0.1);
+    // the FIRST-METERS STREAK — the shot visibly leaving (goal board: launch was the low category)
+    const aim3 = caster.aim3 || caster.aim;
+    this.vfx.launchStreak(m, aim3, (7 + lvl * 4) * scale, pal.core);
     this.particles.burst(m.x, m.y, m.z, { count: 8 + lvl * 5, speed: 34 + lvl * 12, life: 0.26, size: 2 * scale, color: [pal.core, pal.glow], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.32, drag: 1.6, shrink: true });
     this.vfx.ring(m, { color: fx.f.launch.ring, r0: 0.4, r1: (3 + lvl * 1.4) * scale, life: 0.22, opacity: 0.75 });
     if (caster.pos.y < 2.5) this.particles.burst(caster.pos.x, 0.4, caster.pos.z, { count: 4 + lvl * 2, speed: 9, life: 0.5, size: 3, color: ['#57504a', '#8b8577'], up: 3, grav: 8, drag: 1.8 });
+    // LEVEL-III SCREEN PUNCH — a heavy shot the player fires kicks the frame (human only, no AI spam)
+    if (lvl >= 3) { this.world.punch(0.35 * scale); if (this.isHuman?.(caster)) this.world.shake(0.5); }
   }
 
   trail(caster, color) {

@@ -7,6 +7,7 @@ import {FlightSurfaceWake} from './flight-surface-wake.js';
 import {energyShellMaterial} from './energy-burst-material.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
+const _vfxV = new THREE.Vector3(), _vfxV2 = new THREE.Vector3();   // launch-streak scratch (not held across frames)
 
 
 // ⚠ THE VFX FINITE LAW — the visual twin of audio's `fin()`.
@@ -324,6 +325,26 @@ export class VFX {
         dispose: () => { p._live = false; p.visible = false; p.material.opacity = 0; },
       });
     }
+  }
+
+  // THE LAUNCH STREAK (goal board iter 8): a bright stretched flash down the first meters of the
+  // aim, snapping the eye to the shot LEAVING — the read a bigger muzzle orb never gave. One thin
+  // additive quad oriented to the aim, born long-and-bright, collapsing to nothing in ~0.12s.
+  launchStreak(pos, dir, len, color, life = 0.12) {
+    if (!okPos(pos, 'streak')) return;
+    const d = _vfxV.set(dir.x || 0, dir.y || 0, dir.z || 0); if (d.lengthSq() < 1e-6) return; d.normalize();
+    const geo = this._streakGeo || (this._streakGeo = new THREE.PlaneGeometry(1, 1));
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.copy(pos).addScaledVector(d, len * 0.5);
+    m.quaternion.setFromUnitVectors(_vfxV2.set(0, 1, 0), d);   // plane's +Y down the aim
+    m.scale.set(Math.max(0.4, len * 0.16), len, 1);
+    this.scene.add(m);
+    let t = 0;
+    this._add({
+      update: (dt) => { t += dt; const k = t / life; mat.opacity = 0.9 * (1 - k) * (1 - k); m.scale.x *= 0.9; return k >= 1; },
+      dispose: () => { this.scene.remove(m); mat.dispose(); },
+    });
   }
 
   // Ground shockwave: expanding flat ring + energy dome + dust + lightning skirt.
