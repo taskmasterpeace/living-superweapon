@@ -1,0 +1,961 @@
+{
+ "version": 1,
+ "mission": "War World Death & Reaction Presentation Set (Mac asset lab, Mission A)",
+ "targetRig": "public/models/modular-hero/modular-hero.glb (ual-deform-v1)",
+ "selectionConvention": "Slot ids classify by IMPACT direction; bankSemantic may name fall direction (mapping preserved, ids never rewritten).",
+ "statusLadder": [
+  "awaiting-source",
+  "retargeted-unreviewed",
+  "rig-playback-captured",
+  "visually-accepted",
+  "gameplay-proven"
+ ],
+ "counts": {
+  "satisfied": 11,
+  "awaitingSource": 9
+ },
+ "transferRequest": "docs/TRANSFER_REQUEST_ANIMATIONS.md",
+ "handoffDefaults": {
+  "blendMs": 120,
+  "maxAngularVelocityRadS": 6,
+  "settledLinearDamping": 0.92,
+  "settledAngularDamping": 0.95,
+  "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+ },
+ "slots": [
+  {
+   "slot": "death.impact-front.a",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual1full/Death01",
+   "bankSemantic": "death.a",
+   "take": "Death01",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual1/UAL1.glb",
+    "sha256": "d1cb4537efa4c06a953ca951e5935062f88c2580ac68e45045592d587bddb43d",
+    "license": "CC0-1.0"
+   },
+   "duration": 2.4000000953674316,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "standing",
+   "impactDirection": "front",
+   "reactionType": "death",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.46,
+     "angleDeg": 179.1,
+     "direction": "backward"
+    },
+    "endHipsHeight": 0.063,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.877,
+      "face": "upright"
+     },
+     {
+      "t": 0.6,
+      "hipsHeight": 0.667,
+      "face": "upright"
+     },
+     {
+      "t": 1.2,
+      "hipsHeight": 0.079,
+      "face": "up"
+     },
+     {
+      "t": 1.8,
+      "hipsHeight": 0.063,
+      "face": "up"
+     },
+     {
+      "t": 2.4,
+      "hipsHeight": 0.063,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Highwall soldier shot from the front at close/medium range; falls backward, settles supine.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 2.4000000953674316,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Clean backward collapse, settled flat supine final pose on the rig; no limb distortion; slight backward travel (0.46 rig units) stays in-clip.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/Death01-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death01-side-1.png"
+   ]
+  },
+  {
+   "slot": "death.impact-rear.a",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual1full/Death02",
+   "bankSemantic": "death.b",
+   "take": "Death02",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual1/UAL1.glb",
+    "sha256": "d1cb4537efa4c06a953ca951e5935062f88c2580ac68e45045592d587bddb43d",
+    "license": "CC0-1.0"
+   },
+   "duration": 2.4666666984558105,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "standing",
+   "impactDirection": "rear",
+   "reactionType": "death",
+   "finalOrientation": "face-down",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.972,
+     "angleDeg": 0.2,
+     "direction": "forward"
+    },
+    "endHipsHeight": 0.215,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.877,
+      "face": "upright"
+     },
+     {
+      "t": 0.617,
+      "hipsHeight": 0.369,
+      "face": "side"
+     },
+     {
+      "t": 1.233,
+      "hipsHeight": 0.297,
+      "face": "down"
+     },
+     {
+      "t": 1.85,
+      "hipsHeight": 0.229,
+      "face": "down"
+     },
+     {
+      "t": 2.467,
+      "hipsHeight": 0.215,
+      "face": "down"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Soldier shot from behind; pitches forward ~1 unit, ends prone.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 2.4666666984558105,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Strong forward pitch with clear rear-impact read; prone final pose; forward travel must be absorbed by simulation anchoring (policy in-place).",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/Death02-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Death02-side-1.png"
+   ]
+  },
+  {
+   "slot": "knockdown.impact-front.heavy",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/Hit_Knockback",
+   "bankSemantic": "shared.knockdown.rear",
+   "take": "Hit_Knockback",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 0.8333333134651184,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "standing",
+   "impactDirection": "front",
+   "reactionType": "knockdown",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.048,
+     "angleDeg": -175.2,
+     "direction": "in-place"
+    },
+    "endHipsHeight": 0.057,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.611,
+      "face": "upright"
+     },
+     {
+      "t": 0.208,
+      "hipsHeight": 0.436,
+      "face": "up"
+     },
+     {
+      "t": 0.417,
+      "hipsHeight": 0.061,
+      "face": "up"
+     },
+     {
+      "t": 0.625,
+      "hipsHeight": 0.056,
+      "face": "up"
+     },
+     {
+      "t": 0.833,
+      "hipsHeight": 0.057,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Nonlethal heavy impact (blast wave, superweapon shove); knocked flat on back, pairs with getup.from-supine.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 0.8333333134651184,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Fast (0.83 s) full knockback to supine; front-impact read is unambiguous; in-place.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Hit_Knockback-side-1.png"
+   ]
+  },
+  {
+   "slot": "collapse.weakened",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/IdleToLay",
+   "bankSemantic": "shared.collapse",
+   "take": "IdleToLay",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 3,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "standing",
+   "impactDirection": "unspecified",
+   "reactionType": "death",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.153,
+     "angleDeg": -179.1,
+     "direction": "backward"
+    },
+    "endHipsHeight": 0.044,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.877,
+      "face": "upright"
+     },
+     {
+      "t": 0.75,
+      "hipsHeight": 0.845,
+      "face": "upright"
+     },
+     {
+      "t": 1.5,
+      "hipsHeight": 0.217,
+      "face": "side"
+     },
+     {
+      "t": 2.25,
+      "hipsHeight": 0.026,
+      "face": "up"
+     },
+     {
+      "t": 3,
+      "hipsHeight": 0.044,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Bleed-out / non-directional death; slow controlled collapse to supine (3.0 s).",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 3,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Reads as controlled lying-down more than combat death; acceptable for bleed-out only — do not use for gunshot reactions.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/IdleToLay-side-1.png"
+   ]
+  },
+  {
+   "slot": "death.airborne.fall",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/LiftAir_Fall",
+   "bankSemantic": "death.airborne.fall",
+   "take": "LiftAir_Fall",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 0.9333333373069763,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "airborne",
+   "impactDirection": "unspecified",
+   "reactionType": "death",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.121,
+     "angleDeg": -179,
+     "direction": "in-place"
+    },
+    "endHipsHeight": 0.044,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.883,
+      "face": "upright"
+     },
+     {
+      "t": 0.233,
+      "hipsHeight": 0.266,
+      "face": "up"
+     },
+     {
+      "t": 0.467,
+      "hipsHeight": 0.346,
+      "face": "up"
+     },
+     {
+      "t": 0.7,
+      "hipsHeight": 0.03,
+      "face": "up"
+     },
+     {
+      "t": 0.933,
+      "hipsHeight": 0.044,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Airborne kill, part 1: limp fall entry. Chain: fall -> fall.loop while airborne -> impact on ground contact.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 0.9333333373069763,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Limp-body read; chain into death.airborne.fall.loop.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall-side-1.png"
+   ]
+  },
+  {
+   "slot": "death.airborne.fall.loop",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/LiftAir_Fall_Air_Loop",
+   "bankSemantic": "death.airborne.fall.loop",
+   "take": "LiftAir_Fall_Air_Loop",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 1.2999999523162842,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "airborne",
+   "impactDirection": "unspecified",
+   "reactionType": "death",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0,
+     "angleDeg": 0,
+     "direction": "in-place"
+    },
+    "endHipsHeight": 0.172,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.172,
+      "face": "up"
+     },
+     {
+      "t": 0.325,
+      "hipsHeight": 0.183,
+      "face": "up"
+     },
+     {
+      "t": 0.65,
+      "hipsHeight": 0.194,
+      "face": "up"
+     },
+     {
+      "t": 0.975,
+      "hipsHeight": 0.183,
+      "face": "up"
+     },
+     {
+      "t": 1.3,
+      "hipsHeight": 0.172,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Airborne kill, part 2: hold while falling (loop until ground contact).",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 1.2999999523162842,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Loopable limp fall; loop=one-shot in registry because the RUNTIME decides repetition by airtime.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Air_Loop-side-1.png"
+   ]
+  },
+  {
+   "slot": "death.airborne.impact",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/LiftAir_Fall_Impact",
+   "bankSemantic": "death.airborne.impact",
+   "take": "LiftAir_Fall_Impact",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 0.6666666865348816,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "airborne",
+   "impactDirection": "lower-body",
+   "reactionType": "prone death",
+   "finalOrientation": "face-up",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.014,
+     "angleDeg": 179.2,
+     "direction": "in-place"
+    },
+    "endHipsHeight": 0.044,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.172,
+      "face": "up"
+     },
+     {
+      "t": 0.167,
+      "hipsHeight": 0.162,
+      "face": "up"
+     },
+     {
+      "t": 0.333,
+      "hipsHeight": 0.16,
+      "face": "up"
+     },
+     {
+      "t": 0.5,
+      "hipsHeight": 0.041,
+      "face": "up"
+     },
+     {
+      "t": 0.667,
+      "hipsHeight": 0.044,
+      "face": "up"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Airborne kill, part 3: ground impact to settled supine; hand off to restrained ragdoll AFTER this completes.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 0.6666666865348816,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Impact settles supine at ground level (end hips 0.044); the correct spin-free handoff point for aerial kills.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LiftAir_Fall_Impact-side-1.png"
+   ]
+  },
+  {
+   "slot": "getup.from-prone",
+   "status": "rig-playback-captured",
+   "bank": "paid-motion-bank.json",
+   "bankId": "paid/knockdown-getup/AS_KG_Front_Getup",
+   "bankSemantic": "getup-front",
+   "take": "Paid_AS_KG_Front_Getup",
+   "source": {
+    "pack": "knockdown-getup",
+    "file": "knockdown-getup/In_Place/AS_KG_Front_Getup.fbx",
+    "take": "Take 001",
+    "sha256": "2023f00eb9f1000a9e17f23da978adc5f31cf6a7938bdb4454cc4363d06c58bc",
+    "license": "LicenseRef-Purchased-Asset"
+   },
+   "duration": 1.6666666269302368,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "prone",
+   "impactDirection": "unspecified",
+   "reactionType": "recovery",
+   "finalOrientation": "upright",
+   "computedMotion": null,
+   "rootMotionPolicy": "in-place (simulation owns root; source trajectory in sourceMotion metadata)",
+   "useCase": "Nonlethal recovery from face-down; pairs with forward knockdowns.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 1.6666666269302368,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Source animation-only export has no bind pose. Shared neutral anatomical-axis calibration preserves motion direction and continuous twist; anatomical/rest twist and fingers require rendered review.",
+    "Target proportions differ; paired/prop contact needs final gameplay grip constraint.",
+    "No impact/contact/release timing is inferred from the filename.",
+    "Absolute axial twist is unknown without a true bind pose; neutral-reference twist and fingers require rendered review."
+   ],
+   "visualNotes": "PURCHASED KG pack clip on the actual rig: prone -> kneel -> stand, natural weight, no floor penetration observed across 10 phase frames.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Front_Getup-side-1.png"
+   ]
+  },
+  {
+   "slot": "getup.from-supine",
+   "status": "rig-playback-captured",
+   "bank": "paid-motion-bank.json",
+   "bankId": "paid/knockdown-getup/AS_KG_Back_Getup",
+   "bankSemantic": "getup-back",
+   "take": "Paid_AS_KG_Back_Getup",
+   "source": {
+    "pack": "knockdown-getup",
+    "file": "knockdown-getup/In_Place/AS_KG_Back_Getup.fbx",
+    "take": "Take 001",
+    "sha256": "d3c109b3dd6a7b347a9765cd3560a60f673daa4ccd1c040574bd2a74ff5344d5",
+    "license": "LicenseRef-Purchased-Asset"
+   },
+   "duration": 1.7999999523162842,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "supine",
+   "impactDirection": "unspecified",
+   "reactionType": "recovery",
+   "finalOrientation": "upright",
+   "computedMotion": null,
+   "rootMotionPolicy": "in-place (simulation owns root; source trajectory in sourceMotion metadata)",
+   "useCase": "Nonlethal recovery from face-up; pairs with knockdown.impact-front.heavy.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 1.7999999523162842,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Source animation-only export has no bind pose. Shared neutral anatomical-axis calibration preserves motion direction and continuous twist; anatomical/rest twist and fingers require rendered review.",
+    "Target proportions differ; paired/prop contact needs final gameplay grip constraint.",
+    "No impact/contact/release timing is inferred from the filename.",
+    "Absolute axial twist is unknown without a true bind pose; neutral-reference twist and fingers require rendered review."
+   ],
+   "visualNotes": "PURCHASED KG pack clip on the actual rig; clean supine-to-stand.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/Paid_AS_KG_Back_Getup-side-1.png"
+   ]
+  },
+  {
+   "slot": "getup.kipup",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/KipUp",
+   "bankSemantic": "shared.getup.kipup",
+   "take": "KipUp",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 1.1666666269302368,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "supine",
+   "impactDirection": "unspecified",
+   "reactionType": "recovery",
+   "finalOrientation": "upright",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.153,
+     "angleDeg": 0.9,
+     "direction": "forward"
+    },
+    "endHipsHeight": 0.877,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.044,
+      "face": "up"
+     },
+     {
+      "t": 0.292,
+      "hipsHeight": 0.212,
+      "face": "up"
+     },
+     {
+      "t": 0.583,
+      "hipsHeight": 0.658,
+      "face": "upright"
+     },
+     {
+      "t": 0.875,
+      "hipsHeight": 0.801,
+      "face": "upright"
+     },
+     {
+      "t": 1.167,
+      "hipsHeight": 0.877,
+      "face": "upright"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Heroic fast recovery (superweapons, elite units) from supine.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 1.1666666269302368,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Athletic kip-up; too heroic for ordinary soldiers — gate by unit class.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/KipUp-side-1.png"
+   ]
+  },
+  {
+   "slot": "getup.from-supine.slow",
+   "status": "rig-playback-captured",
+   "bank": "warworld-motion-bank.json",
+   "bankId": "ual2full/LayToIdle",
+   "bankSemantic": "shared.getup.supine",
+   "take": "LayToIdle",
+   "source": {
+    "file": "assets-src/modular-character/source/full-library-2026-09-14/ual2/UAL2.glb",
+    "sha256": "866c2ee822d30f0ceed521f50a5e84316d58ee4487d0b02158370bb988452416",
+    "license": "CC0-1.0"
+   },
+   "duration": 1.5333333015441895,
+   "loop": false,
+   "skeleton": "ual-deform-v1 (53 mapped bones on modular-hero.glb)",
+   "entryPosture": "supine",
+   "impactDirection": "unspecified",
+   "reactionType": "recovery",
+   "finalOrientation": "upright",
+   "computedMotion": {
+    "fall": {
+     "displacement": 0.153,
+     "angleDeg": 0.9,
+     "direction": "forward"
+    },
+    "endHipsHeight": 0.877,
+    "phases": [
+     {
+      "t": 0,
+      "hipsHeight": 0.044,
+      "face": "up"
+     },
+     {
+      "t": 0.383,
+      "hipsHeight": 0.025,
+      "face": "up"
+     },
+     {
+      "t": 0.767,
+      "hipsHeight": 0.323,
+      "face": "up"
+     },
+     {
+      "t": 1.15,
+      "hipsHeight": 0.538,
+      "face": "side"
+     },
+     {
+      "t": 1.533,
+      "hipsHeight": 0.877,
+      "face": "upright"
+     }
+    ]
+   },
+   "rootMotionPolicy": "in-place (source values preserved; simulation owns displacement)",
+   "useCase": "Slow deliberate recovery; wounded or cautious units.",
+   "ragdollHandoff": {
+    "trigger": "clip-complete",
+    "atSeconds": 1.5333333015441895,
+    "blendMs": 120,
+    "maxAngularVelocityRadS": 6,
+    "settledLinearDamping": 0.92,
+    "settledAngularDamping": 0.95,
+    "note": "Hand off at clip end (trigger=clip-complete). Grounded settled endings may clamp angular velocity to 2 rad/s. If displaced mid-clip, abandon to full ragdoll from the current sampled pose."
+   },
+   "retargetConcerns": [
+    "Same-skeleton source; only leaf finger/toe tips omitted."
+   ],
+   "visualNotes": "Unhurried supine-to-stand.",
+   "evidence": [
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-front-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-front-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-front-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-front-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-front-1.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-side-0.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-side-0.25.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-side-0.5.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-side-0.75.png",
+    "artifacts/asset-lab/death-reaction-evidence/LayToIdle-side-1.png"
+   ]
+  },
+  {
+   "slot": "death.impact-left.a",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "left",
+   "reactionType": "death",
+   "useCase": "Side-impact death, falls right/away.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "death.impact-right.a",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "right",
+   "reactionType": "death",
+   "useCase": "Side-impact death, falls left/away.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "death.impact-front.b",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "front",
+   "reactionType": "death",
+   "useCase": "Front-impact death variety (avoid same-clip repetition in firefights).",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "death.impact-rear.b",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "rear",
+   "reactionType": "death",
+   "useCase": "Rear-impact death variety.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "death.prone.a",
+   "status": "awaiting-source",
+   "entryPosture": "prone",
+   "impactDirection": "upper-body",
+   "reactionType": "prone death",
+   "useCase": "Killing a downed/crawling soldier.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "death.crouched.a",
+   "status": "awaiting-source",
+   "entryPosture": "crouched",
+   "impactDirection": "front",
+   "reactionType": "death",
+   "useCase": "Death from cover crouch (Highwall firing positions).",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "knockdown.impact-rear.heavy",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "rear",
+   "reactionType": "knockdown",
+   "useCase": "Nonlethal heavy impact from behind; falls forward, pairs with getup.from-prone.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "stagger.front",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "front",
+   "reactionType": "stagger",
+   "useCase": "Heavy hit that does not floor the soldier.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  },
+  {
+   "slot": "stagger.rear",
+   "status": "awaiting-source",
+   "entryPosture": "standing",
+   "impactDirection": "rear",
+   "reactionType": "stagger",
+   "useCase": "Rear heavy hit stagger.",
+   "expectedSource": "Knockdown & Get-Up pack (85 FBX) on the Windows PC — docs/TRANSFER_REQUEST_ANIMATIONS.md",
+   "note": "No substitute assigned by policy: purchased library only."
+  }
+ ]
+}

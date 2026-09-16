@@ -1,0 +1,83 @@
+{
+  "url": "http://localhost:5180",
+  "hero": "sarge",
+  "view": "front",
+  "costumes": [
+    "tactical"
+  ],
+  "results": [
+    {
+      "phase": "ready",
+      "i": 10,
+      "ammo": 30,
+      "state": "idle",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "ready",
+      "i": 25,
+      "ammo": 30,
+      "state": "idle",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "aim",
+      "i": 10,
+      "ammo": 30,
+      "state": "idle",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "aim",
+      "i": 35,
+      "ammo": 30,
+      "state": "idle",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "fire",
+      "i": 10,
+      "ammo": 27,
+      "state": "cast",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "fire",
+      "i": 45,
+      "ammo": 20,
+      "state": "cast",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "recover",
+      "i": 10,
+      "ammo": 20,
+      "state": "cast",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    },
+    {
+      "phase": "recover",
+      "i": 35,
+      "ammo": 20,
+      "state": "idle",
+      "fireError": null,
+      "costume": "tactical",
+      "applied": "ui:tactical"
+    }
+  ],
+  "pageErrors": []
+}

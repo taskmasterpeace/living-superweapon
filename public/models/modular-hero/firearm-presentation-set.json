@@ -1,0 +1,759 @@
+{
+ "version": 1,
+ "mission": "War World firearm presentation set (Mac asset lab)",
+ "contract": {
+  "grips": "grip-primary = firing hand, grip-support = forward hand (existing package sockets, verified against surface)",
+  "muzzle": "muzzle socket is the projectile origin; verified at bore end",
+  "stock": "proposed stock-contact = shoulder pocket contact point for aimed poses",
+  "stow": "proposed stow = holster/back mount recommendation with runtime parent bone",
+  "consumption": "Codex folds accepted proposals into new authored-asset package versions + restored-equipment registration; hashes are owned by the integration branch."
+ },
+ "weapons": [
+  {
+   "ref": "prop.reference-weapon-rifle-m16@4",
+   "family": "rifle",
+   "twoHanded": true,
+   "displayName": "Patrol rifle · carry handle",
+   "packageDir": "prop.reference-weapon-rifle-m16/v4",
+   "bounds": {
+    "min": [
+     -0.296,
+     0,
+     -2.577
+    ],
+    "max": [
+     0.296,
+     2.241,
+     2.686
+    ],
+    "size": [
+     0.593,
+     2.241,
+     5.263
+    ]
+   },
+   "orientation": {
+    "boreAxis": "z",
+    "boreDirection": [
+     0,
+     0,
+     1
+    ],
+    "muzzleAtBoreEnd": 0.0124,
+    "note": "weapon-local space of the package root"
+   },
+   "sockets": {
+    "muzzle": {
+     "position": [
+      0,
+      1.3569,
+      2.6988
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0349
+    },
+    "attachment-muzzle": {
+     "position": [
+      0,
+      1.3569,
+      2.6988
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0349
+    },
+    "attachment-optic": {
+     "position": [
+      0,
+      2.3029,
+      0.0498
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.1888
+    },
+    "grip-primary": {
+     "position": [
+      0,
+      0.2614,
+      -0.6971
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.3054
+    },
+    "grip-support": {
+     "position": [
+      0,
+      1.0581,
+      0.9959
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.1842
+    },
+    "emblem-left": {
+     "position": [
+      -0.2968,
+      1.4316,
+      -0.473
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.217
+    },
+    "tally-left": {
+     "position": [
+      -0.2968,
+      1.4316,
+      0.2988
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2797
+    },
+    "emblem-right": {
+     "position": [
+      0.2968,
+      1.4316,
+      -0.473
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0595
+    },
+    "tally-right": {
+     "position": [
+      0.2968,
+      1.4316,
+      0.2988
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2797
+    }
+   },
+   "proposed": {
+    "stock-contact": {
+     "position": [
+      0,
+      1.1826,
+      -2.5332
+     ],
+     "construction": "centroid of rear-most 2% vertex band along bore axis",
+     "status": "proposed-unreviewed"
+    },
+    "stow": {
+     "mount": "back",
+     "parentBone": "DEF-spine003",
+     "note": "sling across back, muzzle up-left; grip reachable by right hand",
+     "weaponAnchor": "grip-primary",
+     "status": "proposed-unreviewed"
+    }
+   },
+   "reload": {
+    "detachableMagazine": false,
+    "movingParts": [],
+    "note": "Source model has NO detachable magazine mesh. Do not invent one; preserve real gameplay reload timing and present reload with hand motion + moving parts only."
+   },
+   "status": "measured-unreviewed"
+  },
+  {
+   "ref": "prop.reference-weapon-pistol-1@5",
+   "family": "pistol",
+   "twoHanded": false,
+   "displayName": "Service duty pistol",
+   "packageDir": "prop.reference-weapon-pistol-1/v5",
+   "bounds": {
+    "min": [
+     -0.084,
+     0,
+     -0.473
+    ],
+    "max": [
+     0.083,
+     0.69,
+     0.685
+    ],
+    "size": [
+     0.168,
+     0.69,
+     1.158
+    ]
+   },
+   "orientation": {
+    "boreAxis": "z",
+    "boreDirection": [
+     0,
+     0,
+     1
+    ],
+    "muzzleAtBoreEnd": 0,
+    "note": "weapon-local space of the package root"
+   },
+   "sockets": {
+    "muzzle": {
+     "position": [
+      0,
+      0.5877,
+      0.685
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0
+    },
+    "attachment-muzzle": {
+     "position": [
+      0,
+      0.5877,
+      0.685
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0
+    },
+    "attachment-optic": {
+     "position": [
+      0,
+      0.6667,
+      -0.2687
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0804
+    },
+    "grip-primary": {
+     "position": [
+      0,
+      0.2504,
+      -0.3162
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.1035
+    },
+    "grip-support": {
+     "position": [
+      0,
+      0.2926,
+      -0.2898
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0802
+    },
+    "emblem-left": {
+     "position": [
+      -0.0838,
+      0.2346,
+      -0.3372
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0913
+    },
+    "tally-left": {
+     "position": [
+      -0.0811,
+      0.5877,
+      0.274
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0906
+    },
+    "emblem-right": {
+     "position": [
+      0.0838,
+      0.2346,
+      -0.3372
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0913
+    },
+    "tally-right": {
+     "position": [
+      0.0811,
+      0.5877,
+      0.274
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0906
+    }
+   },
+   "proposed": {
+    "stock-contact": {
+     "status": "not-applicable",
+     "note": "one-handed weapon; no shoulder stock"
+    },
+    "stow": {
+     "mount": "hip-right",
+     "parentBone": "DEF-hips",
+     "note": "holster on right hip, grip rearward",
+     "weaponAnchor": "grip-primary",
+     "status": "proposed-unreviewed"
+    }
+   },
+   "reload": {
+    "detachableMagazine": false,
+    "movingParts": [],
+    "note": "Source model has NO detachable magazine mesh. Do not invent one; preserve real gameplay reload timing and present reload with hand motion + moving parts only."
+   },
+   "status": "measured-unreviewed"
+  },
+  {
+   "ref": "prop.reference-weapon-shotgun-0@5",
+   "family": "shotgun",
+   "twoHanded": true,
+   "displayName": "Pump shotgun",
+   "packageDir": "prop.reference-weapon-shotgun-0/v5",
+   "bounds": {
+    "min": [
+     -0.306,
+     0,
+     -2.432
+    ],
+    "max": [
+     0.306,
+     1.929,
+     3.147
+    ],
+    "size": [
+     0.611,
+     1.929,
+     5.579
+    ]
+   },
+   "orientation": {
+    "boreAxis": "z",
+    "boreDirection": [
+     0,
+     0,
+     1
+    ],
+    "muzzleAtBoreEnd": 0.0117,
+    "note": "weapon-local space of the package root"
+   },
+   "sockets": {
+    "muzzle": {
+     "position": [
+      0,
+      1.2808,
+      3.1584
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0329
+    },
+    "attachment-muzzle": {
+     "position": [
+      0,
+      1.2808,
+      3.1584
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.0329
+    },
+    "attachment-optic": {
+     "position": [
+      0,
+      2.1738,
+      0.047
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.6756
+    },
+    "grip-primary": {
+     "position": [
+      0,
+      0.2468,
+      -0.658
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.2883
+    },
+    "grip-support": {
+     "position": [
+      0,
+      0.9988,
+      0.94
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.1739
+    },
+    "emblem-left": {
+     "position": [
+      -0.2801,
+      1.3513,
+      -0.4465
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2049
+    },
+    "tally-left": {
+     "position": [
+      -0.2801,
+      1.3513,
+      0.282
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.264
+    },
+    "emblem-right": {
+     "position": [
+      0.2801,
+      1.3513,
+      -0.4465
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0562
+    },
+    "tally-right": {
+     "position": [
+      0.2801,
+      1.3513,
+      0.282
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.264
+    }
+   },
+   "proposed": {
+    "stock-contact": {
+     "position": [
+      0,
+      1.1319,
+      -2.3931
+     ],
+     "construction": "centroid of rear-most 2% vertex band along bore axis",
+     "status": "proposed-unreviewed"
+    },
+    "stow": {
+     "mount": "back",
+     "parentBone": "DEF-spine003",
+     "note": "sling across back opposite the rifle side",
+     "weaponAnchor": "grip-primary",
+     "status": "proposed-unreviewed"
+    }
+   },
+   "reload": {
+    "detachableMagazine": false,
+    "movingParts": [
+     "weapon-pump",
+     "weapon-pump-painted"
+    ],
+    "note": "Source model has NO detachable magazine mesh. Do not invent one; preserve real gameplay reload timing and present reload with hand motion + moving parts only."
+   },
+   "status": "measured-unreviewed"
+  },
+  {
+   "ref": "prop.reference-weapon-sniper-1@4",
+   "family": "sniper",
+   "twoHanded": true,
+   "displayName": "Long bolt-action rifle",
+   "packageDir": "prop.reference-weapon-sniper-1/v4",
+   "bounds": {
+    "min": [
+     -0.74,
+     0,
+     -2.924
+    ],
+    "max": [
+     0.837,
+     3.208,
+     3.655
+    ],
+    "size": [
+     1.577,
+     3.208,
+     6.579
+    ]
+   },
+   "orientation": {
+    "boreAxis": "z",
+    "boreDirection": [
+     0,
+     0,
+     1
+    ],
+    "muzzleAtBoreEnd": 0.0128,
+    "note": "weapon-local space of the package root"
+   },
+   "sockets": {
+    "muzzle": {
+     "position": [
+      0,
+      1.6783,
+      3.6681
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.036
+    },
+    "attachment-muzzle": {
+     "position": [
+      0,
+      1.6783,
+      3.6681
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.036
+    },
+    "attachment-optic": {
+     "position": [
+      0,
+      2.6571,
+      0.0515
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.2783
+    },
+    "grip-primary": {
+     "position": [
+      0,
+      0.5449,
+      -0.7213
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.316
+    },
+    "grip-support": {
+     "position": [
+      0,
+      1.3692,
+      1.0304
+     ],
+     "quaternion": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "nearestSurface": 0.1803
+    },
+    "emblem-left": {
+     "position": [
+      -0.3071,
+      1.7556,
+      -0.4894
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2246
+    },
+    "tally-left": {
+     "position": [
+      -0.3071,
+      1.7556,
+      0.3091
+     ],
+     "quaternion": [
+      0,
+      -0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2894
+    },
+    "emblem-right": {
+     "position": [
+      0.3071,
+      1.7556,
+      -0.4894
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.0616
+    },
+    "tally-right": {
+     "position": [
+      0.3071,
+      1.7556,
+      0.3091
+     ],
+     "quaternion": [
+      0,
+      0.7071,
+      0,
+      0.7071
+     ],
+     "nearestSurface": 0.2894
+    }
+   },
+   "proposed": {
+    "stock-contact": {
+     "position": [
+      0,
+      1.498,
+      -2.8786
+     ],
+     "construction": "centroid of rear-most 2% vertex band along bore axis",
+     "status": "proposed-unreviewed"
+    },
+    "stow": {
+     "mount": "back",
+     "parentBone": "DEF-spine003",
+     "note": "sling across back; longest silhouette, verify leg clearance",
+     "weaponAnchor": "grip-primary",
+     "status": "proposed-unreviewed"
+    }
+   },
+   "reload": {
+    "detachableMagazine": false,
+    "movingParts": [
+     "weapon-default-scope",
+     "weapon-default-scope-painted",
+     "weapon-default-scope-glazing"
+    ],
+    "note": "Source model has NO detachable magazine mesh. Do not invent one; preserve real gameplay reload timing and present reload with hand motion + moving parts only."
+   },
+   "status": "measured-unreviewed"
+  }
+ ]
+}
