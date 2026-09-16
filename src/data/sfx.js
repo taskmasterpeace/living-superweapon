@@ -130,6 +130,17 @@ export function sfxOf(a, def, charge = 1) {
   if (a.weapon || a.type === 'rifle') return null;
   const vis = visOf(a);
   if (!vis) return null;
+  return sfxOfVis(vis, a, def, charge);
+}
+
+/**
+ * The post-vis half, callable where the ability row is gone but its resolved `vis` travelled with
+ * the spawn options (projectiles.spawnProjectile receives `vis` + the scaled numbers) — so a
+ * projectile in flight can carry its voice without re-threading the ability through every site.
+ */
+export function sfxOfVis(vis, a, def, charge = 1) {
+  if (!vis || !a || typeof a !== 'object') return null;
+  if (a.weapon || a.ballistic || a.bullet) return null;      // firearms/ballistics keep gunshot
 
   const shape = SFX_ATTACK[vis.shape] ? vis.shape : 'bolt';   // unknown shape → the default discharge
   const material = SFX_GRAIN[vis.material] ? vis.material : 'energy';

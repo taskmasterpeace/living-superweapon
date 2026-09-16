@@ -484,6 +484,95 @@ export class AudioBus {
     return h;
   }
 
+  // ---- THE CAST VOICE (Refs #42 L2) --------------------------------------------------------------
+  // `sfx.js` derives a voice VECTOR for every ability; this is the composer its header promised
+  // ("everything audio.power() needs") — named `cast` because `power()` was already the buff toggle.
+  // Element-truth lives in v.grain (fire→roar, ice→glass, shock→glitch…), so a fire impact and an
+  // ice impact CANNOT share a voice by construction. Bank-first, DSP accents, never throws.
+  // Phases: 'release' | 'impact' | 'shutdown' one-shots · 'charge' | 'travel' return a loop handle
+  // with BOTH ramp(L) and set(L, pos, rateMul) (the two sustain contracts in use).
+  cast(v, phase = 'release', pos = null, o = {}) {
+    try {
+      if (phase === 'charge' || phase === 'travel') return this._castLoop(v, phase, pos);
+      if (!v) { if (phase === 'release') this.kiRelease(fin(o.gain, 0.5), pos); return null; }
+      if (!this.ok || this.muted) return null;
+      const gain = Math.max(0.1, Math.min(2, fin(o.gain, 1)));
+      if (phase === 'release') {
+        const played = this.sample(v.attack, { pos, gain: Math.min(1.25, 0.5 + gain * 0.45), rate: fin(v.rate, 1) });
+        if (!played) this.kiRelease(0.35 + gain * 0.4, pos);
+        if (v.grain !== 'ringmod') this.sample(v.grain, { pos, gain: 0.38 * fin(v.grainAmt, 0.5) * gain, rate: Math.min(1.6, fin(v.rate, 1) * 1.08) });
+        else this._crackle(0.09, 0.04 * gain, 2600);
+        this._thump(v.body, Math.max(0.16, fin(v.tail, 0.2)), 0.3 * gain, pos);
+      } else if (phase === 'impact') {
+        this.sample(v.attack, { pos, gain: Math.min(1.2, 0.45 + gain * 0.4), rate: fin(v.rate, 1) * 0.9 });
+        if (v.grain !== 'ringmod') this.sample(v.grain, { pos, gain: 0.45 * fin(v.grainAmt, 0.5) * gain, rate: rand2(0.8, 1.1) });
+        this._thump(fin(v.body, 120) * 0.7, Math.max(0.2, fin(v.tail, 0.2) * 1.2), 0.4 * gain, pos);
+      } else if (phase === 'shutdown') {
+        if (v.grain !== 'ringmod') this.sample(v.grain, { pos, gain: 0.22 * fin(v.grainAmt, 0.5), rate: 0.8 });
+        this._thump(fin(v.body, 120), 0.28, 0.16, pos, 0.4);
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // The sustained half of cast(): a recorded BED pitched by the ability's BODY, with element GRAIN
+  // accents fired at a level-scaled cadence (ice tinkles, fire crackles its roar, shock glitches).
+  _castLoop(v, phase, pos) {
+    try {
+      const bed = v && v.grain === 'fire.roar' ? 'fire.roar' : (phase === 'charge' ? 'engine.charge' : 'engine.low');
+      const rate = v ? Math.max(0.55, Math.min(1.5, 0.7 + (fin(v.body, 210) / 210) * 0.45)) : 1;
+      const base = this.sampleLoop ? this.sampleLoop(bed, { pos, rate }) : null;
+      if (!base) return phase === 'charge' ? this.charge(pos) : null;
+      let lastA = 0;
+      const self = this;
+      const drive = (L, p, rateMul) => {
+        base.set(L, p, rateMul);
+        if (!v) return;
+        const now = performance.now();
+        const lvl = Math.max(0, Math.min(1, fin(L, 0)));
+        if (lvl > 0.2 && now - lastA > 440 - lvl * 270) {
+          lastA = now;
+          if (v.grain === 'ringmod') self._crackle(rand2(0.04, 0.1), 0.03 + lvl * 0.05, rand2(1800, 5200));
+          else self.sample(v.grain, { pos: p ?? pos, gain: 0.05 + lvl * 0.1 * fin(v.grainAmt, 0.5), rate: rand2(0.85, 1.25) * Math.max(0.6, Math.min(1.4, fin(v.crack, 1))) });
+        }
+      };
+      const h = {
+        get last() { return base.last; },
+        ramp: (L, p) => drive(L, p),
+        set: (L, p, rateMul) => drive(L, p, rateMul),
+        stop: () => base.stop(),
+      };
+      return h;
+    } catch (e) { return null; }
+  }
+
+  // A pitched fundamental under a cast — the firearm's `body` generalised. `slide` < 1 chirps DOWN.
+  _thump(hz, dur, gain, pos = null, slide = 0.55) {
+    try {
+      if (!this.ok || this.muted) return;
+      const pg = this._pg(pos, 190); if (!pg) return;
+      const t = this.t;
+      const osc = this.ctx.createOscillator(); osc.type = 'sine';
+      const f0 = Math.max(30, Math.min(700, fin(hz, 120)));
+      osc.frequency.setValueAtTime(f0, t);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(24, f0 * slide), t + dur);
+      this._env(osc, dur, Math.min(0.6, fin(gain, 0.3)) * pg, 0.005);
+    } catch (e) {}
+  }
+
+  // Doppler-lite for a moving source: radial velocity toward the listener → a playbackRate
+  // multiplier for loop.set()'s third argument. ~700 u/s "speed of sound" keeps cruise-speed
+  // projectiles inside a musical ±15% — a receding blast audibly drops, nothing chipmunks.
+  dopplerMul(pos, vel) {
+    try {
+      if (!this._hasL || !pos || !vel) return 1;
+      const dx = this._lx - (pos.x ?? 0), dy = this._ly - (pos.y ?? 0), dz = this._lz - (pos.z ?? 0);
+      const d = Math.hypot(dx, dy, dz); if (d < 2) return 1;
+      const vr = ((vel.x ?? 0) * dx + (vel.y ?? 0) * dy + (vel.z ?? 0) * dz) / d;   // + = approaching
+      return Math.max(0.85, Math.min(1.18, 1 + vr / 700));
+    } catch (e) { return 1; }
+  }
+
   // THE RELEASE — a charged ki attack leaving your hands. Sub-thump for the shove, an inharmonic
   // burst for the mass, a long descending ring-mod tail for the travel, arcing across all of it.
   kiRelease(power = 1, pos = null) {

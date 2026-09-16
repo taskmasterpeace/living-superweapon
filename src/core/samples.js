@@ -235,7 +235,7 @@ export class SampleBank {
     g.gain.linearRampToValueAtTime((m.g ?? 1) * 0.5 * proximity(pos) * routing.normalization, T() + 0.06);
     const h = {
       last: NOW(),
-      set(I, p) {
+      set(I, p, rateMul) {
         if(h._dead)return;
         h.last = NOW();
         const point=p??pos,L=bounded(I,0,1,0),pg=proximity(point);
@@ -243,7 +243,8 @@ export class SampleBank {
         g.gain.cancelScheduledValues(T());
         if(a.muted)g.gain.setValueAtTime(0,T());else g.gain.setTargetAtTime(target,T(),.08);
         if(routing.pan)routing.pan.pan.setTargetAtTime(bounded(a._pan?.(point),-.85,.85,0),T(),.08);
-        src.playbackRate.setTargetAtTime(bounded(rate*(.85+.45*L),.25,16,1),T(),.1);
+        // rateMul is the Doppler seam: a moving source passes its radial-velocity multiplier here
+        src.playbackRate.setTargetAtTime(bounded(rate*(.85+.45*L)*bounded(rateMul,.5,2,1),.25,16,1),T(),.1);
       },
       stop() {
         if (h._dead) return; h._dead = true;

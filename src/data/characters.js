@@ -729,10 +729,10 @@ export const ROSTER = [
       lmb: { type: 'rifle', name: 'Cold Gun', cost: 4, interval: 0.28, damage: 15, speed: 150, radius: 0.8, blast: 3.5, spread: 0.01, recoil: 2, color: '#bfeaff', color2: '#eaffff' },
       rmb: { type: 'cone', name: 'Flash Frost', kiPerSec: 19, range: 32, arc: 1.1, dps: 20, cold: true, frost: 0.6, color: '#bfeaff' },
       q: { type: 'construct', name: 'Glacier Wall', cost: 11, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#bfeaff' },
-      e: { type: 'projectile', name: 'Cryo Charge', cost: 9, cd: 0.7, damage: 20, speed: 72, radius: 1.4, blast: 9, grav: 8, shock: true, color: '#bfeaff', color2: '#eaffff' },
+      e: { type: 'projectile', name: 'Cryo Charge', dtype: 'cold', cost: 9, cd: 0.7, damage: 20, speed: 72, radius: 1.4, blast: 9, grav: 8, shock: true, color: '#bfeaff', color2: '#eaffff' },
       f: { type: 'buff', name: 'Cold Read', cost: 20, cd: 16, mult: 1.45, dur: 9, color: '#bfeaff', color2: '#fff' },
       shift: { type: 'dash', name: 'Getaway', cost: 4, cd: 0.5, power: 96, iframes: 0.26, color: '#bfeaff' },
-      r: { type: 'charge', name: 'Absolute Frost', cost: 10, cd: 14, kiPerSec: 13, maxCharge: 2.3, minR: 1.8, maxR: 7, dmgMin: 24, dmgMax: 80, maxBlast: 36, speedMin: 34, speedMax: 58, chargePower: 3, color: '#bfeaff', color2: '#eaffff' },
+      r: { type: 'charge', name: 'Absolute Frost', dtype: 'cold', cost: 10, cd: 14, kiPerSec: 13, maxCharge: 2.3, minR: 1.8, maxR: 7, dmgMin: 24, dmgMax: 80, maxBlast: 36, speedMin: 34, speedMax: 58, chargePower: 3, color: '#bfeaff', color2: '#eaffff' },
     },
   },
   {

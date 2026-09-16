@@ -5,6 +5,7 @@ import { VOICES } from '../data/armory.js';
 import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consumeSlot, mimicKit, summonMount, domeAt, setVisionMode } from './systems2.js';
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
+import { sfxOf } from '../data/sfx.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
 import { ChargeGather } from './charge-gather.js';
@@ -52,7 +53,9 @@ function beginPaidCharge(c, def, st, g) {
   if(def.type==='charge')st._poseWritten=true;
   st._chargeEntryCost=c.energyInfinite?0:cost;
   st._chargeInvestedKi=cost; // equivalent configured investment also counts for an infinite core
-  st.charging=true;st.chargeT=0;st.sfx=g.audio.charge(c.pos);
+  // element-true spool-up (Refs #42 L2): the charge carries the ability's own voice — an ice
+  // charge tinkles and a fire charge crackles its roar. cast() falls back to charge() cold.
+  st.charging=true;st.chargeT=0;st.sfx=(g.audio.cast?g.audio.cast(sfxOf(def,c.def),'charge',c.pos):null)||g.audio.charge(c.pos);
 }
 function finishPaidCharge(c, def, st) { st._chargeEntryCost=0;st._chargeInvestedKi=0;cooldown(c,def,st); }
 function chargeOrb(c, st, color) {
@@ -267,7 +270,8 @@ export const TYPES = {
       });
       if(def.remoteDetonate)st.remoteShot=shot;
       if(throwMesh)return;
-      if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
+      if (g.audio.cast) g.audio.cast(sfxOf(def, c.def), 'release', c.pos, { gain: 0.55 });
+      else if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
       g.muzzleFlash(c, def.color);
       };
       if(usesThrowAction(c,def)){
@@ -310,7 +314,8 @@ export const TYPES = {
         homing: def.homing, bounces: def.bounces,
       });
       }
-      g.audio.blast(560 + rand(-40, 40), 0.08);
+      if (g.audio.cast) g.audio.cast(sfxOf(def, c.def), 'release', c.pos, { gain: 0.3 });
+      else g.audio.blast(560 + rand(-40, 40), 0.08);
     }
   },
 
@@ -492,7 +497,12 @@ export const TYPES = {
           splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
         });
         if(def.remoteDetonate)st.remoteShot=shot;
-        if(def.naniteForm!=='cannon'){g.audio.kiRelease(0.5 + c01 * 1.1, c.pos); g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);}
+        if(def.naniteForm!=='cannon'){
+          // charge scales the voice's MASS (sfx.js was built for exactly this fraction)
+          if (g.audio.cast) g.audio.cast(sfxOf(def, c.def, 0.5 + c01 * 1.5), 'release', c.pos, { gain: 0.6 + c01 * 0.7 });
+          else g.audio.kiRelease(0.5 + c01 * 1.1, c.pos);
+          g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);
+        }
       }
     }
   },
@@ -502,11 +512,15 @@ export const TYPES = {
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; if (st.sfx) { st.sfx.stop(); st.sfx = null; } }
     if (inp.pressed && ready(c, def, st) && !st.active) {
       pay(c, def, st); st.active = g.projectiles.spawnGrowingOrb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });
-      st.sfx = g.audio.charge(c.pos);
+      st.sfx = (g.audio.cast ? g.audio.cast(sfxOf(def, c.def, 1.6), 'charge', c.pos) : null) || g.audio.charge(c.pos);
     }
     if (st.active) {
       if (st.sfx) st.sfx.ramp(st.active.charge01);
-      if (inp.released) { st.active.launch(); if (st.sfx) { st.sfx.stop(); st.sfx = null; } st.active = null; g.audio.kiRelease(1.4, c.pos); g.world.shake(0.5); }
+      if (inp.released) {
+        st.active.launch(); if (st.sfx) { st.sfx.stop(); st.sfx = null; } st.active = null;
+        if (g.audio.cast) g.audio.cast(sfxOf(def, c.def, 2.2), 'release', c.pos, { gain: 1.2 }); else g.audio.kiRelease(1.4, c.pos);
+        g.world.shake(0.5);
+      }
     }
   },
 
@@ -958,7 +972,7 @@ export const TYPES = {
   // target, arrives... hangs there for a heartbeat... then detonates a massive delayed shockwave.
   // Size, damage, and blast all scale with how much energy he pours into her.
   facebomb(c, def, st, g, inp) {
-    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(c.pos); }
+    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = (g.audio.cast ? g.audio.cast(sfxOf(def, c.def), 'charge', c.pos) : null) || g.audio.charge(c.pos); }
     if (st.charging) {
       const dry = inp.held && !c.spendKi((def.kiPerSec || 13) * inp.dt);
       if (dry) drained(c, g);
@@ -986,7 +1000,8 @@ export const TYPES = {
           face: true, armDelay: def.armDelay || 0.6, shock: true, ground: true,
           color: def.color || '#ffe8c0', color2: '#ffffff',
         });
-        g.audio.blast(180, 0.25); g.world.punch(0.88); g.vfx.flash(from, def.color || '#ffe8c0', 8 + c01 * 8, 0.25);
+        if (g.audio.cast) g.audio.cast(sfxOf(def, c.def, 0.5 + c01 * 1.5), 'release', c.pos, { gain: 0.6 + c01 * 0.5 }); else g.audio.blast(180, 0.25);
+        g.world.punch(0.88); g.vfx.flash(from, def.color || '#ffe8c0', 8 + c01 * 8, 0.25);
       }
     }
   },
@@ -996,7 +1011,7 @@ export const TYPES = {
   // drainedT opens, and if you have Overdrive, your fists are the comeback plan.
   nova(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st) && !st.building) {
-      st.building = true; st.fed = 0; st.sfx = g.audio.charge(c.pos);
+      st.building = true; st.fed = 0; st.sfx = (g.audio.cast ? g.audio.cast(sfxOf(def, c.def), 'charge', c.pos) : null) || g.audio.charge(c.pos);
       if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.2); }
     }
     if (st.building) {
@@ -1052,7 +1067,10 @@ export const TYPES = {
           }
         }
         c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
-        g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
+        g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k);
+        // the element layer LEADS the detonation, the shared boom stays as the low bed under it
+        if (g.audio.cast) g.audio.cast(sfxOf(def, c.def, 1 + k), 'impact', c.pos, { gain: 0.8 + k * 0.6 });
+        g.audio.boom(1.4, c.pos);
         if (g.hud && g.isHuman(c)) g.hud.flashScreen(def.color || '#ff6a1a', 0.2);
       }
     }

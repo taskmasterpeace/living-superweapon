@@ -82,6 +82,7 @@ import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
+import { sfxOf } from '../data/sfx.js';
 import { Gamepad } from '../core/gamepad.js';
 import {updateMovementGears,resetMovementGears} from '../core/movement-gears.js';
 import { runSlot, performEvade } from './abilities.js';
@@ -3757,6 +3758,8 @@ export class Game {
       // THE BEAM ANATOMY (data/visual.js): BUILD is how much of it there is, TEMPER is what it is
       // doing inside. Both derived from the ability's own radius and material, both overridable.
       build: beamBuildOf(def), temper: beamTemperOf(def),
+      // element-true voice (Refs #42 L2): the beam's hum/impact/shutdown all speak its element
+      sfx: sfxOf(def, caster.def, p),
     });
   }
 

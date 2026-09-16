@@ -7,6 +7,7 @@ import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
 import {resolveThrowRelease} from './throwable-action.js';
 import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
+import { sfxOfVis } from '../data/sfx.js';
 import {createBeamMaterials,createBeamSourceMaterial,beamVisualFamily} from './beam-surface.js';
 import { BeamCurve } from './beam-curve.js';
 import { beamPathsTouch, pinBeamContact } from './beam-contact.js';
@@ -169,6 +170,13 @@ class Projectile {
     this.dtype = o.dtype || null; this.siphon = o.siphon; this.shockDuration=o.shockDuration||0;
     this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc; this.pumpkin = !!o.pumpkin;
     this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
+    // THE TRAVEL VOICE (Refs #42 L2 — the empty stage): a projectile with real flight time hums
+    // element-true while it flies (bed pitched by its own mass, grain accents) and Dopplers as it
+    // recedes. Derived from the vis every kit spawn already carries; ballistics stay silent in
+    // flight by rule (a slug's voice is its crack). Stopped in _dispose — the one exit.
+    this._sfxV = o.sfx ?? (o.vis ? sfxOfVis(o.vis, o, caster && caster.def) : null);
+    this._voiceLoop = (this._sfxV && !o.bullet && !o.ballistic && (o.life ?? 3) > 0.45 && game.audio.cast)
+      ? game.audio.cast(this._sfxV, 'travel', this.pos) : null;
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -307,6 +315,7 @@ class Projectile {
   }
 
   update(dt, game, substep=false) {
+    if (this._voiceLoop && !substep) this._voiceLoop.set(0.55, this.pos, game.audio.dopplerMul ? game.audio.dopplerMul(this.pos, this.vel) : 1);
     if(this.webControl&&!this._webControlInterrupted){
       const source=this.caster;
       if(!source?.alive||source._formDisposed||source._webControlEpoch!==this._webControlSourceEpoch||source.staggerT>0||source.stunT>0||source.frozenT>0||source.grabbedBy)this._webControlInterrupted=true;
@@ -763,6 +772,8 @@ class Projectile {
       game.vfx.lightning(p, { color: '#fff', count: 5, radius: this.blast, height: 14 });
       game.slowmo(0.2, 0.45); game.world.punch(0.7); if (game.hud) game.hud.flashScreen('#ffe8c0', 0.16);
     }
+    // the element layer LEADS (fire ≠ ice at the point of impact); the shared boom is the bed under it
+    if (this._sfxV && game.audio.cast) game.audio.cast(this._sfxV, 'impact', p, { gain: clamp(this.power, 0.4, 1.4) });
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4), p);
     this._dispose(game); return false;
   }
@@ -804,6 +815,7 @@ class Projectile {
   }
   _dispose(game) {
     if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
+    if (this._voiceLoop) { this._voiceLoop.stop(); this._voiceLoop = null; }   // travel voice dies with the shot
     // every mesh branch declares its per-projectile materials in _ownMats — shared module
     // materials (steel, brass, tracer) must NEVER be disposed here (index-guessing children[1]
     // used to dispose the SHARED tracer mat on every bullet impact, and crashed on nested groups)
@@ -858,7 +870,12 @@ class BeamHose {
     this._poseLaunch=!!(caster._openSky&&caster.parts?.rig&&(o.poseLaunch||o.faceOrigin||o.chest));
     this._chargedRelease=!!o.chargedRelease;
     this._launchReady=false;
-    this._voice = !this._poseLaunch&&this.game.audio.beamVoice ? this.game.audio.beamVoice(caster.pos) : null;
+    // element-true beam hum: the cast travel loop (fire beams get the roar bed, body-Hz pitch)
+    // with the legacy shared beamVoice as the cold-cache fallback. Same set(I,pos) contract.
+    this._sfxV = o.sfx || null;
+    this._voice = this._poseLaunch ? null
+      : (this._sfxV && this.game.audio.cast ? this.game.audio.cast(this._sfxV, 'travel', caster.pos) : null)
+        || (this.game.audio.beamVoice ? this.game.audio.beamVoice(caster.pos) : null);
     this.tipDist = 0;
     this.dir = caster.aim3.clone().normalize();   // 3D — angles up/down toward the target's height
     this._steerRotation = new THREE.Quaternion();
@@ -1135,6 +1152,7 @@ class BeamHose {
     this._dispose(game);
     game.vfx.explode(pos,{color:this.color,color2:this.color2,radius:this.detonateRadius,power:this.power,energyShell:true,scorch:false});
     game.areaDamage(this.caster,pos,this.detonateRadius,this.detonateDamage,this.power,{dtype:this.dtype});
+    if (this._sfxV && game.audio.cast) game.audio.cast(this._sfxV, 'impact', pos, { gain: clamp(this.power, 0.4, 1.4) });
     game.audio.boom(clamp(this.power*.6,.2,1.4),pos);
     return false;
   }
@@ -1834,7 +1852,7 @@ class BeamHose {
     if(!sweepSplitObstacle(world,a,b,this.radius+skin,this._obstacleContact,!!world._ghTriangles,skin))return false;
     b.lerpVectors(a,b,this._obstacleContact.t);return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; this._groundResidue.reset(); if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
+  _dispose(game) { if (this.dead) return; this.dead = true; this._groundResidue.reset(); if (this._voice) { this._voice.stop(); this._voice = null; } if (this._sfxV && game.audio.cast) game.audio.cast(this._sfxV, 'shutdown', this.caster?.pos || null); game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----
