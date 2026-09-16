@@ -281,7 +281,7 @@ export const TYPES = {
         arrow: def.arrow, payload: def.payload, webControl:def.webControl, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister, missile: def.missile,   // thrown steel / shells / rockets read as objects, not orbs
-        pierce: def.pierce,
+        pierce: def.pierce, explosion: def.explosion,   // detonation STYLE (vfx explode: concussion / emp)
         dtype: def.dtype, siphon: def.siphon, shockDuration:def.shockDuration,
         splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
       });
@@ -382,6 +382,9 @@ export const TYPES = {
         if (d > range || d < 0.1) continue;
         const dot = (dx / d) * c.aim.x + (dz / d) * c.aim.z;
         if (dot < Math.cos(arc)) continue;
+        // VERTICAL APERTURE (Robert: "how wide it is up and down") — authored per-row `vArc`,
+        // radians off the aim plane. Absent = legacy: no vertical gate beyond the sightline.
+        if (def.vArc != null && Math.abs(Math.atan2((f.pos.y + 4) - (c.pos.y + 5), d)) > def.vArc) continue;
         // Cones are volumes, not wallhacks. The same cover/interior sightline
         // used by targeting decides whether this receiver is actually reached.
         if(g.canSee&&!g.canSee(c,f))continue;
@@ -450,14 +453,16 @@ export const TYPES = {
         const batches=Math.min(2,Math.floor((st._fireVisualClock+1e-8)*30));
         st._fireVisualClock=Math.max(0,st._fireVisualClock-batches/30);
         if(batches===2)st._fireVisualClock=Math.min(st._fireVisualClock,1/30);
+        const vSpread=def.vArc!=null?Math.tan(def.vArc)*range*1.6:null;   // the spray shows the vArc it hits with
         for(let i=0;i<batches*3;i++){
           const a=Math.atan2(c.aim.z,c.aim.x)+rand(-arc,arc);
-          g.particles.spawn({x:m.x,y:m.y+rand(-.6,.6),z:m.z,vx:Math.cos(a)*range*1.6,vz:Math.sin(a)*range*1.6,vy:rand(1,4),life:.55,size:6.5,color:i%3?'#ff6b18':'#ffc348',grav:-2,drag:1.1,shrink:true,shape:'flame'});
+          g.particles.spawn({x:m.x,y:m.y+rand(-.6,.6),z:m.z,vx:Math.cos(a)*range*1.6,vz:Math.sin(a)*range*1.6,vy:vSpread!=null?rand(-vSpread,vSpread):rand(1,4),life:.55,size:6.5,color:i%3?'#ff6b18':'#ffc348',grav:-2,drag:1.1,shrink:true,shape:'flame'});
         }
-      } else for (let i = 0; i < 4; i++) {
+      } else { const vSpread=def.vArc!=null?Math.tan(def.vArc)*range*1.6:null;
+      for (let i = 0; i < 4; i++) {
         const a = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
-        g.particles.spawn({ x: m.x, y: m.y + rand(-1, 1), z: m.z, vx: Math.cos(a) * range * 1.6, vz: Math.sin(a) * range * 1.6, vy: rand(-2, 2), life: 0.5, size: def.cold ? 5 : 4, color: def.color, drag: 1.4, shrink: true });
-      }
+        g.particles.spawn({ x: m.x, y: m.y + rand(-1, 1), z: m.z, vx: Math.cos(a) * range * 1.6, vz: Math.sin(a) * range * 1.6, vy: vSpread!=null?rand(-vSpread,vSpread):rand(-2, 2), life: 0.5, size: def.cold ? 5 : 4, color: def.color, drag: 1.4, shrink: true });
+      } }
       // THE CONE VOICE — a sustained loop keyed to the element, started on the first held frame and
       // faded on release (not cut). fire ROARS, gas HISSES, cold CRACKLES, acid SIZZLES.
       if (!st._loop) {

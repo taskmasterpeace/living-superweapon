@@ -28,4 +28,28 @@ export const LIBRARY_BEAMS = [
   { id: 'glacierlance', type: 'beam', name: 'Glacier Lance', dtype: 'cold', mode: 'lance',
     cost: 6, cd: 0.4, radius: 1.3, tipSpeed: 640, maxLen: 140, dps: 44, kiPerSec: 17,
     steer: 11, color: '#7fd4ff', color2: '#ffffff', density: 1.1 },
+  // he likes LIGHT and DARK — the pair, on the modes he hasn't seen carried yet
+  { id: 'nightwhip', type: 'beam', name: 'Night Whip', material: 'shadow', mode: 'whip',
+    cost: 7, cd: 0.5, radius: 1.7, tipSpeed: 540, maxLen: 140, dps: 50, kiPerSec: 19,
+    steer: 9, color: '#3a4a5c', color2: '#101018' },
+  { id: 'daybreak', type: 'beam', name: 'Daybreak', material: 'light', mode: 'converging',
+    cost: 6, cd: 0.4, radius: 1.8, tipSpeed: 820, maxLen: 150, dps: 54, kiPerSec: 18,
+    steer: 12, color: '#ffd24a', color2: '#ffffff', density: 1.1 },
+];
+
+// THE SHOT LIBRARY — projectiles that belong to nobody, for the stand's SHOTS wheel.
+export const LIBRARY_SHOTS = [
+  // "what does a RAILGUN look like — something that fires instantly, all the way to the view
+  // distance." ⚠ Honest label: this is a HYPER-VELOCITY slug (1400 u/s — the stand lane in ~2
+  // frames), not true hitscan; a real instant-line delivery is a new mechanic (manual §5 protocol)
+  // and is on the queue as its own decision.
+  { id: 'railslug', type: 'projectile', name: 'Rail Slug', speed: 1400, damage: 60, radius: 0.5,
+    blast: 3, pierce: 3, cd: 1.2, cost: 6, color: '#bfe9ff', color2: '#ffffff', dtype: 'ballistic' },
+  // the explosion trio's carriers: same canister, different DETONATION STYLE (vfx explode)
+  { id: 'concussionshell', type: 'projectile', name: 'Concussion Shell', canister: true, grav: 1,
+    speed: 74, damage: 20, blast: 16, cd: 1.1, cost: 6, explosion: 'concussion', dtype: 'physical',
+    color: '#d8d2c4', color2: '#8f887a' },
+  { id: 'empshell', type: 'projectile', name: 'EMP Shell', canister: true, grav: 1,
+    speed: 74, damage: 12, blast: 14, cd: 1.1, cost: 6, explosion: 'emp', dtype: 'energy',
+    shock: true, shockDuration: 1.4, color: '#9fd4ff', color2: '#eaffff' },
 ];

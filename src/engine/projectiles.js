@@ -175,6 +175,7 @@ class Projectile {
     this.dtype = o.dtype || null; this.siphon = o.siphon; this.shockDuration=o.shockDuration||0;
     this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc; this.pumpkin = !!o.pumpkin;
     this.missile = !!o.missile;   // a rocket: corkscrews in flight and leaves a SMOKE TRAIL behind it
+    this.explosionStyle = o.explosion || null;   // detonation STYLE (vfx: concussion / emp); null = the classic blast
     this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
     // THE TRAVEL VOICE (Refs #42 L2 — the empty stage): a projectile with real flight time hums
     // element-true while it flies (bed pitched by its own mass, grain accents) and Dopplers as it
@@ -884,7 +885,7 @@ class Projectile {
       this._dispose(game);
       return false;
     }
-    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, fx: this._fx, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
+    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, fx: this._fx, style: this.explosionStyle, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
     // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
     // LEVEL-SCALED KNOCKBACK (Robert: "the explosion should have knockback") — a level-III blast SHOVES

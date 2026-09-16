@@ -1242,3 +1242,25 @@ back, the entire beam is gone — all you see is the end point") root-caused and
   BOTH steps (`fxOf` → `beamVisualFamily`): one-step derivation called Heat Ray 'fire' while the
   live beam renders 'ray', the exact drift the page exists to kill.
 - 🔥 IGNITE TARGET on the chip — the burning look grades through the real `game.ignite` path.
+
+**51 · THE EVERYTHING WAVE** (his /goal: "do everything at once, then check your work") — one sweep:
+- **FIRE, TWO DEGREES** (his lava ruling verbatim): burn >1.1s → DEGREE 2 — lava-crack crust motes
+  cling under the rising flames, and the crust OUTLIVES the fire (~6s smoulder). Measured through
+  the real ignite door: 112 flames + 102 crust alight, crust continues after the dot dies.
+  ⚠ The stand target is a REAL fighter now (1e9 hp, invuln 0, not a dummy) — addDot exempts dummies
+  and the dot tick sits behind invuln≤0, so a dummy target could never burn (the 🔥 button lied).
+- **SHOTS WHEEL v2 — five lanes, 103/103 fire**: projectile/rifle/volley/bow/charge all driven
+  through their REAL TYPES bodies. Three silent-gate bugs found by the sweep: st.cd unseeded
+  (undefined<=0 is FALSE — the ctor-init law), st.def unstamped (chargeOrb reads it), and the
+  press edge computed as ph<1/60 — frames land on k/60 EXACTLY, so firing came down to FP luck
+  per period. Edges are boundary CROSSINGS now (prevPh wrap).
+- **vArc** — the cone's vertical aperture is a real engine field now (hit gate + spray vy), with
+  the RISE dial; an un-authored vArc shows '—', never a fake number.
+- **EXPLOSION STYLES** — vfx.explode(style): 'concussion' (pressure + dust, no fire) and 'emp'
+  (cold blue field pop + arc rings); style rides projectile rows (def.explosion).
+- **LIBRARY +5**: Rail Slug (1400 u/s hyper-velocity — honest label: not true hitscan, that's a
+  mechanic decision), Concussion Shell, EMP Shell, Night Whip (void), Daybreak (light) → 29 beams.
+- **PER-WHEEL DIALS**: beams FAT ×0.4–3 + REACH 40–240; shots SPEED + GRAVITY (the Mars-float
+  tuner); cones REACH/WIDTH/RISE. ⧉ ROW copies the edited row as paste-ready library JSON — the
+  LAB save seed. Checked: 29/29 beams spawn clean, 36/36 cones, 103/103 shots, styles + shaders
+  compile, chart at 29 and consistent, 0 console errors.

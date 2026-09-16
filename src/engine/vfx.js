@@ -115,6 +115,12 @@ export class VFX {
   explode(pos, opt = {}) {
     if (!okPos(pos, 'explode')) return;
     if(opt.energyShell && opt.radius===0)return; // authored point burst: no fabricated visual radius
+    // THE DETONATION STYLE (Refs #42 item 21) — what KIND of blast this is. 'concussion' = pressure
+    // and dust, no fire in it; 'emp' = a cold blue-white field pop with expanding arc rings, no
+    // fire colours. Absent = every caller renders exactly what it always rendered.
+    const style = opt.style || null;
+    if (style === 'concussion') opt = { ...opt, color: '#d8d2c4', color2: '#8f887a' };
+    else if (style === 'emp') opt = { ...opt, color: '#9fd4ff', color2: '#eaffff' };
     const color = opt.color || '#ffd15a', color2 = opt.color2 || '#ff5a2a';
     // THE FX RECIPE (data/powerfx.js, Refs #42): opt.fx = { family, level, f, L } makes this ONE
     // explosion speak its element at its level — palette, smoke, debris, cloud, afterFx, all from
@@ -127,7 +133,13 @@ export class VFX {
     const shell = new THREE.Mesh(this._sphere, opt.energyShell?energyShellMaterial(color,.8):addMat(color, 0.8));
     shell.position.copy(pos); shell.scale.setScalar(radius * 0.3); this.scene.add(shell);
     const l = this.borrowLight(color, 10 * power, radius * 8); l.position.copy(pos);
-    let t = 0; const life = 0.5 + power * 0.15;
+    // style tells: a concussion is mostly its PRESSURE RING; an EMP is a brief field pop with a
+    // pair of cold arc rings racing out (and its shell dies fast — energy, not combustion).
+    if (style) {
+      this.ring(pos, { color: style === 'emp' ? '#bfe9ff' : '#e8e2d4', r0: radius * 0.2, r1: radius * (style === 'emp' ? 1.3 : 1.9), life: style === 'emp' ? 0.26 : 0.45 });
+      if (style === 'emp') this.ring(pos, { color: '#eaffff', r0: radius * 0.1, r1: radius * 0.9, life: 0.18 });
+    }
+    let t = 0; const life = style === 'emp' ? 0.24 : 0.5 + power * 0.15;
     const c1 = new THREE.Color(color), c2 = new THREE.Color(color2);   // once per explosion, not per frame
     const shellMax = this._cap(pos, Infinity, PW_FX.blastShell);   // §3.4: cap the fireball peak at 0.64 of frame
     // fx path: the shell is a FLASH, not a balloon — kernel/ring/debris/cloud carry the structure

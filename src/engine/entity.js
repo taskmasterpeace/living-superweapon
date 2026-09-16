@@ -1558,12 +1558,36 @@ export class Fighter {
                 color: col, drag: 1.4, shrink: true, shape: 'flame' });
             }
             if (Math.random() < 0.12) game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 8 + Math.random() * 4, z: this.pos.z + (Math.random() * 2 - 1), vx: 0, vy: 6, vz: 0, life: 0.7, size: 3.2, color: '#2a201a', drag: 1.2, shrink: true });
+            // DEGREE 2 — BURNING (Robert's two-degrees ruling, 2026-09-16): after ~1.1s alight the
+            // LAVA CRUST forms — near-still molten-crack motes clinging to the body under the rising
+            // flames — and it OUTLIVES the fire ("what if the lava stayed there": `_charT` below).
+            this._burnHeat = Math.min(2.5, (this._burnHeat || 0) + dt);
+            if (this._burnHeat > 1.1) {
+              this._charT = 6;
+              if (Math.random() < 0.5) {
+                const hot = Math.random();
+                game.particles.spawn({ x: this.pos.x + (Math.random() * 3.2 - 1.6), y: this.pos.y + 1 + Math.random() * 6.5, z: this.pos.z + (Math.random() * 3.2 - 1.6),
+                  vx: 0, vy: 0.5, vz: 0, life: 0.9 + Math.random() * 0.5, size: 1.6 + Math.random() * 1.2,
+                  color: hot > 0.78 ? '#ffc94a' : hot > 0.5 ? '#ff5605' : '#20100a', drag: 2.2, shrink: true });
+              }
+            }
           } else if (Math.random() < 0.25) {
             game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
           }
         }
       }
       if (d.t <= 0) this._dots.splice(i, 1);
+    }
+    // DEGREE 2 AFTERMATH — the crust outlives the fire. Flames stop with the dot; the lava motes
+    // keep smouldering and fade over ~6s. Burnt, not just no-longer-burning.
+    if (this._charT > 0) {
+      this._charT -= dt; this._burnHeat = Math.max(0, (this._burnHeat || 0) - dt * 0.5);
+      if (game && this.state !== 'ko' && Math.random() < 0.30 * Math.min(1, this._charT / 3)) {
+        const hot = Math.random();
+        game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 1 + Math.random() * 6, z: this.pos.z + (Math.random() * 3 - 1.5),
+          vx: 0, vy: 0.4, vz: 0, life: 1.0 + Math.random() * 0.5, size: 1.5 + Math.random() * 1.1,
+          color: hot > 0.8 ? '#ff5605' : hot > 0.55 ? '#7e1602' : '#180b06', drag: 2.2, shrink: true });
+      }
     }
     // ACID: the corrosion timer, and the smoke that tells everyone the plate is open
     if (this._corrode > 0) {

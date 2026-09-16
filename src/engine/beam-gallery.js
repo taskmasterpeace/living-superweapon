@@ -1,6 +1,6 @@
 import { ROSTER } from '../data/characters.js';
 import { beamBuildOf, beamTemperOf, beamModeOf, BEAM_MODES, visOf } from '../data/visual.js';
-import { LIBRARY_BEAMS } from '../data/beams.js';
+import { LIBRARY_BEAMS, LIBRARY_SHOTS } from '../data/beams.js';
 import { TYPES } from './abilities.js';
 
 // THE BEAM GALLERY — Robert: "flip through every beam×mode in third person, no fight. Best way for me
@@ -24,15 +24,18 @@ export class BeamGallery {
     // roster's. That is the unassociation made visible: the stand's caster fires them fine.
     for (const b of LIBRARY_BEAMS) this.list.push({ heroId: null, heroName: 'LIBRARY', slot: '—', ab: b, name: b.name });
     // THE SHOTS WHEEL — Robert: "I need to be able to see these missiles, bro... show the rockets."
-    // Every projectile-type ability the roster carries, fired on a cadence at the stand's target.
+    // FIVE fire lanes, all driven through their REAL ability bodies (TYPES) with a synthetic
+    // press→hold→release cycle: projectiles fire on the press, rifles/volleys stream while held,
+    // bows/charges draw the hold and loose on the release. Plus the LIBRARY shot rows.
     this.shots = [];
     for (const d of ROSTER) {
       if (!d.abilities) continue;
       for (const k of ['lmb', 'rmb', 'q', 'e', 'f', 'r']) {
         const a = d.abilities[k];
-        if (a && a.type === 'projectile') this.shots.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
+        if (a && ['projectile', 'rifle', 'volley', 'bow', 'charge'].includes(a.type)) this.shots.push({ heroId: d.id, heroName: d.name, slot: k, ab: a, name: a.name });
       }
     }
+    for (const s of LIBRARY_SHOTS) this.shots.push({ heroId: null, heroName: 'LIBRARY', slot: '—', ab: s, name: s.name });
     // THE SPRAY WHEEL — "the wide short spray... we need to be able to control that... certain
     // things should go so far and so wide" (the sliders). Driven through the REAL cone ability
     // body (TYPES.cone) with a stand-owned state — zero mirror drift; the sliders override the
@@ -46,9 +49,12 @@ export class BeamGallery {
       }
     }
     this.kind = 'beam';                      // 'beam' | 'shot' | 'cone' — which wheel the stand is on
-    this.shotI = 0; this._shotT = 0;
+    this.shotI = 0; this._shotSt = { cd: 0 }; this._shotCycle = 0;   // ⚠ cd SEEDED: ready() is `st.cd <= 0` and undefined <= 0 is false
     this.coneI = 0; this._coneSt = {};
-    this.coneRange = null; this.coneArc = null;   // null = the ability's own authored numbers
+    // THE DIALS (null = the ability's own authored numbers) — the LAB layer, per wheel
+    this.coneRange = null; this.coneArc = null; this.coneVArc = null;
+    this.shotSpeed = null; this.shotGrav = null;    // GRAVITY = his "grenades float like Mars" tuner
+    this.beamWidth = null; this.beamLen = null;
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
@@ -64,9 +70,12 @@ export class BeamGallery {
     // spendKi always pass regardless of tick order. Restored in dispose.
     this._wasInfinite = p ? p.energyInfinite : false;
     if (p) { p.pos.set(-40, 0, -40); p.noPowers = true; p.energyInfinite = true; p.facing = Math.atan2(1, 0.12); }
-    // one passive target, straight down-range along +x, that the beam can play across
+    // one passive target, straight down-range along +x, that the beam can play across.
+    // ⚠ NOT a dummy and NOT invulnerable: `addDot` exempts dummies and the dot tick sits behind
+    // `invuln <= 0`, so a dummy target can never BURN — and the 🔥 button would be a control that
+    // lies. A real fighter with mountainous HP takes every status honestly and still cannot die.
     this.target = game.spawnDummy ? game.spawnDummy(p.pos.x + 46, p.pos.z + 6) : null;
-    if (this.target) { this.target.hp = this.target.maxHp = 1e9; this.target.invuln = 1e9; this.target._patrol = null; }
+    if (this.target) { this.target.hp = this.target.maxHp = 1e9; this.target.invuln = 0; this.target.isDummy = false; this.target._patrol = null; }
     this._home = p ? p.pos.clone() : null;      // the caster stands still; frameCamera composes the view
     // FREE THE CURSOR. A viewer is not mouse-look — clicking a button must not swing the view.
     this._wasLock = game.input ? game.input.pointerLock : false;
@@ -128,6 +137,8 @@ export class BeamGallery {
     c.ki = c.maxKi = Math.max(c.maxKi || 0, 9999); c.drainedT = 0;
     this._aim();
     const { def } = this._current();
+    if (this.beamWidth != null) def.radius = +(((def.radius || 1.6) * this.beamWidth)).toFixed(2);   // the FAT dial
+    if (this.beamLen != null) def.maxLen = this.beamLen;                                             // the REACH dial
     const beam = g.spawnBeamFor(c, def, def.charge ? (def.chargePower || 1.6) : 1);   // charge beams show at full width
     if (beam) {
       // ⚠ LEAVE IT IN projectiles.list so the manager runs every beam's real pre-passes (clash,
@@ -143,45 +154,57 @@ export class BeamGallery {
   }
 
   step(d) {
-    if (this.kind === 'shot') { this.shotI = (this.shotI + d + this.shots.length) % this.shots.length; this._shotT = 0; this._updateChip(); return; }
-    if (this.kind === 'cone') { this._stopCone(); this.coneI = (this.coneI + d + this.cones.length) % this.cones.length; this._syncSliders(); this._updateChip(); return; }
-    this.i = (this.i + d + this.list.length) % this.list.length; this.spawn();
+    if (this.kind === 'shot') { this._stopShot(); this.shotI = (this.shotI + d + this.shots.length) % this.shots.length; this._configSliders(); this._updateChip(); return; }
+    if (this.kind === 'cone') { this._stopCone(); this.coneI = (this.coneI + d + this.cones.length) % this.cones.length; this._configSliders(); this._updateChip(); return; }
+    this.i = (this.i + d + this.list.length) % this.list.length; this.spawn(); this._configSliders();
   }
   cycleMode() { if (this.kind !== 'beam') return; this.modeIdx = this.modeIdx + 1 >= BEAM_MODES.length ? -1 : this.modeIdx + 1; this.spawn(); }
   toggleKind() {
     if (this.kind === 'cone') this._stopCone();
+    if (this.kind === 'shot') this._stopShot();
     this.kind = this.kind === 'beam' ? 'shot' : this.kind === 'shot' ? 'cone' : 'beam';
     if (this.kind === 'beam') this.spawn();
-    else { this._drop(); this._shotT = 0; this._updateChip(); }
-    if (this._sliderRow) this._sliderRow.style.display = this.kind === 'cone' ? 'flex' : 'none';
-    if (this.kind === 'cone') this._syncSliders();
+    else { this._drop(); this._updateChip(); }
+    if (this._sliderRow) this._sliderRow.style.display = 'flex';
+    this._configSliders();
   }
-  // the held spray fades out through the body's own release branch — never a hard cut
+  // held lanes fade out through the body's own release branch — never a hard cut
   _stopCone() {
     try { TYPES.cone(this.caster, this.cones[this.coneI]?.ab || {}, this._coneSt, this.g, { held: false, dt: 1 / 60 }); } catch {}
     if (this._coneSt._loop) { try { this._coneSt._loop.stop(); } catch {} this._coneSt._loop = null; }
     this._coneSt = {};
   }
-
-  // FIRE ONE SHOT through the real spawnProjectile door. ⚠ The field mapping mirrors the
-  // `projectile` ability body (abilities.js) — the stand's caster is noPowers, so it cannot go
-  // through runSlot; if a new projectile flag lands there, add it here too (a missing field shows
-  // up as a stand-only visual gap, never a combat one).
-  _fireShot(def) {
-    const g = this.g, c = this.caster; if (!c) return;
-    const vel = def.grav ? c.aim.clone().setY(.5) : c.aim3.clone();
-    g.projectiles.spawnProjectile(c, { vis: visOf(def),
-      pos: c.muzzle ? c.muzzle(new (c.pos.constructor)(), 3.6, 5.8) : c.pos.clone(),
-      vel: vel.setLength(def.speed || 70),
-      radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
-      homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
-      arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
-      card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
-      blade: def.blade, canister: def.canister, missile: def.missile, pierce: def.pierce,
-      dtype: def.dtype,
-    });
-    if (g.muzzleFlash) g.muzzleFlash(c, def.color, 1);
+  _stopShot() {
+    const ab = this.shots[this.shotI]?.ab;
+    try { if (ab && TYPES[ab.type]) { this._shotSt.def = ab; TYPES[ab.type](this.caster, ab, this._shotSt, this.g, { dt: 1 / 60, pressed: false, held: false, released: true }); } } catch {}
+    if (this._shotSt._loop) { try { this._shotSt._loop.stop(); } catch {} this._shotSt._loop = null; }
+    this._shotSt = { cd: 0 }; this._shotCycle = 0; this._shotPh = undefined;
   }
+
+  // COPY ROW — the LAB's save seed: the current row WITH your dial edits, as a paste-ready JSON
+  // library row (clipboard + console). Paste it back to Claude and it becomes data/beams.js truth.
+  copyRow() {
+    let def;
+    if (this.kind === 'shot') {
+      def = { ...this.shots[this.shotI].ab };
+      if (this.shotSpeed != null && def.speed) def.speed = Math.round(def.speed * this.shotSpeed);
+      if (this.shotGrav != null && def.grav) def.grav = this.shotGrav;
+    } else if (this.kind === 'cone') {
+      def = { ...this.cones[this.coneI].ab };
+      if (this.coneRange != null) def.range = this.coneRange;
+      if (this.coneArc != null) def.arc = this.coneArc;
+      if (this.coneVArc != null) def.vArc = this.coneVArc;
+    } else {
+      def = this._current().def;
+      if (this.beamWidth != null) def.radius = +((def.radius || 1.6) * this.beamWidth).toFixed(2);
+      if (this.beamLen != null) def.maxLen = this.beamLen;
+    }
+    const txt = JSON.stringify(def);
+    try { navigator.clipboard?.writeText(txt); } catch {}
+    console.log('[GALLERY ROW]', txt);
+    if (this._chipText) { const keep = this._chipText.innerHTML; this._chipText.innerHTML = '<b style="color:#7dff9a">ROW COPIED — paste it to Claude</b>'; setTimeout(() => { if (this._chipText) this._chipText.innerHTML = keep; }, 900); }
+  }
+
   setSpeed(d) {
     this.speed = Math.min(6, Math.max(0.25, Math.round((this.speed + d * 0.25) * 100) / 100));
     if (this.beam) this.beam.animSpeed = this.speed;
@@ -202,9 +225,28 @@ export class BeamGallery {
     if (this.g.input) this.g.input.pointerLock = false;               // free cursor — a viewer isn't mouse-look
     if (this._home) { c.pos.copy(this._home); if (c.vel) c.vel.set(0, 0, 0); }   // caster stands still
     this._aim();                                                       // beam + view stay locked on the target, never drift
-    if (this.kind === 'shot') {                                        // the SHOTS wheel: refire on a cadence; the manager ticks them
-      this._shotT -= 1 / 60;
-      if (this._shotT <= 0 && this.shots.length) { this._fireShot(this.shots[this.shotI].ab); this._shotT = 0.6; }   // ~0.55s flight to the stand target — keep one in the air
+    if (this.kind === 'shot') {
+      // ONE generic driver, five lanes — the REAL ability bodies with a synthetic
+      // press→hold→release cycle. Their own cd/pay pace the refire (authored rhythm).
+      const it = this.shots[this.shotI];
+      if (it && TYPES[it.ab.type]) {
+        const def = { ...it.ab };
+        if (this.shotSpeed != null && def.speed) def.speed = Math.round(def.speed * this.shotSpeed);
+        if (this.shotGrav != null && def.grav) def.grav = this.shotGrav;
+        this._shotCycle += 1 / 60;
+        if (this._shotSt.cd > 0) this._shotSt.cd -= 1 / 60;   // runSlot owns this in real play; the stand owns it here
+        if (this._shotSt.cd > 0.5) this._shotSt.cd = 0.5;     // SHOW pacing: a 14s ult cooldown is combat truth, not stand truth
+        this._shotSt.def = def;                               // runSlot stamps st.def too (chargeOrb reads it)
+        const hold = def.type === 'charge' || def.type === 'bow' || def.charge;
+        const period = hold ? 1.6 : Math.max(Math.min(def.cd || 0.3, 1.2) + 0.2, 0.7);
+        // ⚠ EDGES BY BOUNDARY CROSSING, never `ph < epsilon` — frames land on k/60 EXACTLY, so the
+        // epsilon compare came down to floating-point luck per period (measured: pressed never
+        // fired at period 1.6, fired at 0.7). prevPh tracks the last phase; a wrap IS the press.
+        const ph = this._shotCycle % period, rel = period - 0.12, prevPh = this._shotPh ?? Infinity;
+        this._shotPh = ph;
+        const inp = { dt: 1 / 60, pressed: ph < prevPh, held: ph < rel, released: prevPh < rel && ph >= rel };
+        try { TYPES[def.type](c, def, this._shotSt, this.g, inp); } catch (e) { this._lastErr = e.message; }
+      }
       return;
     }
     if (this.kind === 'cone') {                                        // the SPRAY wheel: hold the REAL cone body every frame
@@ -262,32 +304,69 @@ export class BeamGallery {
     });
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
     el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn);
-    // THE SLIDERS ("some sliders where... certain things should be able to go so far and so
-    // wide") — they write the exact `range`/`arc` fields the cone hit test + spray read. Shown
-    // only on the SPRAY wheel. Vertical aperture is NOT a field the engine has yet — no fake dial.
+    // THE DIALS ROW ("some sliders where... certain things should be able to go so far and so
+    // wide") — three generic slider slots, reconfigured per wheel by _configSliders(): they write
+    // the exact fields the engine reads. ⧉ ROW copies the edited row as paste-ready library JSON.
     const srow = document.createElement('div');
-    srow.style.cssText = 'display:none;flex-basis:100%;justify-content:center;align-items:center;gap:10px;padding-top:5px;';
-    const mkS = (lab, min, max, step, fmt, on) => {
+    srow.style.cssText = 'display:flex;flex-basis:100%;justify-content:center;align-items:center;gap:10px;padding-top:5px;';
+    this._sl = [];
+    for (let s = 0; s < 3; s++) {
       const w = document.createElement('label'); w.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;color:#9fd4ff;';
-      const t = document.createElement('span'); t.textContent = lab;
-      const r = document.createElement('input'); r.type = 'range'; r.min = min; r.max = max; r.step = step; r.style.width = '120px';
+      const t = document.createElement('span');
+      const r = document.createElement('input'); r.type = 'range'; r.style.width = '110px';
       const v = document.createElement('b'); v.style.cssText = 'color:#f5e6c8;min-width:44px;';
-      r.oninput = () => { on(+r.value); v.textContent = fmt(+r.value); this._updateChip(); };
-      w.append(t, r, v); srow.appendChild(w); return { r, v };
-    };
-    this._sRange = mkS('REACH', 10, 120, 2, v => v + 'u', v => this.coneRange = v);
-    this._sArc = mkS('WIDTH', 0.15, 1.5, 0.05, v => Math.round(v * 114.6) + '°', v => this.coneArc = v);
-    srow.appendChild(mkBtn('↺', 'Back to the authored numbers', () => { this.coneRange = null; this.coneArc = null; this._syncSliders(); this._updateChip(); }));
+      const slot = { w, t, r, v, def: null };
+      r.oninput = () => { if (!slot.def) return; slot.def.set(+r.value); v.textContent = slot.def.fmt(+r.value); this._updateChip(); };
+      w.append(t, r, v); srow.appendChild(w); this._sl.push(slot);
+    }
+    srow.appendChild(mkBtn('↺', 'Back to the authored numbers', () => this.resetDials()));
+    srow.appendChild(mkBtn('⧉ ROW', 'Copy this row (with your edits) as library JSON', () => this.copyRow()));
     el.style.flexWrap = 'wrap'; el.appendChild(srow); this._sliderRow = srow;
     document.body.appendChild(el);
     this.chip = el; this._chipText = text;
+    this._configSliders();
   }
-  _syncSliders() {
-    if (!this._sRange) return;
-    const a = this.cones[this.coneI]?.ab || {};
-    const r = this.coneRange ?? a.range ?? 34, w = this.coneArc ?? a.arc ?? 1.05;
-    this._sRange.r.value = r; this._sRange.v.textContent = r + 'u';
-    this._sArc.r.value = w; this._sArc.v.textContent = Math.round(w * 114.6) + '°';
+  // which dials this wheel gets, what they read, what they write — all real engine fields
+  _sliderDefs() {
+    const deg = v => Math.round(v * 114.6) + '°';
+    if (this.kind === 'cone') {
+      const a = this.cones[this.coneI]?.ab || {};
+      return [
+        { lab: 'REACH', min: 10, max: 120, step: 2, fmt: v => v + 'u', get: () => this.coneRange ?? a.range ?? 34, set: v => this.coneRange = v },
+        { lab: 'WIDTH', min: .15, max: 1.5, step: .05, fmt: deg, get: () => this.coneArc ?? a.arc ?? 1.05, set: v => this.coneArc = v },
+        { lab: 'RISE', min: .05, max: .8, step: .05, fmt: deg, off: () => this.coneVArc == null && a.vArc == null, get: () => this.coneVArc ?? a.vArc ?? .35, set: v => this.coneVArc = v },
+      ];
+    }
+    if (this.kind === 'shot') {
+      const a = this.shots[this.shotI]?.ab || {};
+      return [
+        { lab: 'SPEED', min: .3, max: 2.5, step: .05, fmt: v => '×' + v, get: () => this.shotSpeed ?? 1, set: v => this.shotSpeed = v },
+        { lab: 'GRAVITY', min: .2, max: 3, step: .1, fmt: v => '×' + v, off: () => !a.grav, get: () => this.shotGrav ?? a.grav ?? 1, set: v => this.shotGrav = v },
+      ];
+    }
+    const a = this.list[this.i]?.ab || {};
+    return [
+      { lab: 'FAT', min: .4, max: 3, step: .1, fmt: v => '×' + v, get: () => this.beamWidth ?? 1, set: v => { this.beamWidth = v; this.spawn(); } },
+      { lab: 'REACH', min: 40, max: 240, step: 5, fmt: v => v + 'u', get: () => this.beamLen ?? a.maxLen ?? 120, set: v => { this.beamLen = v; this.spawn(); } },
+    ];
+  }
+  _configSliders() {
+    if (!this._sl) return;
+    const defs = this._sliderDefs();
+    for (let s = 0; s < this._sl.length; s++) {
+      const slot = this._sl[s], d = defs[s];
+      slot.def = d || null; slot.w.style.display = d ? 'flex' : 'none';
+      if (!d) continue;
+      slot.t.textContent = d.lab; slot.r.min = d.min; slot.r.max = d.max; slot.r.step = d.step;
+      const val = d.get(); slot.r.value = val;
+      slot.v.textContent = d.off?.() ? '—' : d.fmt(val);   // an OFF dial says so — it never fakes a number
+    }
+  }
+  resetDials() {
+    if (this.kind === 'cone') this.coneRange = this.coneArc = this.coneVArc = null;
+    else if (this.kind === 'shot') this.shotSpeed = this.shotGrav = null;
+    else { this.beamWidth = this.beamLen = null; this.spawn(); }
+    this._configSliders(); this._updateChip();
   }
 
   _updateChip() {
@@ -305,9 +384,10 @@ export class BeamGallery {
     if (this.kind === 'shot') {
       const it = this.shots[this.shotI]; if (!it) return;
       const a = it.ab;
-      const flags = [a.missile && 'MISSILE', a.pierce && 'AP', a.homing && 'HOMING ' + a.homing, a.canister && 'CANISTER',
+      const flags = [a.type !== 'projectile' && a.type.toUpperCase(), a.weapon && a.weapon.toUpperCase(),
+        a.missile && 'MISSILE', a.pierce && 'AP', a.homing && 'HOMING ' + a.homing, a.canister && 'CANISTER',
         a.blade && 'BLADE', a.card && 'CARD', a.disc && 'DISC', a.grav && 'ARC', a.bounces && 'RICOCHET',
-        a.boomerang && 'BOOMERANG', a.payload && ('PAYLOAD ' + a.payload).toUpperCase()].filter(Boolean).join(' · ') || 'PLAIN BOLT';
+        a.boomerang && 'BOOMERANG', a.explosion && a.explosion.toUpperCase(), a.payload && ('PAYLOAD ' + a.payload).toUpperCase()].filter(Boolean).join(' · ') || 'PLAIN BOLT';
       this._chipText.innerHTML = `<b style="color:#f5b21a">➶ SHOT STAND</b> &nbsp; ${this.shotI + 1}/${this.shots.length}<br>`
         + `<b style="font-size:13px">${it.heroName}</b> — ${it.name}<br><span style="color:#9fd4ff">${flags}</span>`;
       return;
@@ -324,6 +404,7 @@ export class BeamGallery {
     try { window.removeEventListener('keydown', this._onKey, true); } catch {}
     if (this.chip && this.chip.parentNode) this.chip.parentNode.removeChild(this.chip);
     this._stopCone();
+    this._stopShot();
     this._drop();
     if (this.g) this.g.mapCam = null;
     if (this.g && this.g.input) this.g.input.pointerLock = this._wasLock;
