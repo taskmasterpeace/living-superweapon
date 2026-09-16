@@ -475,6 +475,10 @@ export class Game {
     this.hardLock = null; this._aim3pt = new THREE.Vector3();
     // field of vision — enemies only shown where the player can see them
     this.fov = true; this.visNear = 26; this.visRange = 96; this.visCos = Math.cos(0.96); this.visReveal = 130;
+    // Player vision-cone tightness (Options → VISION). 1 = the base cone; below 1
+    // shortens the reach AND narrows the wedge; the FOG visual is synced to it each
+    // frame so what you SEE and what the engine LETS you see can never drift.
+    this.visionScale = 1;
     this._ghostGeo = new THREE.CapsuleGeometry(1.5, 3.2, 4, 8);
     this._buildReticle();
     this._buildLockMark();
@@ -1611,7 +1615,12 @@ export class Game {
     if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(!this.world.surfaceSight);
     const h2 = this.humans[1] && this.humans[1].fighter;
-    this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null, p.pos.y + 5);
+    // Effective cone for THIS frame = base × the player's VISION setting. Computed
+    // once here, read by _humanSees, and pushed to the fog so both agree exactly.
+    const s = this.visionScale || 1;
+    this._visRangeEff = this.visRange * s;
+    this._visConeEff = clamp(this.visCos + (1 - this.visCos) * (1 - s), -1, 0.999);   // below 1 → higher cos threshold → narrower wedge
+    this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null, p.pos.y + 5, this._visRangeEff, this._visConeEff, this.visNear);
     for (const e of this.entities) {
       if (e._banished || e._highwallRetiredBody) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
       if (e._inert) { e.obj.visible = false; continue; }      // POSSESSED AWAY: the body is left behind, not here
@@ -1641,7 +1650,8 @@ export class Game {
     const vm = ((p.sheet && p.sheet.visMult) || 1) * (p.blindT > 0 ? 0.28 : 1);   // AWARENESS extends the eye — smoke closes it (manual §14)
     const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
     if (d < this.visNear * vm) return true;
-    if (d < this.visRange * vm && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
+    const range = this._visRangeEff ?? this.visRange, cos = this._visConeEff ?? this.visCos;   // Options → VISION tightens both
+    if (d < range * vm && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > cos) return this.canSee(p, e);
     return false;
   }
 

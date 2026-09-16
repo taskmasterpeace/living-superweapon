@@ -3828,3 +3828,32 @@ honestly lopsided, production build passes, sim still 0.64ms/frame.
   **18/18, 0 console errors** through real `takeDamage` KOs. Golden Path beat #2 is now WIRED
   (`docs/GOLDEN_PATH.md`). Deliberately left in `docs/BACKLOG.md`: airborne "where compatible", the
   knockdown DOWN clip, the async paid get-up, and all awaiting-source slots.
+
+## VEHICLE STEERING WAS INVERTED + A VISION-CONE DIAL (2026-09-15) — found by playing the integrated build
+- Robert, driving the tank in the HIGHWALL sim: *"the tank is inverted… left to be right and right to
+  be left… every vehicle was inverted… the plane's up and down makes sense."* Two separate fixes.
+- **STEERING — one shared sign, all fleet vehicles.** `fleet-pilot.js` built `turn/bank = KeyD − KeyA`
+  and `vehicle-motion.js`'s convention is `steer>0 → yaw+`. ⚠ **THE CHASE CAMERA FOLLOWS THE BODY YAW**
+  (`world.js` ~2623, looks along `+forward=(sin,cos)`), and a +Z-looking Three.js camera puts world +X
+  on its LEFT — so `yaw+` reads as a LEFT turn on screen while the TURRET (mouse-aim, which *is* the
+  camera) and PITCH (W/S) stay correct. That is exactly the "turret feels right, body inverted" report.
+  Fix: the controller owns screen handedness (the motion header says so), so D must map to `steer<0` →
+  `turn/bank = KeyA − KeyD`. One sign fixes tank/mech/hover/ship/rotor/fixedwing (they all read the same
+  `turn`); AI is untouched (it computes its own steer). ⚠ **DON'T DERIVE THE HANDEDNESS — MEASURE IT.**
+  I flip-flopped twice on paper; `tools/steer-audit-browser.mjs` drives the real pilot and asserts the
+  sign: **before** D→yaw +0.55, **after** D→yaw −0.55 (turns right), A→+0.55 (left). The scout
+  (`_scoutVehicle`) is NOT touched — it's a city/iso-camera vehicle, a different handedness; audit it
+  separately if the convoy car is also inverted.
+- **VISION — a tunable cone that can't drift from the fog.** The player sight cone (`game.visNear/
+  visRange/visCos` = 26 / 96 / cos(0.96) ≈ 110° wide) and the FOG shader (`fog.js` uniforms) held
+  DUPLICATE constants. New `game.visionScale` (Options → VISION, `SETTINGS.vision`, default **0.85** = a
+  hair tighter) scales the range AND narrows the wedge in `_humanSees`, and `updateVision` pushes the
+  same effective `range/cos/near` into `updateFog` every frame — so what you SEE and what the engine
+  LETS you see are the same cone by construction (the can't-drift law). Slider min 0.5 (tight) → 1.2
+  (wide); `applySettings` clamps. ⚠ AI vision is its OWN system — this is player-side feel only, no
+  fairness impact. Verified `tools/vision-audit-browser.mjs` **7/7**: a foe at 60u is seen at 1.2, gone
+  at 0.5, and the fog `uRange`/`uCos` track the gameplay cone exactly.
+- Gates: build green · steer-audit 7/7 · vision-audit 7/7 · deathSuite still 18/18 · 0 console errors.
+  ⚠ pwSuite (12) and groundSuite (a `melee.js:414` `f.center` throw) fail on this branch — the SAME
+  pre-existing headless-harness cluster from §50 (melee self-proof + thrown-prop stub), in files this
+  work never touched. The real game plays fine.

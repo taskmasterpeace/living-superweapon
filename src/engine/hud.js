@@ -991,6 +991,7 @@ export class HUD {
       <div class="dgsec">GAME</div>
       ${slider('voice', 'Battle Cry Intensity', 1, 0.05)}
       ${slider('shake', 'Screen Shake', 1.5, 0.05)}
+      <div class="orow"><span class="ol">Vision Cone · how far &amp; wide you see (fog + targeting)</span><input type="range" data-k="vision" min="0.5" max="1.2" step="0.05" value="${S.vision ?? 0.85}"><span class="ov" data-v="vision">${Math.round((S.vision ?? 0.85) * 100)}%</span></div>
       ${slider('lookSens', 'Mouse Look Sensitivity', 3, 0.1)}
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}

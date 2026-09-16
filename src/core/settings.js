@@ -74,6 +74,7 @@ export const SETTINGS = {
   hints: false,     // F1 opens the full control reference; keep the fight unobscured by default.
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
+  vision: 0.85,     // VISION CONE tightness 0.5 (tight) – 1.2 (wide); scales the sight range + wedge AND the fog you see. Default a hair tighter than the base 1.0.
   spacingRings: false,  // THE SPACING UI (manual §38): your three strike reaches, drawn on the ground
   sundial: true,        // the hanging dial: sun, moon, noon/midnight, the day and the time
   // 'aim'    — W goes where the MOUSE points, A/D strafe across it (character-relative; the default)
@@ -169,6 +170,7 @@ export function applySettings(game) {
       a.setBus('ui', SETTINGS.volUi);
     }
   }
+  game.visionScale = Math.max(0.5, Math.min(1.3, SETTINGS.vision ?? 1));   // Options → VISION: tightens the sight cone + the fog you see
   if (w) {
     w.shakeMult = SETTINGS.shake;
     w._lookSens = 0.0024 * (SETTINGS.lookSens ?? 1);   // PowerWorld mouse-look — the base rate × the player's dial

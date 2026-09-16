@@ -91,8 +91,15 @@ export class FleetPilot {
     const barrel = 0;
     this._c = {
       fwd: Number(d('KeyW')) - Number(d('KeyS')),
-      turn: Number(d('KeyD')) - Number(d('KeyA')),
-      bank: Number(d('KeyD')) - Number(d('KeyA')),
+      // ⚠ STEER HANDEDNESS: the fleet chase camera follows the BODY yaw (world.js
+      // ~2623) and looks along +forward=(sin,cos); a +Z-looking camera puts world
+      // +X on its LEFT, so the motion convention `steer>0 → yaw+` reads as a LEFT
+      // turn on screen. The controller owns screen handedness (vehicle-motion.js
+      // header), so D (turn right) must map to steer<0. A=+1 / D=−1. Every fleet
+      // class shares this camera, so this one sign fixes tank/mech/hover/ship/rotor/
+      // fixedwing at once. (Turret mouse-aim and W/S pitch are separate and correct.)
+      turn: Number(d('KeyA')) - Number(d('KeyD')),
+      bank: Number(d('KeyA')) - Number(d('KeyD')),
       throttle: Number(d('KeyR')) - Number(d('KeyF')),      // aircraft throttle
       pitch: Number(d('KeyS')) - Number(d('KeyW')),          // aircraft collective
       lift: Number(d('Space')) - Number(d('ControlLeft') || d('KeyZ')),

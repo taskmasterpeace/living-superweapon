@@ -94,12 +94,17 @@ export const FogMixin = {
     this.fogMat.uniforms.uOccExt.value = need;
   },
 
-  updateFog(px, pz, dx, dz, tint, p2, eyeY=5) {
+  updateFog(px, pz, dx, dz, tint, p2, eyeY=5, range, cos, near) {
     if (!this.fogMat) return;
     const u = this.fogMat.uniforms;
     u.uPlayer.value.set(px, pz); u.uDir.value.set(dx, dz);
     u.uEyeY.value=eyeY;u.uEye2Y.value=(p2?.y||0)+5;
     if (tint) u.uTint.value.set(tint);
+    // The VISIBLE cone is driven by the gameplay cone (game.js updateVision), so the
+    // fog can never reveal more (or less) than the engine actually lets you see.
+    if (Number.isFinite(range)) u.uRange.value = range;
+    if (Number.isFinite(cos)) u.uCos.value = cos;
+    if (Number.isFinite(near)) u.uNear.value = near;
     if (p2) { u.uP2.value.set(p2.x, p2.z); u.uHas2.value = 1; } else u.uHas2.value = 0;
   },
 
