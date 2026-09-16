@@ -3783,6 +3783,7 @@ export class Game {
         if (Math.random() < 0.12 + k * 0.18) this.vfx.lightning(pos, { color: pal.glow, count: 1, radius: 2.6 + k * 2.2, height: 3.5 });
         break;
       case 'sigil':       // magic draws a converging circle on the ground and sheds slow motes
+        if (caster._csRing == null) caster._csRing = caster._csAcc - 1;   // the FIRST ring fires immediately
         if (caster._csAcc - (caster._csRing || 0) > 0.55) {
           caster._csRing = caster._csAcc;
           this.vfx.ring({ x: caster.pos.x, y: Math.max(0.4, caster.pos.y * 0.1 + 0.4), z: caster.pos.z }, { color: pal.glow, r0: 5 + k * 2.5, r1: 0.9, life: 0.5, flat: true, opacity: 0.5 });

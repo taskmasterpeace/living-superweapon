@@ -94,3 +94,19 @@ flames, softer scorch, longer arc re-strikes), then CHARGE styles, then IMPACT s
 **Iteration 4 orders: beam families (the 24 beams are still stock — the lava octagon, SOL/VEGAS) ·
 ribbon length + head flare · warm-to-soot smoke gradient · guaranteed first sigil ring ·
 impact dome restructure + family debris silhouettes · full 12-family sweep + regrade.**
+
+### Iteration 4 — THE LAVA BEAM LANDS (evidence: fire/ice sheets incl. the new BEAM column)
+
+| what shipped | the critic |
+|---|---|
+| **THE FIRE BEAM** — `shadeLavaCore`: black rock crust quantized to the octagon's facets, molten cracks scrolling the traveled arc, blackbody ramp to white-hot; fire tongues ride the sheath above it. Robert's spec verbatim, live in BOTH render paths. | **8.5** — instantly nameable at grayscale; wants city-bloom feed on the cracks + far-end contact glow |
+| **THE ICE BEAM** — `shadeIceCore`: rigid plate bands (structure never scrolls — ice doesn't flow), bright frost seams over the bloom threshold, cold sparkle. | **8** — utterly distinct from fire; wants icicle fringe later |
+| Matrix gained the BEAM column (6×3 sheets); ribbon 14→22 nodes; smoke born warm cooling to soot inside each puff; first sigil ring guaranteed; the fx impact shell is a flash, not a balloon (peak 0.9→0.55). | |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 4 | 2026-09-16 | LAVA + CRYSTAL beam cores (both paths) · beam matrix column · ribbon 22 · warm-to-soot puffs · first-sigil fix · shell restructure | energy/electric/magic/water beams still generic · full-sweep regrade pending | **≈6.3** |
+
+**Iteration 5 orders: full 12-family sweep + regrade · electric/magic/energy beam surfaces
+(comb lanes for shock, streamline pulses for ki, sigil-banded arcane) · beam contact glow at
+the receiving end · family debris silhouettes on impact (ice spikes, fire tongues).**

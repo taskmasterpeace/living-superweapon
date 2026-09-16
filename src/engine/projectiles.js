@@ -311,7 +311,7 @@ class Projectile {
       // the last N positions, hot at the head, fading to nothing at the tail. One mesh, one draw,
       // vertices rewritten in place each frame, camera-faced per segment. Energy-class bolts only.
       if (this._fx && this._fx.f.flight.style !== 'none') {
-        const N = this._ribN = 14;
+        const N = this._ribN = 22;
         this._ribPos = new Float32Array(N * 3);
         this._ribCount = 0;
         const rg = new THREE.BufferGeometry();

@@ -38,12 +38,77 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false,
   core.color.lerp(glow.color,.8);time=shadeBeamSurface(core,color);
   const hue={};glow.color.getHSL(hue);glow.color.setHSL(hue.h,energySaturation(hue.s),Math.min(.12,hue.l));
   shadeBeamSheath(glow);tip.color.set(color);if(detail)detail.color.set(color);
-  if(family==='fire'){
-   time={value:0};shadeFireSurface(core,time);shadeFireSurface(glow,time,true);
-   tip.color.set('#ffbf45');if(detail)detail.color.set('#ffc34a').multiplyScalar(1.2);
-  }
+ }
+ // ELEMENT CORES run in BOTH paths (Refs #42 iter 4) — the city's additive beams and PowerWorld's
+ // readable ones share one element identity; the family branch lands LAST so it owns the program.
+ if(family==='fire'){
+  // Robert's lava spec, verbatim: an octagon tube "that's black and orange underneath, like lava —
+  // and then fire above that." The CORE is the crust (dark rock, scrolling molten cracks); the
+  // SHEATH carries the tongues. The 8-radial tube already gives the octagonal silhouette.
+  time={value:0};
+  shadeLavaCore(core,time);
+  core.blending=THREE.NormalBlending;core.side=THREE.DoubleSide;core.opacity=1;
+  shadeFireSurface(glow,time,false);
+  tip.color.set('#ffbf45');if(detail)detail.color.set('#ffc34a').multiplyScalar(1.2);
+ } else if(family==='ice'){
+  time={value:0};
+  shadeIceCore(core,time);
+  core.blending=THREE.NormalBlending;core.side=THREE.DoubleSide;core.opacity=1;
+  tip.color.set('#eaffff');if(detail)detail.color.set('#d8f2ff');
  }
  return{core,glow,tip,detail,time};
+}
+
+// THE LAVA CRUST — dark rock quantized into the octagon's facets, molten cracks scrolling along
+// the traveled arc (never world space: the pattern must RIDE the beam — anisotropy law, mined
+// from AvatarCastingAbilitiesThreeJS (MIT), docs/beam-makeover/AVATAR_CASTING_TECHNIQUES.md).
+function shadeLavaCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.lavaTime=time;
+  shader.vertexShader='attribute float beamArc;varying float lavaArc;varying vec3 lavaField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+lavaArc=beamArc;lavaField=normal;`);
+  shader.fragmentShader='uniform float lavaTime;varying float lavaArc;varying vec3 lavaField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(lavaField);
+float flow=lavaArc*0.22-lavaTime*5.5;
+float n1=sin(dot(fld,vec3(3.7,5.1,2.3))+flow);
+float n2=sin(dot(fld,vec3(7.3,2.9,6.1))*1.6+flow*2.13);
+float crust=.5+.5*(n1*.62+n2*.38);
+float crack=smoothstep(.5,.82,1.0-abs(crust*2.0-1.0));
+float facet=.88+.12*fract(sin(dot(floor(fld*2.6),vec3(12.9898,78.233,37.719)))*43758.5453);
+vec3 rock=vec3(.045,.028,.018)*facet;
+vec3 lava=mix(vec3(.62,.06,.004),vec3(1.35,.34,.02),crack);
+lava=mix(lava,vec3(1.6,1.12,.45),pow(crack,3.0)*.75);
+diffuseColor.rgb=mix(rock,lava,crack);
+diffuseColor.a=smoothstep(0.0,1.4,lavaArc);`);
+ };
+ material.customProgramCacheKey=()=> 'beam-lava-v1';
+}
+
+// THE CRYSTAL CORE — ice is RIGID: the plate structure never scrolls (arc-only), only the seams
+// glint. Seams push over the bloom threshold so an ice beam glows COLD, not hot.
+function shadeIceCore(material,time){
+ material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.iceTime=time;
+  shader.vertexShader='attribute float beamArc;varying float iceArc;varying vec3 iceField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+iceArc=beamArc;iceField=normal;`);
+  shader.fragmentShader='uniform float iceTime;varying float iceArc;varying vec3 iceField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 fld=normalize(iceField);
+float band=iceArc*0.3;
+float c1=sin(dot(fld,vec3(4.1,2.3,5.7))+band);
+float c2=sin(dot(fld,vec3(2.9,6.7,3.1))*1.9+band*1.61);
+float plate=.5+.5*(c1*.6+c2*.4);
+float pid=fract(sin(dot(floor(fld*3.1)+floor(band),vec3(12.9898,78.233,37.719)))*43758.5453);
+float seam=smoothstep(.72,.88,plate);
+vec3 deepIce=vec3(.06,.16,.26),pale=vec3(.55,.82,.95);
+diffuseColor.rgb=mix(deepIce,pale*(.8+.2*pid),plate*.85);
+diffuseColor.rgb+=vec3(.85,1.0,1.15)*seam*1.4;
+float sparkle=pow(max(0.0,sin(iceArc*17.0+pid*6.3+iceTime*8.0)),8.0);
+diffuseColor.rgb+=vec3(1.0)*sparkle*.8;
+diffuseColor.a=smoothstep(0.0,1.4,iceArc)*.96;`);
+ };
+ material.customProgramCacheKey=()=> 'beam-ice-v1';
 }
 
 // Flame has broken, advecting tongues and a soot envelope. This shades the

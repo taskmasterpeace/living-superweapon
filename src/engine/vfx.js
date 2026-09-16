@@ -129,11 +129,13 @@ export class VFX {
     let t = 0; const life = 0.5 + power * 0.15;
     const c1 = new THREE.Color(color), c2 = new THREE.Color(color2);   // once per explosion, not per frame
     const shellMax = this._cap(pos, Infinity, PW_FX.blastShell);   // §3.4: cap the fireball peak at 0.64 of frame
+    // fx path: the shell is a FLASH, not a balloon — kernel/ring/debris/cloud carry the structure
+    const shellPeak = fx ? 0.55 : 0.9, shellGrow = fx ? 0.9 : 1.1;
     this._add({
       update: (dt) => {
         t += dt; const k = t / life;
-        shell.scale.setScalar(Math.min(radius * (0.3 + k * 1.1), shellMax));
-        shell.material.opacity = Math.max(0, 0.9 * (1 - k));
+        shell.scale.setScalar(Math.min(radius * (0.3 + k * shellGrow), shellMax));
+        shell.material.opacity = Math.max(0, shellPeak * (1 - k));
         shell.material.color.lerpColors(c1, c2, k);
         l.intensity = Math.max(0, 10 * power * (1 - k * k));
         return k >= 1;
@@ -171,7 +173,7 @@ export class VFX {
       // REAL SMOKE — normal-blend billboard puffs (the additive system cannot render soot; goal
       // board iter 2 root cause). Column now, stragglers climbing behind it at level III.
       const puffs = Math.round((5 + power * 3) * LV.cloud);
-      this.smokePuffs(pos, { count: puffs, colors: pal ? [...pal.smoke, '#191a1e'] : undefined, rise, dur, size: 4.5 + power * 2, spread: radius * 0.3, opacity: 0.55 });
+      this.smokePuffs(pos, { count: puffs, colors: pal ? [...pal.smoke, '#191a1e'] : undefined, warm: imp && imp.afterFx === 'embers' ? pal.glow : null, rise, dur, size: 4.5 + power * 2, spread: radius * 0.3, opacity: 0.55 });
       let ct = 0, fired = 0; const stragglers = Math.max(0, Math.round(LV.cloud) - 1) * 2;
       if (stragglers > 0) this._add({
         update: (dt) => {
@@ -285,9 +287,13 @@ export class VFX {
   smokePuffs(pos, o = {}) {
     const n = Math.max(1, Math.round(o.count ?? 6)), colors = o.colors || ['#20222c', '#15161d'];
     const rise = o.rise ?? 8, dur = o.dur ?? 2.2, size = o.size ?? 6, spread = o.spread ?? 3, op = o.opacity ?? 0.5;
+    // o.warm: smoke born HOT and cooling to soot — "fire first and then some smoke afterwards"
+    // playing out inside each single puff, not just across the burst.
+    const warmC = o.warm ? new THREE.Color(o.warm) : null;
     for (let i = 0; i < n; i++) {
       const p = this._puff(); if (!p) return;
-      p.material.color.set(colors[(Math.random() * colors.length) | 0]);
+      const soot = new THREE.Color(colors[(Math.random() * colors.length) | 0]);
+      p.material.color.copy(warmC || soot);
       p.material.rotation = Math.random() * TAU;
       const rot = rand(-0.6, 0.6), drx = rand(-1.4, 1.4), drz = rand(-1.4, 1.4);
       const px = pos.x + rand(-spread, spread), pz = pos.z + rand(-spread, spread);
@@ -304,6 +310,7 @@ export class VFX {
           p.scale.setScalar(s0 * (0.65 + k * 1.5));
           p.material.rotation += rot * dt;
           p.material.opacity = op * Math.min(1, t * 5) * Math.pow(1 - k, 1.25);
+          if (warmC) p.material.color.lerpColors(warmC, soot, Math.min(1, k * 2.4));
           return k >= 1;
         },
         dispose: () => { p._live = false; p.visible = false; p.material.opacity = 0; },

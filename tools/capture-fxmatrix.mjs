@@ -73,10 +73,13 @@ try {
       },
       setKit(fam, lvl, pal) {
         const t = this.tpl;
+        // dtype routes the BEAM element surface (beamVisualFamily reads dtype: fire→lava, cold→crystal)
+        const dt = fam === 'fire' || fam === 'alien' ? 'fire' : fam === 'ice' ? 'cold' : fam === 'water' ? 'cold' : undefined;
         t.colors = { primary: '#2a2a2e', secondary: '#1a1a1e', accent: pal.glow, skin: '#c8a888' };
         t.abilities = {
           lmb: { type: 'projectile', name: 'FX Bolt', fxFamily: fam, fxLevel: lvl, color: pal.glow, color2: pal.core, damage: 14 * lvl, blast: 4 + lvl * 5, speed: 58, radius: 1 + lvl * 0.5, cost: 0, cd: 0.05, shock: lvl >= 2 },
           rmb: { type: 'charge', name: 'FX Charge', fxFamily: fam, fxLevel: lvl, color: pal.glow, color2: pal.core, cost: 0, cd: 0.05, kiChargePerSec: 0, maxCharge: 1.1, chargePower: 2, minR: 1.4 + lvl * 0.5, maxR: 3 + lvl * 1.4, dmgMin: 10 * lvl, dmgMax: 30 * lvl, speedMin: 40, speedMax: 60, maxBlast: 8 + lvl * 8 },
+          q: { type: 'beam', name: 'FX Beam', fxFamily: fam, fxLevel: lvl, dtype: dt, color: pal.glow, color2: pal.core, radius: lvl === 1 ? 0.7 : lvl === 2 ? 1.6 : 2.6, tipSpeed: 950, maxLen: 62, dps: 18 * lvl, kiPerSec: 0, cost: 0, cd: 0.05 },
         };
         this.g.setPlayerChar('_fxtest'); this.g.controlPlayer = () => {};
         this.step(3);
@@ -126,6 +129,13 @@ try {
         shots.aftermath = `${dir}/${lvl}-aftermath.png`;
         await page.locator('#game').screenshot({ path: shots.aftermath });
         await page.evaluate(() => window.__fx.sweep());
+        // BEAM — mid-sustain: the sixth column (iter 4: element cores — lava crust, crystal plates)
+        await page.evaluate(() => { const c = window.__fx; c.stage(52); c.step(28);
+          for (let i = 0; i < 46; i++) { c.L.runSlot(c.g.player, 'q', { pressed: i === 0, held: true, released: false }, c.g); c.step(1); }
+          c.shoot(); });
+        shots.beam = `${dir}/${lvl}-beam.png`;
+        await page.locator('#game').screenshot({ path: shots.beam });
+        await page.evaluate(() => { const c = window.__fx; c.L.runSlot(c.g.player, 'q', { pressed: false, held: false, released: true }, c.g); c.step(30); c.sweep(); });
         rows.push({ family: fam.id, level: lvl, ...Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, v.replace(OUT + '/', '')])) });
       } catch (e) { rows.push({ family: fam.id, level: lvl, error: String(e.message).slice(0, 160) }); }
     }
@@ -137,11 +147,11 @@ try {
   if (SHEETS) {
     await mkdir(`${OUT}/sheets`, { recursive: true });
     for (const fam of fams) {
-      // reading order per row: charge/launch/flight/impact/aftermath — L1, L2, L3 rows (5x3)
+      // reading order per row: charge/launch/flight/impact/aftermath/beam — L1, L2, L3 rows (6x3)
       try {
-        const list = [1, 2, 3].flatMap(l => ['charge', 'launch', 'flight', 'impact', 'aftermath'].map(ph => `${OUT}/shots/${fam.id}/${l}-${ph}.png`));
+        const list = [1, 2, 3].flatMap(l => ['charge', 'launch', 'flight', 'impact', 'aftermath', 'beam'].map(ph => `${OUT}/shots/${fam.id}/${l}-${ph}.png`));
         const inputs = list.map(f => `-i "${f}"`).join(' ');
-        execSync(`ffmpeg -y ${inputs} -filter_complex "concat=n=15:v=1:a=0 [s]; [s] scale=480:-1, tile=5x3" -frames:v 1 -q:v 4 "${OUT}/sheets/${fam.id}.jpg"`, { stdio: 'ignore' });
+        execSync(`ffmpeg -y ${inputs} -filter_complex "concat=n=18:v=1:a=0 [s]; [s] scale=420:-1, tile=6x3" -frames:v 1 -q:v 4 "${OUT}/sheets/${fam.id}.jpg"`, { stdio: 'ignore' });
       } catch { console.error(`sheet failed: ${fam.id}`); }
     }
   }
