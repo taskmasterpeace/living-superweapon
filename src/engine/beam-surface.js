@@ -320,9 +320,10 @@ float facing=abs(dot(normalize(flameNormal),normalize(flameEye)));
 float density=smoothstep(.14,.78,tongues*.72+breakup*.28);
 ${smoke?`diffuseColor.rgb=vec3(.09,.065,.045);
 diffuseColor.a*=.3*(1.0-density)*smoothstep(3.0,15.0,flameArc)*smoothstep(.02,.7,facing);`:`
-vec3 ember=vec3(.64,.025,.002),orange=vec3(1.2,.17,.008),yellow=vec3(1.5,.8,.12);
+vec3 ember=vec3(.55,.02,.002),orange=vec3(1.25,.22,.01),yellow=vec3(1.7,.95,.2),white=vec3(2.3,1.75,1.0);
 diffuseColor.rgb=mix(ember,orange,density);
-diffuseColor.rgb=mix(diffuseColor.rgb,yellow,pow(density,4.0)*.8);
+diffuseColor.rgb=mix(diffuseColor.rgb,yellow,pow(density,3.0)*.85);
+diffuseColor.rgb=mix(diffuseColor.rgb,white,pow(density,7.0)*.6);   // white-hot heart, so fire has tonal range not a red haze
 diffuseColor.a*=smoothstep(.12,.54,tongues)*(.28+.72*breakup);
 diffuseColor.a*=smoothstep(.03,.55,facing)+.2;
 `}

@@ -1544,7 +1544,24 @@ export class Fighter {
           if (this.state === 'ko') break;
           d._acc = 0; d._tick = 0;
         }
-        if (game && Math.random() < 0.25) game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
+        if (game) {
+          if (d.kind === 'burn') {
+            // ON FIRE — reads as flame, not a coloured dot, at the SAME per-frame budget (one pool,
+            // capped, so a hundred burning things cost what the pool already costs). Ember->orange->
+            // yellow up the body via the pool's flame SHAPE, a flicker in the rate, and an occasional
+            // dark soot wisp above. The base for "non-metal things catch on fire" (see game.ignite).
+            if (Math.random() < 0.55) {
+              const up = 9 + Math.random() * 8, fl = 0.35 + Math.random() * 0.35;
+              const hot = Math.random(); const col = hot > 0.72 ? '#ffd24a' : hot > 0.34 ? '#ff7a1a' : '#ff3a08';
+              game.particles.spawn({ x: this.pos.x + (Math.random() * 3.4 - 1.7), y: this.pos.y + 1.5 + Math.random() * 6.5, z: this.pos.z + (Math.random() * 3.4 - 1.7),
+                vx: (Math.random() * 2 - 1) * 1.6, vy: up, vz: (Math.random() * 2 - 1) * 1.6, life: fl, size: 2.2 + Math.random() * 1.8,
+                color: col, drag: 1.4, shrink: true, shape: 'flame' });
+            }
+            if (Math.random() < 0.12) game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 8 + Math.random() * 4, z: this.pos.z + (Math.random() * 2 - 1), vx: 0, vy: 6, vz: 0, life: 0.7, size: 3.2, color: '#2a201a', drag: 1.2, shrink: true });
+          } else if (Math.random() < 0.25) {
+            game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
+          }
+        }
       }
       if (d.t <= 0) this._dots.splice(i, 1);
     }

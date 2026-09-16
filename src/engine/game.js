@@ -3778,6 +3778,19 @@ export class Game {
     });
   }
 
+  // CATCH FIRE (Robert: "we want people to be able to catch on fire eventually — non-metal things").
+  // The ONE front door for setting something alight: it routes through the burn DoT (so it inherits
+  // the resistance table, the choke point, the KO booking and the efficient flame visual in the DoT
+  // tick), and it is gated on being non-metal — a robot chassis does not ignite. A future spread/
+  // ignition-source system calls this and nothing else. Metal returns false so callers can branch.
+  ignite(f, o = {}) {
+    if (!f || !f.addDot || f.state === 'ko') return false;
+    if (f.def && f.def.metal) return false;                 // non-metal only
+    f.addDot({ kind: 'burn', dtype: 'fire', dps: o.dps || 6, dur: o.dur || 3, color: '#ff7a1a', src: o.src || null });
+    if (o.src && o.src !== f) { f.lastHitBy = o.src; f.lastHitT = 0; }
+    return true;
+  }
+
   // CHARGE STYLES (goal board iter 3 #3, powerfx.js charge.style): the gather itself is generic —
   // WHAT ORBITS/ARCS/RISES around it is the element's tell. Called per held frame; throttles inside.
   chargeStyleFx(caster, fx, pos, k = 0.5, dt = 1 / 60) {
