@@ -25,6 +25,10 @@ import * as THREE from 'three';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FleetPilot} from './fleet-pilot.js';
+import {attachVehicleHull} from './vehicle-combat.js';
+import {spawnAIVehicle as crewAIVehicle} from './vehicle-ai.js';
+import {AAEmplacement} from './aa-emplacement.js';
+import {measureMuzzle} from './vehicle-weapons.js';
 import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
 import {initVehicleState,initAirborneVehicleState} from './vehicle-pilot.js';
 import {bindVehicleParts} from './vehicle-rig.js';
@@ -1603,7 +1607,7 @@ export class Game {
   // ---------- field of vision ----------
   updateVision(dt) {
     const p = this.player;
-    const piloting = e => e._fleetVehicle || e._aircraftVehicle || e._scoutVehicle;   // the driver's body rides hidden — you see the vehicle, not them
+    const piloting = e => (e._fleetVehicle && !e._fleetVehicle.env?.openSeat) || e._aircraftVehicle || e._scoutVehicle;   // a CLOSED hull hides its driver — an open saddle (motorcycle/ATV/board) shows the rider
     if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(!this.world.surfaceSight);
     const h2 = this.humans[1] && this.humans[1].fighter;
@@ -1643,6 +1647,10 @@ export class Game {
 
   canSee(a, b) {
     for (const c of this.world.cover) {
+      // A vehicle hull never hides its own crew: the occupant sits INSIDE the
+      // hull's cover box, so without this the whole world goes blind to an
+      // occupied tank — infantry must perceive the vehicle as the threat.
+      if (c.fleetVehicle && c.construct?.actor && (a._fleetVehicle === c.construct.actor || b._fleetVehicle === c.construct.actor)) continue;
       if(c.finiteBuilding){if(this.world.traceBox3(a.pos.x,a.pos.y+5,a.pos.z,b.pos.x,b.pos.y+5,b.pos.z,c)>=0)return false;continue;}
       if (Math.min(a.pos.y, b.pos.y) + 5 > (c.top ?? c.h)) continue;              // both above the block → seen over it
       if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, c.x, c.z, (c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1)) return false;
@@ -1966,9 +1974,10 @@ export class Game {
     if (this._ring) this._ring.close();
     if (this._pwStage) this._pwStage.close();   // POWERWORLD's stage is a transient like any other
     if (this._fleetPilot) { this._fleetPilot.dispose(); this._fleetPilot = null; }
-    if (this._fleetActors) { for (const a of this._fleetActors) if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } this._fleetActors = null; }
+    if (this._fleetActors) { for (const a of this._fleetActors) { a.hull?.dispose(); if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } } this._fleetActors = null; }
     teardownSimProps(this);   // dispose the sim's walls + water, unregister the wall cover
     if (this._simUndo) { restoreSimArena(this.world, this._simUndo); this._simUndo = null; }   // the sim arena's terrain is a transient — put the land back
+    if (this._simAA) { for (const aa of this._simAA) aa.dispose(); this._simAA = null; }   // real emplacements go home with the sim (the reset law)
     this._simActive = false; this._simVehicle = null; this._simFleet = null; this._simIndex = 0; this._simPrevActor = null; this._simFoe = null; this._simInRing = false; this._simRingScore = 0; this._simAir = 12; this._simDrownT = 0; this._simMissiles = null;
     document.getElementById('simWarp')?.remove();
     document.body.classList.remove('powerworld');   // and the class goes home with it (the reset law)
@@ -2147,6 +2156,14 @@ export class Game {
     if (!this._simBoxRing) this._simBoxRing = buildSimBoxRing(this, THREE);   // the SQUARE boxing ring (punches only)
     if (!this._simMaze) this._simMaze = buildSimMaze(this, THREE);           // the mech/tank maze
     if (!this._simDefenses) this._simDefenses = buildSimDefenses(this, THREE);// the anti-air emplacements
+    // GENUINE BASE AA (fleet workstream §8): the corner turrets are real
+    // AAEmplacements on the BASE's side (team 0) — they engage HOSTILE flyers
+    // (spawn one with spawnAIVehicle(id, pos, {team:1})) and never the player's
+    // own practice flights, honoring the earlier no-missiles-at-the-player ruling.
+    if (!this._simAA && this._simDefenses?.turrets) {
+      this._simAA = this._simDefenses.turrets.map((t, i) =>
+        new AAEmplacement(this, { config: 'fixed', pos: { x: t.position.x, y: t.position.y - 7, z: t.position.z }, team: 0, turret: t, name: `BASE AA ${i + 1}` }));
+    }
     // the drivable roster (base models only), built once — this is what the L-key cycles through
     if (!this._simFleet) {
       if (!this._fleetCat) { try { const r = await fetch('./reference-fleet/catalog.json'); this._fleetCat = await r.json(); } catch {} }
@@ -2159,6 +2176,7 @@ export class Game {
     if (this._simVehicle) {
       const old = this._simVehicle;
       if (this._fleetPilot?.actor === old) this._fleetPilot.exit({force:true});
+      old.hull?.dispose();
       if (old.wrapper) { this.scene.remove(old.wrapper); old.wrapper.traverse(o => o.geometry?.dispose?.()); }
       const i = this._fleetActors ? this._fleetActors.indexOf(old) : -1; if (i >= 0) this._fleetActors.splice(i, 1);
       this._simVehicle = null;
@@ -2170,6 +2188,7 @@ export class Game {
     if (!current()) {
       // A newer request can start between spawn's completion and this continuation.
       if (a) {
+        a.hull?.dispose();
         this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.());
         const i = this._fleetActors?.indexOf(a) ?? -1; if (i >= 0) this._fleetActors.splice(i, 1);
       }
@@ -2304,10 +2323,16 @@ export class Game {
     wrapper.position.set(actor.pos.x, actor.pos.y, actor.pos.z);
     actor.parts = bindVehicleParts(model);   // turret/rotor/wheels/control surfaces, driven each frame by rigParts
     (this._fleetActors ??= []).push(actor);
+    attachVehicleHull(this, actor);          // every fleet vehicle is a finite-volume damage receiver
+    measureMuzzle(actor, THREE);             // muzzle truth from the real barrel node where one exists
     this._fleetPilot ??= new FleetPilot(this);
     this.hud?.feed?.(`${(row.name || id).toUpperCase()} DEPLOYED — WALK UP + J TO BOARD`, '#7fe6ff');
     return actor;
   }
+
+  // An AI-crewed fleet vehicle: same spawn, same envelopes, same weapons —
+  // the crew operates it through the session/intent paths, never a script.
+  spawnAIVehicle(id, pos, opts) { return crewAIVehicle(this, id, pos, opts); }
 
   // ---------- modes & players ----------
   spawnEnemy(charId, o = {}) {
@@ -4562,6 +4587,7 @@ export class Game {
     }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
     this._fleetPilot?.update(dt);   // generic fleet-vehicle driving (exists only once one is spawned)
+    for (const a of this._fleetActors || []) { a.hull?.update(dt); a.operator?.update?.(dt); }   // hull bounds ride the moving vehicle; AI operators think here
     if (this._simActive) {   // board a printed vehicle → warp into the simulation (Robert's "teleported somewhere else, looks like VR")
       const cur = this._fleetPilot?.actor || null;
       if (cur && cur !== this._simPrevActor) this._simWarpFx();
@@ -4598,22 +4624,22 @@ export class Game {
           }
         }
       }
-      // AA turrets TRACK the nearest airborne target as menacing set dressing — they swivel to face
-      // it and do NOT fire (the missile behaviour was removed by request). `a` is the piloted flier.
-      const defs = this._simDefenses;
-      const airY = VEHICLE_SIM.baseY + SIM_AA.minY;
-      const aTgt = [];   // {pos} — the airborne things a turret may track
-      if (a && (a.cls === 'fixedwing' || a.cls === 'rotor') && a.pos.y > airY) aTgt.push({ pos: a.pos });
-      for (const e of this.entities) if (e && e.alive && e.flying && e.pos.y > airY) aTgt.push({ pos: e.pos });
-      if (defs && defs.turrets) {
-        for (const turret of defs.turrets) {
-          const tp = turret.position;
-          let best = null, bd = SIM_AA.range * SIM_AA.range;
-          for (const t of aTgt) { const d = (t.pos.x - tp.x) ** 2 + (t.pos.z - tp.z) ** 2; if (d < bd) { bd = d; best = t; } }
-          if (best) {
-            const yaw = Math.atan2(best.pos.x - tp.x, best.pos.z - tp.z);
-            let dyaw = yaw - turret.rotation.y; while (dyaw > Math.PI) dyaw -= 2 * Math.PI; while (dyaw < -Math.PI) dyaw += 2 * Math.PI;
-            turret.rotation.y += dyaw * Math.min(1, dt * 3);   // ease onto the target — tracking only, no fire
+      // GENUINE AA (fleet workstream §8): the corner emplacements are REAL —
+      // they sense, track within traverse limits, launch actual missiles from
+      // the missile family, consume ammunition and can be destroyed. They are
+      // the BASE's defense (team 0): hostile flyers only, never the player's
+      // own practice flight (the earlier no-missiles-at-the-player ruling).
+      // Idle with nothing hostile aloft they still PASSIVELY track the nearest
+      // friendly flier as the old set dressing did — menace preserved.
+      if (this._simAA) {
+        for (const aa of this._simAA) {
+          aa.update(dt);
+          if (!aa.target && !aa.destroyed && a && (a.cls === 'fixedwing' || a.cls === 'rotor') && a.pos.y > VEHICLE_SIM.baseY + SIM_AA.minY) {
+            const tp = aa.pos, yaw = Math.atan2(a.pos.x - tp.x, a.pos.z - tp.z);
+            if ((a.pos.x - tp.x) ** 2 + (a.pos.z - tp.z) ** 2 < SIM_AA.range * SIM_AA.range) {
+              aa.yaw += Math.atan2(Math.sin(yaw - aa.yaw), Math.cos(yaw - aa.yaw)) * Math.min(1, dt * 3);
+              if (aa.turret?.rotation) aa.turret.rotation.y = aa.yaw;
+            }
           }
         }
       }

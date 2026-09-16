@@ -58,7 +58,12 @@ export function stepWheeled(s, i, dt, e, ctx) {
   fin(s, ['speed', 'yaw', 'vx', 'vz', 'steerSmooth', 'yawVel', 'lean', 'y', 'vy', 'rollSpin', 'rollDir']); dt = dtc(dt); if (!dt || !i) return s;
   const th = clamp(i.throttle || 0, -1, 1), st = clamp(i.steer || 0, -1, 1), grade = G(ctx);
   const groundY = Number.isFinite(ctx?.groundY) ? ctx.groundY : 0;
-  const airborne = s.air = s.y > groundY + .08;
+  // Departure test: a wheel following a downhill is NOT airborne — while
+  // grounded, s.vy is the terrain-follow rate, so the expected drop next frame
+  // is |vy|·dt. Only ground falling away FASTER than the follow rate (a crest,
+  // a cliff) is a launch. A fixed .08 epsilon made every ordinary downhill
+  // frame at speed read as airborne (drive force and grip skipped).
+  const airborne = s.air = s.y > groundY + .08 + Math.abs(s.vy || 0) * dt * 1.5;
   let f = s.speed;
   if (!airborne) {                                   // drive forces only reach the ground
     if (i.brake) f = approach(f, 0, e.brake * dt);
@@ -119,6 +124,7 @@ export function stepFixedwing(s, i, dt, e, ctx) {
   fin(s, ['speed', 'yaw', 'roll', 'pitch', 'lever', 'rollSpin', 'rollDir']); dt = dtc(dt); if (!dt || !i) return s;
   const parked = !!i.parked;
   s.lever = clamp(s.lever + clamp(i.throttle || 0, -1, 1) * e.throttleRate * dt, parked ? 0 : .12, 1);
+  if (parked && Math.abs(i.throttle || 0) < .001) s.lever = Math.max(0, s.lever - .35 * dt);   // on the strip, hands off = idle back (rollout actually stops)
   const burn = e.burnTop > 0 && !!i.burner && !parked && s.lever > .85;
   const max = burn ? e.burnTop : e.top;
   const bleed = clamp(1 - Math.max(0, s.pitch) * e.climbBleed, .15, 1);   // climbing bleeds; diving never does
@@ -151,7 +157,10 @@ export function stepRotor(s, i, dt, e, ctx) {
   s.rockT += dt;
   if (s.spool >= 1) {
     const gain = 1 - Math.exp(-e.accelK * dt), th = clamp(i.throttle || 0, -1, 1);
-    const tx = Math.sin(s.yaw) * th * e.top, tz = Math.cos(s.yaw) * th * e.top;
+    // LATERAL TRANSLATION — a helicopter slides sideways (right = +strafe) at
+    // reduced authority; the same target-velocity model as forward flight.
+    const sf = clamp(i.strafe || 0, -1, 1) * .72;
+    const tx = (Math.sin(s.yaw) * th + Math.cos(s.yaw) * sf) * e.top, tz = (Math.cos(s.yaw) * th - Math.sin(s.yaw) * sf) * e.top;
     const ax = (tx - s.vx) * gain, az = (tz - s.vz) * gain;
     s.vx += ax; s.vz += az;
     s.vy = ease(s.vy, clamp(i.lift || 0, -1, 1) * (i.lift > 0 ? e.climb : e.sinkMax), 2, dt);
@@ -159,7 +168,7 @@ export function stepRotor(s, i, dt, e, ctx) {
     // lean INTO the acceleration + the subtle hover rock
     const c = Math.cos(s.yaw), sn = Math.sin(s.yaw), fwdA = (sn * ax + c * az) / Math.max(dt, 1e-4);
     s.tiltX = ease(s.tiltX, clamp(fwdA * e.leanK, -e.lean, e.lean) + Math.sin(s.rockT * Math.PI * 2 * e.rockHz) * e.rock, 5, dt);
-    s.tiltZ = ease(s.tiltZ, -clamp(i.steer || 0, -1, 1) * e.lean * .6 + Math.cos(s.rockT * Math.PI * 2 * e.rockHz * .77) * e.rock * .6, 5, dt);
+    s.tiltZ = ease(s.tiltZ, -clamp(i.steer || 0, -1, 1) * e.lean * .6 - sf * e.lean * .8 + Math.cos(s.rockT * Math.PI * 2 * e.rockHz * .77) * e.rock * .6, 5, dt);
   } else { s.vx *= Math.exp(-3 * dt); s.vz *= Math.exp(-3 * dt); s.vy = Math.min(0, s.vy); s.tiltX = ease(s.tiltX, 0, 3, dt); s.tiltZ = ease(s.tiltZ, 0, 3, dt); }
   barrelRoll(s, i, e, dt, s.spool >= 1);  // a heli can roll once it's spooled up
   fin(s, ['yaw', 'vx', 'vy', 'vz', 'spool', 'tiltX', 'tiltZ', 'rollSpin', 'rollDir']); return s;

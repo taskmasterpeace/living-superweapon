@@ -1,0 +1,18 @@
+{
+  "errors": [],
+  "seated": {
+    "id": "motorcycle",
+    "visible": true,
+    "dx": 0,
+    "dz": 0,
+    "saddle": 2.3999999999999986,
+    "armX": -1.05,
+    "kneeX": 1.35
+  },
+  "leaning": {
+    "lean": 0.23155278011415853,
+    "riderRoll": 0.23155278011415853,
+    "speed": 91
+  },
+  "verdict": "RIDER VISIBLE PASS"
+}

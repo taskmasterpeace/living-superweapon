@@ -5,15 +5,21 @@
 // (vehicle-pilot.js) — so a tank, mech, hovercraft, ship, the carrier or the mothership
 // all board and drive through this single path. Powerworld-gated; the city is untouched.
 import { driveActor } from './vehicle-pilot.js';
-import { cancelHeldAttacks } from './abilities.js';
 import { FleetAudio } from './fleet-audio.js';
 import {FleetControlsHud,fleetControls} from './fleet-controls.js';
 import {canUseFlight} from './mobility-policy.js';
+import {sessionOf,seatBusy,SEAT_DRIVER} from './vehicle-session.js';
+import {turretSlewIntent,wrapAngle,attachMount,fireVehicleWeapon} from './vehicle-weapons.js';
+import {VehicleReticle} from './vehicle-reticle.js';
 
-const busy=p=>!p?.alive||p.stunT>0||p.frozenT>0||p.staggerT>0||p.sleepT>0||p.launchT>0||p.grabbedBy||p.grabbing||p._carry||p._personCarry;
+const AIMED = new Set(['tracked','mech']);   // classes whose mount the mouse aims
+
+const busy=seatBusy;
 function boardReason(game,a,p){
- if(busy(p)||p._fleetVehicle||p._scoutVehicle||p._aircraftVehicle||p._passengerTransport)return 'Cannot board during this action.';
- if(!a?.ready||a.occupant||a.destroyed)return 'Vehicle is unavailable.';
+ // seat/occupancy law lives in the shared session; the pilot layers the
+ // physical rules (proximity, obstruction) on top of it, never instead of it.
+ const seatReason=sessionOf(game,a)?.claimReason(SEAT_DRIVER,p);
+ if(seatReason)return seatReason;
  if(Math.abs(p.pos.y-a.pos.y)>8||Math.hypot(p.pos.x-a.pos.x,p.pos.z-a.pos.z)>(a.bodyRadius||8)+8)return 'Move closer to the vehicle entrance.';
  if(game.world?._camNearestT?.(p.pos.x,p.pos.y+3,p.pos.z,a.pos.x,a.pos.y+3,a.pos.z,.2)<.999)return 'Vehicle entrance is obstructed.';
  return null;
@@ -48,7 +54,7 @@ export function fleetExitPosition(game,a,p){
 // drive on W/S; aircraft keep flight-sim mapping (throttle R/F, pitch W/S, bank A/D).
 export function fleetIntent(cls, c) {
   if (cls === 'fixedwing') return { throttle: c.throttle, steer: c.bank, rudder: c.bank, pitch: c.pitch, barrel: 0, gearToggle:c.gearToggle, parked: false };
-  if (cls === 'rotor') return { throttle: c.fwd, steer: c.turn, lift: c.lift, barrel: c.barrel, on: true };
+  if (cls === 'rotor') return { throttle: c.fwd, steer: c.turn, lift: c.lift, strafe: c.strafe, barrel: c.barrel, on: true };
   if (cls === 'tracked') return { throttle: c.fwd, steer: c.turn, brake: c.brake, turretX: c.aimX, turretY: c.aimY };
   if (cls === 'mech') return { throttle: c.fwd, steer: c.turn, brake: c.brake, torsoX: c.aimX, powerOn: true };
   if (cls === 'hover' || cls === 'ship') return { throttle: c.fwd, steer: c.turn, brake: c.brake };
@@ -56,7 +62,7 @@ export function fleetIntent(cls, c) {
 }
 
 export class FleetPilot {
-  constructor(game) { this.game = game; this.actor = null; this._tapT = 0; this._tapKey = ''; this._audio = new FleetAudio(game.audio); this._hud=new FleetControlsHud(); }
+  constructor(game) { this.game = game; this.actor = null; this._tapT = 0; this._tapKey = ''; this._audio = new FleetAudio(game.audio); this._hud=new FleetControlsHud(); this._reticle=new VehicleReticle(); }
 
   _blocked() { const g = this.game; return g.paused || g.running === false || g.matchOver || g.hud?.titleOpen || g.combatOverlayOpen; }
 
@@ -71,6 +77,16 @@ export class FleetPilot {
     }
     if (!this.actor) return false;
     const d = code => !!input?.down?.(code), cls = this.actor.cls;
+    // THE MOUSE AIMS THE MOUNT (tracked turret / mech torso). Ordinary mouse
+    // look is already suppressed while seated (game.js), so the deltas are free;
+    // Alt keeps the freelook and therefore never moves the gun. The aim is a
+    // WORLD yaw/pitch — a turning hull does not drag the gun off target.
+    if (AIMED.has(cls) && this._aim && !d('AltLeft') && !d('AltRight')) {
+      const mx = input?.mouse?.dx || 0, my = input?.mouse?.dy || 0, sens = this.game.world?._lookSens || .0024;
+      this._aim.yaw = wrapAngle(this._aim.yaw + mx * sens);
+      const e = this.actor.env;
+      this._aim.pitch = Math.max(e.turretPitchMin ?? -0.6, Math.min(e.turretPitchMax ?? 0.6, this._aim.pitch - my * sens * .7));
+    }
     // Steering taps never trigger an aerobatic maneuver.
     const barrel = 0;
     this._c = {
@@ -80,8 +96,11 @@ export class FleetPilot {
       throttle: Number(d('KeyR')) - Number(d('KeyF')),      // aircraft throttle
       pitch: Number(d('KeyS')) - Number(d('KeyW')),          // aircraft collective
       lift: Number(d('Space')) - Number(d('ControlLeft') || d('KeyZ')),
+      strafe: Number(d('KeyE')) - Number(d('KeyQ')),
       brake: d('Space'),
       aimX: 0, aimY: 0, barrel, gearToggle:!!input?.pressed?.('KeyG'),
+      fire: !!input?.mouse?.left,
+      reload: cls !== 'fixedwing' && !!input?.pressed?.('KeyR'),
     };
     return true;
   }
@@ -100,27 +119,61 @@ export class FleetPilot {
   enter(a, p) {
     const reason=this._blocked()?'Close the current menu before boarding.':boardReason(this.game,a,p);
     if(reason){this.game.hud?.feed?.(reason,'#ffce75');return false;}
-    cancelHeldAttacks(p); this.actor = a; a.occupant = p; p._fleetVehicle = a; p._occVisible = p.obj?.visible;
-    p.flying = p.flyHeld = p.descendHeld = p.guarding = p.prone = p.crouching = p.sprintHeld = false;
-    if (p.moveDir) p.moveDir = { x: 0, z: 0 }; p.vel?.set?.(0, 0, 0); if (p.obj) p.obj.visible = false;
+    const claim=sessionOf(this.game,a).claim(SEAT_DRIVER,p,{source:'player'});
+    if(claim){this.game.hud?.feed?.(claim,'#ffce75');return false;}
+    this.actor = a;
+    // open with the gun where the mount is actually pointing — no snap on entry
+    const m = a.motion;
+    this._aim = AIMED.has(a.cls) ? { yaw: wrapAngle((m.yaw || 0) + (m.turretYaw ?? m.torsoYaw ?? 0)), pitch: m.turretPitch || 0 } : null;
     this._c = null; this.game.world && (this.game.world._chaseSnap = true);
     this._seat();
+    attachMount(a);
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
     this._audio.enter(a);
-    this.game.hud?.feed?.(`${(a.name || a.id).toUpperCase()} — ${fleetControls(a.cls,{canSwitchVehicle:!!this.game._simActive})}`, '#ffce75');
+    this.game.hud?.feed?.(`${(a.name || a.id).toUpperCase()} — ${fleetControls(a.cls,{canSwitchVehicle:!!this.game._simActive,armed:!!a.weapon})}`, '#ffce75');
     return true;
   }
 
-  _seat() { const a = this.actor, p = a?.occupant; if (!p) return; p.pos?.set ? p.pos.set(a.pos.x, a.pos.y + (a.groundOffset || 2), a.pos.z) : (p.pos.x = a.pos.x, p.pos.y = a.pos.y, p.pos.z = a.pos.z); p.vel?.set?.(0, 0, 0); if (p.obj) { p.obj.position?.copy?.(p.pos); p.obj.visible = false; } }
+  _seat() { this.actor?.session?.tick(); }
 
   update(dt) {
-    const a = this.actor; if (!a) { this._audio.stop(); return; }
+    const a = this.actor; if (!a) { this._audio.stop(); this._reticle.hide(); return; }
     if (a.destroyed || !a.occupant?.alive || a.occupant !== this.game.player) { this.exit({force:true}); return; }
-    if (this._blocked() || !(dt > 0)) { this._audio.pause(); return; }
+    if (this._blocked() || !(dt > 0)) { this._audio.pause(); this._reticle.hide(); return; }
     this._audio.update(this._c || {});
-    driveActor(a, fleetIntent(a.cls, this._c || {}), dt, this.game.world);
+    const intent = fleetIntent(a.cls, this._c || {});
+    if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
+    if (a.disabled && intent.throttle) intent.throttle *= .45;   // a mauled drivetrain limps
+    if (a.cls === 'fixedwing') intent.parked = !!a.grounded;     // on the ground: rollout drag + no pitch below rotate; full throttle is the takeoff roll
+    driveActor(a, intent, dt, this.game.world);
+    // touchdown policy: a gentle, gear-down arrival is a LANDING; sink or a
+    // belly costs the hull through the real receiver (no scripted subtraction)
+    if (a.landedImpact) {
+      const li = a.landedImpact; a.landedImpact = null;
+      if (a.cls === 'fixedwing') {
+        // thresholds are ENVELOPE-relative: the authored lift-out sink rate is
+        // this model's normal glide arrival, not a crash
+        const sink = a.env?.sink ?? 27, belly = !li.gearDown && li.speed > 8;
+        if (belly || li.vy < -(sink * 2)) { a.hull?.hit((26 + Math.abs(li.vy)) * (belly ? 2 : 1), { team: NaN }); this.game.hud?.feed?.(belly ? 'BELLY LANDING — hull damaged' : 'CRASH LANDING — hull damaged', '#ff8b63'); }
+        else if (li.vy < -(sink + 8)) { a.hull?.hit(Math.abs(li.vy) * .8, { team: NaN }); this.game.hud?.feed?.('HARD LANDING', '#ffce75'); }
+        else this.game.hud?.feed?.('TOUCHDOWN — throttle up to take off again', '#7fe6ff');
+      }
+    }
+    // the mounted weapon: same fire path the AI crew uses (vehicle-weapons.js)
+    const w = attachMount(a);
+    if (w) {
+      w.update(dt);
+      if (this._c?.reload && w.reloadNow()) this.game.hud?.feed?.(`${w.spec.label || 'GUN'} — RELOADING`, '#ffce75');
+      if (this._c?.fire) {
+        const wasDry = w.dry;
+        fireVehicleWeapon(this.game, a, a.occupant);
+        if (wasDry && !this._saidDry) { this._saidDry = true; this.game.hud?.feed?.(`${w.spec.label || 'GUN'} DRY — no rounds remain`, '#ff8b63'); }
+        if (!wasDry) this._saidDry = false;
+      }
+    }
     if(this._c)this._c.gearToggle=false;
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
+    this._reticle.update(this.game, a);   // weapon-truth mark (tracked/mech mounts)
     this._seat();
   }
 
@@ -129,16 +182,16 @@ export class FleetPilot {
     const destination=p?fleetExitPosition(this.game,a,p):null;
     if(p&&!force&&(busy(p)||!destination)){this.game.hud?.feed?.('No safe exit. Land or move the vehicle into clear space.','#ffce75');return false;}
     this._hud.dispose();
+    this._reticle.hide();
     this._audio.stop({off:!force&&!this._blocked()});
     if (!p) { this.actor = null; this._c=null;return false; }
-    // Forced lifecycle cleanup always releases ownership. If boxed in, retain
-    // the actor's existing world position rather than teleport through a wall.
-    if(destination){p.pos?.set?p.pos.set(destination.x,destination.y,destination.z):Object.assign(p.pos,destination);p.flying=!!destination.air&&p.alive&&canUseFlight(p);p.groundY=this.game.world?.heightAt?.(destination.x,destination.z)??0;}
-    p.obj && (p.obj.position?.copy?.(p.pos), p.obj.visible = p._occVisible !== false);
-    p.vel?.set?.(0, 0, 0); p._fleetVehicle = null; a.occupant = null;
-    this.actor = null; this._c = null; this.game.world && (this.game.world._chaseSnap = true);
+    // Forced lifecycle cleanup always releases ownership. If boxed in, the
+    // session keeps the seat position rather than teleport through a wall.
+    if(destination&&!(destination.air&&!canUseFlight(p)))a.session?.release(SEAT_DRIVER,{destination});
+    else a.session?.release(SEAT_DRIVER,{});
+    this.actor = null; this._c = null; this._aim = null; this.game.world && (this.game.world._chaseSnap = true);
     return true;
   }
 
-  dispose() { this._audio.stop(); if (this.actor) this.exit({force:true}); }
+  dispose() { this._audio.stop(); this._reticle.dispose(); if (this.actor) this.exit({force:true}); }
 }

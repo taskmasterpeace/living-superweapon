@@ -7,6 +7,7 @@ import {modularAsset,createModularActor,characterRecipeOf} from '../engine/modul
 import {applyModularRecipe,applyModularFrame} from '../engine/modular-costume.js';
 import {createSignatureParts} from '../engine/modular-signature-parts.js';
 import {drives} from '../data/fleet-handling.js';
+import {vehicleStatus} from '../engine/fleet-catalog-status.js';
 
 const $=s=>document.querySelector(s),params=new URLSearchParams(location.search);
 const labels={fleet:'Fleet library',characters:'Characters & constructs',equipment:'Equipment library',facilities:'Facilities'};
@@ -32,6 +33,19 @@ function chooseCollection(value){collection=value;selected=null;params.set('coll
 async function select(row){
  const request=++serial;selected=row;params.set('model',row.id);history.replaceState(null,'','?'+params);renderList();$('#model-name').textContent=row.name;$('#model-id').textContent=row.id;$('#model-note').textContent=row.note||'';$('#model-status').textContent='Loading authored model…';$('#provenance').textContent=`${row.url} · original authored version retained · ${row.runtime==='integrated-controller'?'Existing integrated controller; individual gameplay acceptance remains separate.':'Model preview; no claim of complete gameplay integration.'}`;$('#model-actions').replaceChildren();
  const link=(text,href)=>{const a=document.createElement('a');a.textContent=text;a.href=href;$('#model-actions').append(a);};
+ // THE CAPABILITY LEDGER — each system separately, never one "working" badge
+ let caps=$('#capabilities');if(!caps){caps=document.createElement('dl');caps.id='capabilities';caps.style.cssText='margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px';$('#provenance').after(caps);}
+ caps.replaceChildren();
+ if(row.collection==='fleet'){
+  const s=vehicleStatus(row);
+  const fam=document.createElement('dt');fam.textContent='Family';const famV=document.createElement('dd');famV.textContent=s.family;caps.append(fam,famV);
+  const COLOR={accepted:'#7fe66f',yes:'#7fe66f',interim:'#ffce75',incomplete:'#ff8b63','n/a':'#8a8a80',no:'#ff8b63'};
+  for(const [key,c] of Object.entries(s.capabilities)){
+   const dt=document.createElement('dt');dt.textContent=key.replace(/([A-Z])/g,' $1').toLowerCase();
+   const dd=document.createElement('dd');dd.textContent=`${c.state}${c.note?' — '+c.note:''}`;dd.style.color=COLOR[c.state]||'';
+   caps.append(dt,dd);
+  }
+ }
  if(row.collection==='fleet'&&drives(row)&&!/-damaged$|-destroyed$/.test(row.id))link(row.runtime==='integrated-controller'?'Try in vehicle proving ground':'Test drive · unverified',`./powerworld.html?destination=vehicle-sim&vehicle=${encodeURIComponent(row.id)}`);
  if(row.collection==='characters'){const family={'nanite-mech':'mech','nanite-hound':'hound','nanite-rat':'rat','nanite-cloud':'cloud'}[row.id];if(family)link('Open character motion tools',`./character-families.html?family=${family}`);else link('Open humanoid robot editor','./character-foundation.html?recipe=robot');link('Dog & creature editor','./creature-foundation.html');}
  if(row.collection==='equipment')link('Character equipment & powers','./studio.html');

@@ -55,8 +55,23 @@ for(const end of ['pause','dispose','destroy','death','transfer','missing-occupa
  if(['pause','dispose','destroy'].includes(end))assert.equal(ids(f).includes('vehicle-off'),false);
 });
 
-for(const cls of ['tracked','rotor','fixedwing','mech','hover','ship'])test(`${cls} never acquires car recordings`,()=>{
+for(const cls of ['tracked','mech','hover','ship'])test(`${cls} never acquires car recordings`,()=>{
  const f=fixture(cls);f.pilot.enter(f.a,f.game.player);f.pilot._audio.update({fwd:1,brake:true});f.pilot.exit();assert.deepEqual(ids(f),[]);
+});
+
+for(const [cls,cue] of [['rotor','rotor'],['fixedwing','jet']])test(`${cls} runs its OWN loop (${cue}) once a REAL recording is bound — and never a car cue`,()=>{
+ // no recording bound: the library honestly refuses (no fake rotor audio)
+ const cold=fixture(cls);cold.pilot.enter(cold.a,cold.game.player);cold.pilot._audio.update({fwd:1,brake:true});
+ assert.deepEqual(ids(cold),[],'silent until an authentic source exists');
+ cold.pilot.exit();
+ // a chosen recording bound: the loop starts and cleans up on exit
+ const f=fixture(cls),buf={duration:3};
+ f.lib.state.bindings[cue]={name:'real.mp3',data:'real'};f.lib.buffers.set(cue,{data:'real',buffer:buf});
+ f.pilot.enter(f.a,f.game.player);f.pilot._audio.update({fwd:1,brake:true});
+ const played=ids(f);
+ assert.ok(played.includes(cue),`${cue} loop started (${played})`);
+ assert.ok(played.every(id=>!id.startsWith('vehicle-')),'no car cues');
+ f.pilot.exit();assert.equal(f.audio._sus.size,0,'loop cleaned up on exit');
 });
 
 test('explicit placeholder choice reaches SoundLibrary and audio errors never interrupt driving',()=>{

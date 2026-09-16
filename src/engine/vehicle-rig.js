@@ -7,7 +7,7 @@
 
 // material/detail variants and the model root are never articulated
 const isVariant = n => /-painted$|-glazing$|-fleet-|^propreference/.test(n);
-const stashRest = o => { const u = o.userData || (o.userData = {}); if (u._restX == null) { u._restX = o.rotation.x || 0; u._restY = o.rotation.y || 0; } };
+const stashRest = o => { const u = o.userData || (o.userData = {}); if (u._restX == null) { u._restX = o.rotation.x || 0; u._restY = o.rotation.y || 0; u._restPZ = o.position?.z ?? 0; } };
 
 // Traverse a loaded model and collect the drivable nodes. Call once at spawn.
 export function bindVehicleParts(model) {
@@ -42,7 +42,17 @@ export function rigParts(actor, dt) {
   // articulated aim: turret yaw + barrel pitch (relative to rest so a canted mount holds)
   if (p.turret) p.turret.rotation.y = (p.turret.userData._restY || 0) + (m.turretYaw || 0);
   if (p.barrel) p.barrel.rotation.x = (p.barrel.userData._restX || 0) - (m.turretPitch || 0);
+  // recoil PRESENTATION: the barrel slides back on firing and returns (the sim
+  // hull nudge lives in fireVehicleWeapon — this is only the picture of it)
+  if (p.barrel?.position) {
+    actor.recoilT = Math.max(0, (actor.recoilT || 0) - dt * 2.5);
+    p.barrel.position.z = (p.barrel.userData._restPZ ?? 0) - actor.recoilT * .9;
+  }
   if (p.torso) p.torso.rotation.y = (p.torso.userData._restY || 0) + (m.torsoYaw || 0);
+  // IMPACT REACTION — a hull hit rocks the torso back and recovers; pure
+  // presentation (set by VehicleHull.hit), the sim never reads it
+  if (p.torso && (actor.flinchT || 0) > 0) { actor.flinchT = Math.max(0, actor.flinchT - dt); p.torso.rotation.x = (p.torso.userData._restX || 0) - actor.flinchT * .35; }
+  else if (p.torso && actor.flinchT === 0) { p.torso.rotation.x = p.torso.userData._restX || 0; actor.flinchT = null; }
   // The authored walker has four joint chains. Preserve its bent rest pose;
   // diagonal pairs alternate, and the ankle cancels the upper-chain rotation.
   if (cls === 'mech' && p.legs) {

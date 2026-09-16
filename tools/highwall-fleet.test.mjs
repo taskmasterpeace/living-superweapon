@@ -33,7 +33,9 @@ test('jet remains separate and its flight start retains airspeed and throttle',a
 });
 
 test('invalid station placement is rejected and removes only the new actor',async()=>{
- const g=fixture();await assert.rejects(spawnHighwallFleet(g,'tank',{position:{x:-286,z:-220}}),/solid cover/);assert.equal(g._fleetActors.length,0);
+ // (-169,80) is the centre of a solid fortification run in the CURRENT layout —
+ // the old point (-286,-220) stopped overlapping anything when the walls moved.
+ const g=fixture();await assert.rejects(spawnHighwallFleet(g,'tank',{position:{x:-169,z:80}}),/solid cover/);assert.equal(g._fleetActors.length,0);
 });
 
 test('known-height vehicles pass below roof slabs but cannot pass through low ceilings',()=>{
@@ -49,4 +51,20 @@ test('measured helicopter cannot rise vertically through a shelter roof',()=>{
  const a={cls:'rotor',env:VEHICLE_ENVELOPES.helicopter,pos:{x:0,y:0,z:0},motion:initVehicleState('rotor'),bodyRadius:10,bodyHeight:18};
  for(let i=0;i<180;i++)driveActor(a,{lift:1,on:true},1/60,w);
  assert.ok(a.pos.y+18<22);assert.equal(a.motion.vy,0);
+});
+
+test('the authored aa-hardpoint becomes a REAL tower AA emplacement (fleet supplies the gameplay)',async()=>{
+ const {spawnHighwallAA}=await import('../src/engine/highwall-fleet.js');
+ const layout=highwallLayout();
+ const g={world:{cover:layout.pieces,coverAll:[],heightAt:()=>0,waterAt:()=>false,ARENA:1100,refreshFogBoxes(){}},entities:[],_fleetActors:[],hud:{feed(){}},particles:{spawn(){},burst(){}},audio:null,vfx:null,news:null,scene:{add(){},remove(){}},noise(){},isFoe:(a,b)=>!!b&&a.team!==b.team,canSee:()=>true,areaDamage(){},friendlyFire:false,cityStats:{}};
+ const emplacements=spawnHighwallAA(g,{layout,team:0});
+ assert.ok(emplacements.length>=1,'the layout hardpoint was found');
+ const aa=emplacements[0];
+ assert.equal(aa.kind,'tower','tower/hardpoint config');
+ assert.ok(aa.pos.y>=66,'mounted ON the hardpoint, not the ground');
+ // a hostile flyer above the wall: it senses, tracks and launches for real
+ g.entities.push({alive:true,flying:true,team:1,pos:{x:aa.pos.x+30,y:aa.pos.y+60,z:aa.pos.z+80}});
+ for(let i=0;i<60*8&&aa.ammo===aa.cfg.ammo;i++)aa.update(1/60);
+ assert.ok(aa.ammo<aa.cfg.ammo,'a real missile left the Highwall hardpoint');
+ for(const e of emplacements)e.dispose();
 });

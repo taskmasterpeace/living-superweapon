@@ -1,5 +1,22 @@
 import {HIGHWALL_FLEET_PRESETS} from '../data/highwall-fleet.js';
 import {initVehicleState,initAirborneVehicleState,driveActor} from './vehicle-pilot.js';
+import {AAEmplacement} from './aa-emplacement.js';
+
+// HIGHWALL SUPPLIES THE MOUNTING LOCATION, fleet supplies the AA gameplay
+// (workstream §8): the layout's authored `aa-hardpoint` placements become real
+// tower-config AAEmplacements. Highwall itself is untouched — this reads the
+// pieces it already declares.
+export function spawnHighwallAA(game,{layout=game._highwall?.layout,team=0}={}){
+ const spots=new Map();
+ for(const p of layout?.pieces||[])if(p.moduleId==='aa-hardpoint'&&p.placementId&&!spots.has(p.placementId))
+  spots.set(p.placementId,{x:p.x,z:p.z,y:Math.max(...(layout.pieces.filter(q=>q.placementId===p.placementId).map(q=>q.top||0)))});
+ const out=[];
+ for(const [id,s] of spots){
+  const aa=new AAEmplacement(game,{config:'tower',pos:{x:s.x,y:s.y,z:s.z},team,name:id.toUpperCase()});
+  out.push(aa);
+ }
+ return out;
+}
 
 // Keep Game.spawnFleetVehicle as the asset/cache/rig owner. This seam only gives
 // those actual actors scenario placement, dimensions and a valid initial state.
@@ -15,7 +32,7 @@ export function fleetSpawnReason(game,actor,{bounds=game._highwall?.layout?.boun
  for(const other of game._fleetActors||[])if(other!==actor&&!other.destroyed&&Math.abs(other.pos.y-y)<h+(other.bodyHeight||10)&&Math.hypot(other.pos.x-x,other.pos.z-z)<r+(other.bodyRadius||6)+2)return 'Vehicle placement overlaps another vehicle.';
  return null;
 }
-function discard(game,actor){actor.wrapper?.removeFromParent();actor.wrapper?.traverse(o=>o.geometry?.dispose());const i=(game._fleetActors||[]).indexOf(actor);if(i>=0)game._fleetActors.splice(i,1);}
+function discard(game,actor){actor.hull?.dispose();actor.wrapper?.removeFromParent();actor.wrapper?.traverse(o=>o.geometry?.dispose());const i=(game._fleetActors||[]).indexOf(actor);if(i>=0)game._fleetActors.splice(i,1);}
 export async function spawnHighwallFleet(game,id,{position,yaw,scope=game._highwall}={}){
  const preset=HIGHWALL_FLEET_PRESETS.find(p=>p.id===id);if(!preset)throw Error(`Unsupported Highwall vehicle: ${id}`);
  if(scope&&!preset.highwall)throw Error('Use the separate flight proving ground for the jet. Highwall is not a jet runway.');
