@@ -1947,7 +1947,16 @@ class BeamHose {
       if (game._flung && game._flung.length) game.hitFlung(c, this.tip.position, this.radius + 2.5, this.dps * c.powerBuff * tipDt);
       // tip fx + muzzle fx  (read tip from mesh — the damage loop reused the _v temp)
       const tp = this.tip.position;
-      if (emitSparks&&Math.random() < 0.8) game.particles.burst(tp.x, tp.y, tp.z, { count: 3, speed: 16, life: 0.3, size: this._combatReadability?Math.min(1.1,this.radius*.4):this.radius*1.6, color: this._combatReadability?[this.color,this.color2]:['#fff',this.color,this.color2], drag: 3 });
+      // THE CONTACT SPLASH (goal board iter 14): a beam that just STOPS in the air reads as unfinished.
+      // Where the tip lands, spray family sparks BACK toward the caster (splashing off the point) and
+      // throb a glow flash — so the beam is clearly HITTING something, not ending in a void.
+      this._tipFxClock = (this._tipFxClock || 0) + tipDt;
+      if (emitSparks && this._tipFxClock > 0.04) {
+        this._tipFxClock = 0;
+        game.particles.burst(tp.x, tp.y, tp.z, { count: 3 + (this.radius | 0), speed: 16 + this.radius * 6, life: 0.28, size: this._combatReadability ? Math.min(1.3, this.radius * .5) : this.radius * 1.6, color: ['#fff', this.color, this.color2], dir: { x: -this.dir.x, y: -this.dir.y, z: -this.dir.z }, spread: 1.4, drag: 3 });
+        // flash less often than the sparks (mesh + borrowed-light churn) — still a steady throb
+        if (Math.random() < 0.45) game.vfx.flash(tp, this.color2, this.radius * (0.9 + 0.3 * Math.sin(game.time * 30)), 0.1);
+      }
       if(emitSparks)game.particles.burst(this.muzzle.x, this.muzzle.y, this.muzzle.z, { count: 2, speed: 10, life: 0.25, size: this._combatReadability?Math.min(1,this.radius*.4):this.radius, color: this._combatReadability?[this.color,this.color2]:[this.color2,'#fff'], drag: 4 });
       if (emitSparks&&this.blocked) game.particles.burst(tp.x, tp.y, tp.z, { count: 4, speed: 20, life: 0.3, size: this._combatReadability?1:2.4, color: ['#fff', this.color], dir: { x: -this.dir.x, z: -this.dir.z }, spread: 1.2 });
       if (Math.random() < 0.15) game.world.shake(0.1 * this.power);

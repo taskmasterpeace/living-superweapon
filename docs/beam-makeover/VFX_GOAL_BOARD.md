@@ -277,3 +277,17 @@ fluid-specific) → #2.**
 **Every cell ≥8, beams 8–8.5. Iteration 14 orders (pure polish to 10): beam CONTACT GLOW at
 the receiving end (a beam just stops in air right now) · per-level ribbon width/tint · nova
 fire-tongue skin · level-III screen authority · then the final clean-eyed 216-cell re-grade.**
+
+### Iteration 14 — beam contact splash
+
+| what shipped | the critic |
+|---|---|
+| BEAM CONTACT SPLASH — at the tip, family sparks spray BACK toward the caster (splashing off the landing point) + a throbbing glow flash on a 25Hz clock (flash rate-limited under the sparks to bound mesh/light churn). A beam clearly HITS something now instead of stopping in a void. | beams 8–8.5 → **8.5–9**; the "just stops in air" ding cleared |
+
+| iter | date | what changed | worst cells | overall |
+|---|---|---|---|---|
+| 14 | 2026-09-16 | beam contact splash (tip spray + throb) | per-level ribbon tint · nova fire-tongue skin · level-III screen authority | **≈8.7** |
+
+**Iteration 15 orders: per-level ribbon width/tint (a III bolt's trail heavier than a I) · nova
+fire-tongue skin · level-III screen authority (charge-release kick) · then the final 216-cell
+clean-eyed re-grade hunting the last sub-9 cells.**
