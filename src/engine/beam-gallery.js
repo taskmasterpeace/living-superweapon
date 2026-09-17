@@ -65,6 +65,10 @@ export class BeamGallery {
     // `fxLevel`, the authored override powerfx.fxLevelOf already honours, so explosions, muzzle,
     // charge orbs and style fx all scale through FX_LEVELS with no second system.
     this.level = null;
+    // THE AURA (Robert: "what if characters were MADE UP of these beams") — the stand's caster
+    // wears the CURRENT row's energy: OFF → BODY (full surround) → HANDS (fists only). SKIN (the
+    // lava-skin being) needs the per-model material contract and is queued, never faked here.
+    this.aura = null;
     const p = game.player;
     // start on the caster's OWN first beam when they carry one (so ?hero=vega opens on Violet Lance),
     // else the first beam in the roster.
@@ -197,6 +201,35 @@ export class BeamGallery {
     this._shotSt = { cd: 0 }; this._shotCycle = 0; this._shotPh = undefined;
   }
 
+  _curAb() {
+    return this.kind === 'shot' ? this.shots[this.shotI]?.ab : this.kind === 'cone' ? this.cones[this.coneI]?.ab : this.list[this.i]?.ab;
+  }
+  cycleAura() { this.aura = this.aura == null ? 'body' : this.aura === 'body' ? 'hands' : null; }
+  // pool particles only — no lights, no new materials, capped by the pool itself (the optimization
+  // worry he raised is answered by construction: an aura costs what the pool already costs)
+  _auraTick() {
+    if (!this.aura) return;
+    const c = this.caster, g = this.g, a = this._curAb() || {};
+    const cols = [a.color || '#8fe3ff', a.color2 || '#eaffff'];
+    const fire = a.material === 'fire' || a.dtype === 'fire';
+    if (this.aura === 'body') {
+      for (let i = 0; i < 3; i++) {
+        const th = Math.random() * Math.PI * 2, r = 1.9 + Math.random() * 0.9;
+        g.particles.spawn({ x: c.pos.x + Math.cos(th) * r, y: c.pos.y + Math.random() * 8.5, z: c.pos.z + Math.sin(th) * r,
+          vx: Math.cos(th) * 0.6, vy: 7 + Math.random() * 6, vz: Math.sin(th) * 0.6,
+          life: 0.35 + Math.random() * 0.3, size: 1.6 + Math.random() * 1.3, color: cols[i % 2],
+          drag: 1.2, shrink: true, ...(fire ? { shape: 'flame' } : {}) });
+      }
+    } else {
+      for (let i = 0; i < 2; i++) {
+        const side = i % 2 ? 1 : -1, fx2 = Math.sin(c.facing), fz = Math.cos(c.facing);
+        g.particles.spawn({ x: c.pos.x + fx2 * 2.6 - fz * side * 1.7, y: c.pos.y + 4.6 + Math.random() * 1.2, z: c.pos.z + fz * 2.6 + fx2 * side * 1.7,
+          vx: 0, vy: 3 + Math.random() * 3, vz: 0, life: 0.3 + Math.random() * 0.2, size: 1.1 + Math.random() * 0.9,
+          color: cols[i % 2], drag: 1.4, shrink: true, ...(fire ? { shape: 'flame' } : {}) });
+      }
+    }
+  }
+
   // COPY ROW — the LAB's save seed: the current row WITH your dial edits, as a paste-ready JSON
   // library row (clipboard + console). Paste it back to Claude and it becomes data/beams.js truth.
   copyRow() {
@@ -243,6 +276,7 @@ export class BeamGallery {
     if (this.g.input) this.g.input.pointerLock = false;               // free cursor — a viewer isn't mouse-look
     if (this._home) { c.pos.copy(this._home); if (c.vel) c.vel.set(0, 0, 0); }   // caster stands still
     this._aim();                                                       // beam + view stay locked on the target, never drift
+    this._auraTick();                                                  // the worn energy, every wheel
     if (this.kind === 'shot') {
       // ONE generic driver, five lanes — the REAL ability bodies with a synthetic
       // press→hold→release cycle. Their own cd/pay pace the refire (authored rhythm).
@@ -326,8 +360,12 @@ export class BeamGallery {
       lvlBtn.textContent = 'LVL ' + (this.level ? ['I', 'II', 'III'][this.level - 1] : 'AUTO');
       if (this.kind === 'beam') this.spawn(); else this._updateChip();
     });
+    const auraBtn = mkBtn('AURA OFF', 'Wear the current row’s energy: OFF → BODY → HANDS', () => {
+      this.cycleAura();
+      auraBtn.textContent = 'AURA ' + (this.aura ? this.aura.toUpperCase() : 'OFF');
+    });
     const text = document.createElement('div'); text.style.cssText = 'text-align:center;min-width:280px;';
-    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn, lvlBtn);
+    el.append(prev, text, next, modeBtn, slower, faster, fireBtn, chartBtn, kindBtn, lvlBtn, auraBtn);
     // THE DIALS ROW ("some sliders where... certain things should be able to go so far and so
     // wide") — three generic slider slots, reconfigured per wheel by _configSliders(): they write
     // the exact fields the engine reads. ⧉ ROW copies the edited row as paste-ready library JSON.
